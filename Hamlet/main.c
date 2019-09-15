@@ -18,33 +18,13 @@
                                                            \
         }                                                  \
                                                            \
-                                                           \
     }
 
 #else
 
-    #define Assert( cond ) ;
+    #define ASSERT( cond ) ;
 
 #endif
-
-
-void SwapLines(struct Line* str1, struct Line* str2);
-
-char ToLow (char letter);
-
-int NumOfCharsInFile (FILE* file);
-
-void SplitStr (struct Line* ArrOfPtr, char* String, const int NumOfChars);
-
-int CompGreaterStraightStr (struct Line strA, struct Line strB);
-
-int CompGreaterReverseStr (struct Line strA, struct Line strB);
-
-int NumOfSymbol (char* string, const int NumChars, const char symbol);
-
-int PrintStrInFile (FILE* file, struct Line* strings, int NumberOfStrings);
-
-void QsortLines (struct Line* Array, int Left, int Right, int (*Sorting)(struct Line, struct Line));
 
 struct Line {
 
@@ -54,66 +34,158 @@ struct Line {
 
 };
 
+void SwapLines (Line* str1, Line* str2);
+
+char ToLow (char letter);
+
+int NumOfCharsInFile (FILE* file);
+
+void SplitStr (Line* ArrOfPtr, char* String, const int NumOfChars);
+
+int CompGreaterStraightStr (const void* str1, const void* str2);
+
+int CompGreaterReverseStr (const void* str1, const void* str2);
+
+int NumOfSymbol (char* string, const int NumChars, const char symbol);
+
+int PrintStrToFile (FILE* file, Line* strings, int NumberOfStrings);
+
+void QsortLines (Line* Array, int Left, int Right, int (*Sorting)(Line, Line));
+
+void AddLinesToFile (const char* FileName, Line* ArrLines, int NumOfLines);
+
+char* FileToString (const char* FileName, int* NumOfChars);
+
+#define TEST
+
+#ifdef TEST
+
+void TestToLow ();
+
+void TestSwapLines ();
+
+void TestNumOfCharsInFile ();
+
+void TestCompGreaterStraightStr ();
+
+void TestCompGreaterReverseStr ();
+
+void TestNumOfSymbol ();
+
+int main () {
+
+    TestToLow ();
+
+    return 0;
+
+}
+
+void TestToLow () {
+
+    printf ("\n\tTestings ToLow\n\n");
+
+    int TestNum = 8;
+
+    char    inputChar[8] = {'a', 'A', '"', '\0', '\n', 'Ô', 'B', 'z'};
+    char expectedChar[8] = {'a', 'a', '"', '\0', '\n', 'Ô', 'b', 'z'};
+
+    char ResChar = -1;
+
+    int flag = 1;
+
+    for (int i = 0; i < TestNum; ++i) {
+
+        ResChar = ToLow (inputChar[i]);
+
+        if (ResChar == expectedChar[i])
+            printf ("Successful test %d, get element ""%c"", expexcted ""%c""\n\n", i, ResChar, expectedChar[i]);
+
+        else {
+
+            printf ("FAILED test %d, get element ""%c"", expexcted ""%c""\n\n", i, ResChar, expectedChar[i]);
+
+            flag = 0;
+
+        }
+
+    }
+
+    if(!flag)
+        printf ("FAILD TESTS");
+
+    else
+        printf ("\tSUCCESSFUL TESTS\n");
+
+
+}
+
+void TestSwapLines () {
+
+}
+
+void TestNumOfCharsInFile () {
+
+}
+
+void TestCompGreaterStraightStr () {
+
+}
+
+void TestCompGreaterReverseStr () {
+
+}
+
+void TestNumOfSymbol () {
+
+}
+
+
+#else
+
 /*! This program sorts lines of Shakespear's "Hamlet" in alphabet order,
 *   sorts lines for rhyme dictionary and shows that it hasn't broken the tragedy
 */
 
 int main () {
 
-	FILE* Poem = fopen ("ShakespeareIn.txt", "r");
+	const char* NameOfSorted = "Shakespeare Sorted.txt";
 
-	ASSERT (Poem != NULL);
+	const char* NameOfFile = "ShakespeareIn.txt";
 
-	const int NumOfChars = NumOfCharsInFile (Poem);
+	int NumOfChars = 0;
 
-	char* AllLines = (char*) calloc (NumOfChars+1, sizeof (char) );
+	char* AllLines = FileToString (NameOfFile, &NumOfChars);
 
-	fread (AllLines, sizeof (char), NumOfChars, Poem);
+	int NumOfLines = NumOfSymbol (AllLines, NumOfChars, '\n') + NumOfSymbol (AllLines, NumOfChars, '\0');
 
-	const int NumOfLines = NumOfSymbol (AllLines, NumOfChars, '\n') + NumOfSymbol (AllLines, NumOfChars, '\0');
-
-	struct Line *ArrStr = (struct Line*) calloc (NumOfLines+1, sizeof (struct Line) ); // Array with pointers to strings
+	Line *ArrStr = (struct Line*) calloc (NumOfLines+1, sizeof (struct Line) ); // Array with pointers to strings
 
 	SplitStr (ArrStr, AllLines, NumOfChars);
 
-	struct Line *Originally = (struct Line*) calloc (NumOfLines+1, sizeof (struct Line) ); // Array with pointers to strings;
+	Line *Originally = (struct Line*) calloc (NumOfLines+1, sizeof (struct Line) );
 
 	SplitStr (Originally, AllLines, NumOfChars);
 
-	QsortLines (ArrStr, 0, NumOfLines-1, CompGreaterStraightStr);
 
-    FILE* NewPoem = fopen ("Shakespeare From A to B.txt", "w");
 
-	ASSERT (NewPoem != NULL);
+    qsort (ArrStr, NumOfLines, sizeof(Line), CompGreaterStraightStr);
 
-	PrintStrInFile (NewPoem, ArrStr, NumOfLines);
+    AddLinesToFile (NameOfSorted, ArrStr, NumOfLines);
 
-    fclose (NewPoem);
+    qsort (ArrStr, NumOfLines, sizeof(Line), CompGreaterReverseStr);
 
-    QsortLines (ArrStr, 0, NumOfLines-1, CompGreaterReverseStr);
+    AddLinesToFile (NameOfSorted, ArrStr, NumOfLines);
 
-    FILE* Rhymes = fopen ("ShakespeareRhyme.txt", "w");
-
-    assert (Rhymes != NULL);
-
-    PrintStrInFile (Rhymes, ArrStr, NumOfLines);
-
-    fclose (Rhymes);
-
-    FILE* Original = fopen ("ShakespeareOriginal.txt", "w");
-
-    ASSERT (Original != NULL);
-
-    PrintStrInFile (Original, Originally, NumOfLines);
-
-    fclose (Original);
-
+    AddLinesToFile (NameOfSorted, Originally, NumOfLines);
 
 	free (ArrStr);
 	free (AllLines);
 
 	return 0;
+
 }
+
+#endif;
 
 /*! This function swaps to lines (strings)
 *
@@ -121,7 +193,7 @@ int main () {
 *
 */
 
-void SwapLines(struct Line* str1, struct Line* str2) {
+void SwapLines(Line* str1, Line* str2) {
 
     ASSERT (str1 != NULL);
     ASSERT (str2 != NULL);
@@ -143,8 +215,7 @@ char ToLow (char letter) {
 
     if (letter <= 'Z' && letter >= 'A') {
 
-        letter -= 'A';
-        letter += 'a';
+        letter += ('a' - 'A');
 
     }
 
@@ -182,7 +253,7 @@ int NumOfCharsInFile (FILE* file) {
 *
 */
 
-void SplitStr (struct Line* ArrOfPtr, char* String, const int NumOfChars){
+void SplitStr (Line* ArrOfPtr, char* String, const int NumOfChars){
 
     ASSERT (ArrOfPtr != NULL);
     ASSERT (String != NULL);
@@ -199,7 +270,7 @@ void SplitStr (struct Line* ArrOfPtr, char* String, const int NumOfChars){
 
             (ArrOfPtr - 1) -> End = String;
 
-            ArrOfPtr -> Start= String + 1;
+            ArrOfPtr -> Start = String + 1;
 
             ++ArrOfPtr;
 
@@ -220,20 +291,23 @@ void SplitStr (struct Line* ArrOfPtr, char* String, const int NumOfChars){
 *
 */
 
-int CompGreaterStraightStr (struct Line strA, struct Line strB) {
+int CompGreaterStraightStr (const void* str1, const void* str2) {
 
-    ASSERT (strA.Start != NULL);
-    ASSERT (strB.Start != NULL);
+    ASSERT (str1 != NULL);
+    ASSERT (str2 != NULL);
+
+    Line strA = *(Line*) str1;
+    Line strB = *(Line*) str2;
 
     char A = ' ';
     char B = ' ';
 
-    while (*strA.Start != '\0' && *strB.Start != '\0') {
+    do {
 
-        while ( (!isalpha(*strA.Start)) && (*strA.Start != '\0') )
+        while ( (!isalpha(*strA.Start)) && (strA.Start != strA.End) )
             ++strA.Start;
 
-        while ( (!isalpha(*strB.Start)) && (*strB.Start != '\0') )
+        while ( (!isalpha(*strB.Start)) && (strB.Start != strB.End) )
             ++strB.Start;
 
         A = ToLow (*strA.Start);
@@ -245,12 +319,17 @@ int CompGreaterStraightStr (struct Line strA, struct Line strB) {
 
         else {
 
-            ++strA.Start;
-            ++strB.Start;
+            if (strA.Start != strB.End)
+                ++strA.Start;
+
+            if (strB.Start != strB.End)
+                ++strB.Start;
 
         }
 
     }
+
+    while (strA.Start != strA.End && strB.Start != strB.End);
 
     return 0;
 
@@ -267,17 +346,18 @@ int CompGreaterStraightStr (struct Line strA, struct Line strB) {
 *
 */
 
-int CompGreaterReverseStr (struct Line strA, struct Line strB) {
+int CompGreaterReverseStr (const void* str1, const void* str2) {
 
-    ASSERT (strA.Start != NULL);
-    ASSERT (strB.Start != NULL);
-    ASSERT (strA.End != NULL);
-    ASSERT (strB.End != NULL);
+    ASSERT (str1 != NULL);
+    ASSERT (str2 != NULL);
 
-    char letterA = ' ';
-    char letterB = ' ';
+    Line strA = *(Line*) str1;
+    Line strB = *(Line*) str2;
 
-    while (strA.End != strA.Start && strB.End != strB.Start) {
+    char A = ' ';
+    char B = ' ';
+
+    do {
 
         while ( (!isalpha(*strA.End)) && (strA.End != strA.Start) )
             --strA.End;
@@ -285,12 +365,12 @@ int CompGreaterReverseStr (struct Line strA, struct Line strB) {
         while ( (!isalpha(*strB.End)) && (strB.End != strB.Start) )
             --strB.End;
 
-        letterA = ToLow (*strA.End);
+        A = ToLow (*strA.End);
 
-        letterB = ToLow (*strB.End);
+        B = ToLow (*strB.End);
 
-        if ( (letterA - letterB) != 0)
-            return (int)(letterA - letterB);
+        if ( (A - B) != 0)
+            return (int)(A - B);
 
         else if ( (strA.End != strA.Start) && (strB.End != strB.Start) ) {
 
@@ -299,7 +379,7 @@ int CompGreaterReverseStr (struct Line strA, struct Line strB) {
 
         }
 
-    }
+    } while (strA.End != strA.Start && strB.End != strB.Start);
 
     return 0;
 
@@ -340,17 +420,19 @@ int NumOfSymbol (char* strings, const int NumChars, const char symbol) {
 *
 */
 
-int PrintStrInFile(FILE* file, struct Line* strings, int NumberOfStrings) {
+int PrintStrToFile(FILE* file, Line* strings, int NumberOfStrings) {
 
 	ASSERT (file != NULL);
 	ASSERT (strings != NULL);
 
-	for (int n = 0; n <= NumberOfStrings; ++n)  {
+	for (int n = 0; n < NumberOfStrings; ++n)  {
 
-        if (*((strings + n) -> Start) != '\0' && *((strings +n) -> Start) != '\n' && *((strings +n) -> Start) != '\r')
+        if (*((strings + n) -> Start) != '\0' && *((strings + n) -> Start) != '\n' && *((strings +n) -> Start) != '\r')
             fprintf (file, "%s\n", (strings + n) -> Start);
 
     }
+
+    fprintf (file, "\n");
 
 	return 0;
 
@@ -365,7 +447,7 @@ int PrintStrInFile(FILE* file, struct Line* strings, int NumberOfStrings) {
 *
 */
 
-void QsortLines (struct Line* Array, int Left, int Right, int (*Compare)(struct Line, struct Line) ) {
+void QsortLines (Line* Array, int Left, int Right, int (*Compare)(Line, Line) ) {
 
     ASSERT (Array != NULL);
     ASSERT (Left >= 0);
@@ -395,5 +477,55 @@ void QsortLines (struct Line* Array, int Left, int Right, int (*Compare)(struct 
 
         QsortLines (Array, Left, Last -  1, Compare);
         QsortLines (Array, Last + 1, Right, Compare);
+
+}
+
+/*! This function adds lines into the end of file
+*
+* @param FileName - name of file
+* @param ArrLines - an array of lines
+* @param NumOfLines - number of lines in array
+*
+*/
+
+void AddLinesToFile (const char* FileName, Line* ArrLines, int NumOfLines) {
+
+    ASSERT (FileName != NULL);
+    ASSERT (ArrLines != NULL);
+
+    FILE* file = fopen (FileName, "a");
+
+	ASSERT (file != NULL);
+
+	PrintStrToFile (file, ArrLines, NumOfLines);
+
+    fclose (file);
+
+}
+
+/*! This function records characters of file to one string
+*
+*   @param FileName - name of file
+*   @param NumOfChars - address of the variable where records number of characters in file
+*
+*   @return AllLines - string of characters !!!AllLines needs to free!!!
+*
+*/
+
+char* FileToString (const char* FileName, int* NumOfChars) {
+
+    FILE* file = fopen (FileName, "r");
+
+	ASSERT (file != NULL);
+
+	*NumOfChars = NumOfCharsInFile (file);
+
+	char* AllLines = (char*) calloc (*NumOfChars+1, sizeof (char) );
+
+	fread (AllLines, sizeof (char), *NumOfChars, file);
+
+	fclose (file);
+
+    return AllLines;
 
 }
