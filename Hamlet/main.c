@@ -57,6 +57,20 @@ char* FileToString (const char* FileName, int* NumOfChars);
 
 #ifdef TEST
 
+#define PRINT_RESULT                                                                                            \
+                                                                                                                \
+    if (Result == expectedRes[i])                                                                               \
+        printf ("Successful test %d, get element ""%c"", expected ""%c""\n\n", i, Result, expectedRes[i]);      \
+    else {                                                                                                      \
+                                                                                                                \
+        printf ("FAILED test %d, get element ""%c"", expected ""%c""\n\n", i, Result, expectedRes[i]);          \
+                                                                                                                \
+        flag = 0;                                                                                               \
+                                                                                                                \
+    }
+
+
+
 void TestToLow ();
 
 void TestCompGreaterStraightStr ();
@@ -85,27 +99,18 @@ void TestToLow () {
 
     const int TestNum = 8;
 
-    char    inputChar[TestNum] = {'a', 'A', '"', '\0', '\n', 'Ф', 'B', 'z'};
-    char expectedChar[TestNum] = {'a', 'a', '"', '\0', '\n', 'Ф', 'b', 'z'};
+    char   inputChar[TestNum] = {'a', 'A', '"', '\0', '\n', 'Ф', 'B', 'z'};
+    char expectedRes[TestNum] = {'a', 'a', '"', '\0', '\n', 'Ф', 'b', 'z'};
 
-    char ResChar = -1;
+    char Result = -1;
 
     int flag = 1;
 
     for (int i = 0; i < TestNum; ++i) {
 
-        ResChar = ToLow (inputChar[i]);
+        Result = ToLow (inputChar[i]);
 
-        if (ResChar == expectedChar[i])
-            printf ("Successful test %d, get element ""%c"", expected ""%c""\n\n", i, ResChar, expectedChar[i]);
-
-        else {
-
-            printf ("FAILED test %d, get element ""%c"", expected ""%c""\n\n", i, ResChar, expectedChar[i]);
-
-            flag = 0;
-
-        }
+        PRINT_RESULT
 
     }
 
@@ -144,16 +149,7 @@ void TestCompGreaterStraightStr () {
 
         int Result = CompGreaterStraightStr ((void*)&Str1[i], (void*)&Str2[i]);
 
-        if (Result == expectedRes[i])
-            printf ("Successful test %d, get result ""%d"", expected ""%d""\n\n", i, Result, expectedRes[i]);
-
-        else {
-
-            printf ("FAILED test %d, get result ""%d"", expected ""%d""\n\n", i, Result, expectedRes[i]);
-
-            flag = 0;
-
-        }
+        PRINT_RESULT
 
     }
 
@@ -191,16 +187,7 @@ void TestCompGreaterReverseStr () {
 
         int Result = CompGreaterReverseStr ((void*)&Str1[i], (void*)&Str2[i]);
 
-        if (Result == expectedRes[i])
-            printf ("Successful test %d, get result ""%d"", expected ""%d""\n\n", i, Result, expectedRes[i]);
-
-        else {
-
-            printf ("FAILED test %d, get result ""%d"", expected ""%d""\n\n", i, Result, expectedRes[i]);
-
-            flag = 0;
-
-        }
+        PRINT_RESULT
 
     }
 
@@ -233,16 +220,7 @@ void TestNumOfSymbol () {
 
         int Result = NumOfSymbol (TestStr, NumOfChars, TestSymbol[i]);
 
-        if (Result == expectedRes[i])
-            printf ("Successful test %d, get result ""%d"", expected ""%d""\n\n", i, Result, expectedRes[i]);
-
-        else {
-
-            printf ("FAILED test %d, get result ""%d"", expected ""%d""\n\n", i, Result, expectedRes[i]);
-
-            flag = 0;
-
-        }
+        PRINT_RESULT
 
     }
 
@@ -611,3 +589,4 @@ char* FileToString (const char* FileName, int* NumOfChars) {
     return AllLines;
 
 }
+
