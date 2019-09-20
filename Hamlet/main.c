@@ -34,37 +34,30 @@ struct Line {
 
 };
 
-void SwapLines (Line* str1, Line* str2);
-
 char ToLow (char letter);
 
 int NumOfCharsInFile (FILE* file);
 
-void SplitStr (Line* ArrOfPtr, char* String, const int NumOfChars);
+void SplitStr (struct Line* ArrOfPtr, char* String, const int NumOfChars);
 
 int CompGreaterStraightStr (const void* str1, const void* str2);
 
 int CompGreaterReverseStr (const void* str1, const void* str2);
 
-int NumOfSymbol (char* string, const int NumChars, const char symbol);
+int NumOfSymbol (char* strings, const int NumChars, const char symbol);
 
-int PrintStrToFile (FILE* file, Line* strings, int NumberOfStrings);
+int PrintStrToFile (FILE* file, struct Line* strings, int NumberOfStrings);
 
-void QsortLines (Line* Array, int Left, int Right, int (*Sorting)(Line, Line));
-
-void AddLinesToFile (const char* FileName, Line* ArrLines, int NumOfLines);
+void AddLinesToFile (const char* FileName, struct Line* ArrLines, int NumOfLines);
 
 char* FileToString (const char* FileName, int* NumOfChars);
+
 
 #define TEST
 
 #ifdef TEST
 
 void TestToLow ();
-
-void TestSwapLines ();
-
-void TestNumOfCharsInFile ();
 
 void TestCompGreaterStraightStr ();
 
@@ -76,18 +69,24 @@ int main () {
 
     TestToLow ();
 
+    TestCompGreaterStraightStr ();
+
+    TestCompGreaterReverseStr ();
+
+    TestNumOfSymbol ();
+
     return 0;
 
 }
 
 void TestToLow () {
 
-    printf ("\n\tTestings ToLow\n\n");
+    printf ("\n\tTesting ToLow\n\n");
 
-    int TestNum = 8;
+    const int TestNum = 8;
 
-    char    inputChar[8] = {'a', 'A', '"', '\0', '\n', 'Ô', 'B', 'z'};
-    char expectedChar[8] = {'a', 'a', '"', '\0', '\n', 'Ô', 'b', 'z'};
+    char    inputChar[TestNum] = {'a', 'A', '"', '\0', '\n', 'Ð¤', 'B', 'z'};
+    char expectedChar[TestNum] = {'a', 'a', '"', '\0', '\n', 'Ð¤', 'b', 'z'};
 
     char ResChar = -1;
 
@@ -98,11 +97,11 @@ void TestToLow () {
         ResChar = ToLow (inputChar[i]);
 
         if (ResChar == expectedChar[i])
-            printf ("Successful test %d, get element ""%c"", expexcted ""%c""\n\n", i, ResChar, expectedChar[i]);
+            printf ("Successful test %d, get element ""%c"", expected ""%c""\n\n", i, ResChar, expectedChar[i]);
 
         else {
 
-            printf ("FAILED test %d, get element ""%c"", expexcted ""%c""\n\n", i, ResChar, expectedChar[i]);
+            printf ("FAILED test %d, get element ""%c"", expected ""%c""\n\n", i, ResChar, expectedChar[i]);
 
             flag = 0;
 
@@ -119,24 +118,139 @@ void TestToLow () {
 
 }
 
-void TestSwapLines () {
-
-}
-
-void TestNumOfCharsInFile () {
-
-}
-
 void TestCompGreaterStraightStr () {
+
+    printf ("\n\tTesting CompGreaterStraightStr\n\n");
+
+    const int TestNum = 5;
+
+    Line Str1[TestNum] = {"1",     Str1[0].Start + 1,
+                          "abc",   Str1[1].Start + 3,
+                          "Abc",   Str1[2].Start + 3,
+                          "",      Str1[3].Start,
+                          "zbDzx", Str1[4].Start};
+
+    Line Str2[TestNum] = {"123",  Str2[0].Start + 1,
+                          "abcd", Str2[1].Start + 4,
+                          "ABC",  Str2[2].Start + 3,
+                          "",     Str2[3].Start,
+                          "Dcseds",     Str2[4].Start};
+
+    int expectedRes[TestNum] = {0, -(int)'d', 0, 0, (int)('z' - 'd')};
+
+    int flag = 1;
+
+    for (int i = 0; i < TestNum; ++i) {
+
+        int Result = CompGreaterStraightStr ((void*)&Str1[i], (void*)&Str2[i]);
+
+        if (Result == expectedRes[i])
+            printf ("Successful test %d, get result ""%d"", expected ""%d""\n\n", i, Result, expectedRes[i]);
+
+        else {
+
+            printf ("FAILED test %d, get result ""%d"", expected ""%d""\n\n", i, Result, expectedRes[i]);
+
+            flag = 0;
+
+        }
+
+    }
+
+    if(!flag)
+        printf ("FAILD TESTS");
+
+    else
+        printf ("\tSUCCESSFUL TESTS\n");
 
 }
 
 void TestCompGreaterReverseStr () {
 
+    printf ("\n\tTesting CompGreaterReverseStr\n\n");
+
+    const int TestNum = 5;
+
+    Line Str1[TestNum] = {"",      Str1[0].Start,
+                          "1",     Str1[1].Start + 1,
+                          "1",     Str1[2].Start + 1,
+                          "a",     Str1[3].Start + 1,
+                          "zxDsq", Str1[4].Start + 5};
+
+    Line Str2[TestNum] = {"",      Str2[0].Start,
+                          "23262", Str2[1].Start + 5,
+                          "1",     Str2[2].Start + 1,
+                          "b",     Str2[3].Start + 1,
+                          "Dswwq", Str2[4].Start + 5};
+
+    int expectedRes[TestNum] = {0, 0, 0, (int)('a'-'b'), (int)('s'-'w')};
+
+    int flag = 1;
+
+    for (int i = 0; i < TestNum; ++i) {
+
+        int Result = CompGreaterReverseStr ((void*)&Str1[i], (void*)&Str2[i]);
+
+        if (Result == expectedRes[i])
+            printf ("Successful test %d, get result ""%d"", expected ""%d""\n\n", i, Result, expectedRes[i]);
+
+        else {
+
+            printf ("FAILED test %d, get result ""%d"", expected ""%d""\n\n", i, Result, expectedRes[i]);
+
+            flag = 0;
+
+        }
+
+    }
+
+    if(!flag)
+        printf ("FAILD TESTS");
+
+    else
+        printf ("\tSUCCESSFUL TESTS\n");
+
 }
 
 void TestNumOfSymbol () {
 
+    printf ("\n\tTesting NumOfSymbol\n\n");
+
+    const int TestNum = 5;
+
+    char* TestStr= "adwwad01932#2$%AASWEFGGFF3214";
+
+    const int NumOfChars = 29;
+
+    char TestSymbol[TestNum] = {'a', 'w', '2', 'F', '%'};
+
+    int expectedRes[TestNum] = { 2 ,  2 ,  3 ,  3 ,  1 };
+
+
+    int flag = 1;
+
+    for (int i = 0; i < TestNum; ++i) {
+
+        int Result = NumOfSymbol (TestStr, NumOfChars, TestSymbol[i]);
+
+        if (Result == expectedRes[i])
+            printf ("Successful test %d, get result ""%d"", expected ""%d""\n\n", i, Result, expectedRes[i]);
+
+        else {
+
+            printf ("FAILED test %d, get result ""%d"", expected ""%d""\n\n", i, Result, expectedRes[i]);
+
+            flag = 0;
+
+        }
+
+    }
+
+    if(!flag)
+        printf ("FAILD TESTS");
+
+    else
+        printf ("\tSUCCESSFUL TESTS\n");
 }
 
 
@@ -185,24 +299,8 @@ int main () {
 
 }
 
-#endif;
+#endif
 
-/*! This function swaps to lines (strings)
-*
-* @param str1, str2 - addresses of strings (lines) that should be swaped
-*
-*/
-
-void SwapLines(Line* str1, Line* str2) {
-
-    ASSERT (str1 != NULL);
-    ASSERT (str2 != NULL);
-
-    struct Line buf = *str1;
-    *str1 = *str2;
-    *str2 = buf;
-
-}
 
 /*! This function turns uppercase letter to lowercase one
 *
@@ -314,22 +412,35 @@ int CompGreaterStraightStr (const void* str1, const void* str2) {
 
         B = ToLow (*strB.Start);
 
+
+        if ((!isalpha(A)) && (!isalpha(B)))
+            return 0;
+
+        if (!isalpha(A))
+            return -10;
+
+        if (!isalpha(B))
+            return 10;
+
         if ( (A - B) != 0)
             return (int)(A - B);
 
         else {
 
             if (strA.Start != strB.End)
-                ++strA.Start;
+              A = *(++strA.Start);
 
             if (strB.Start != strB.End)
-                ++strB.Start;
+              B = *(++strB.Start);
 
         }
 
     }
 
     while (strA.Start != strA.End && strB.Start != strB.End);
+
+    if ( (A - B) != 0)
+        return (int)(A - B);
 
     return 0;
 
@@ -369,17 +480,30 @@ int CompGreaterReverseStr (const void* str1, const void* str2) {
 
         B = ToLow (*strB.End);
 
+
+        if ((!isalpha(A)) && (!isalpha(B)))
+            return 0;
+
+        if (!isalpha(A))
+            return -10;
+
+        if (!isalpha(B))
+            return 10;
+
         if ( (A - B) != 0)
             return (int)(A - B);
 
         else if ( (strA.End != strA.Start) && (strB.End != strB.Start) ) {
 
-            --strA.End;
-            --strB.End;
+           A = *(--strA.End);
+           B = *(--strB.End);
 
         }
 
     } while (strA.End != strA.Start && strB.End != strB.Start);
+
+    if ( (A - B) != 0)
+        return (int)(A - B);
 
     return 0;
 
@@ -435,48 +559,6 @@ int PrintStrToFile(FILE* file, Line* strings, int NumberOfStrings) {
     fprintf (file, "\n");
 
 	return 0;
-
-}
-
-/*! This function does quick sorting of lines
-*
-* @param[in] Array - array of lines
-* @param[in] Left, Right - borders of sorting
-* @param[in] Compare - comparing function that returns a value > 0 if the first line is greater than the second one,
-*            a value < 0, if the second line is greater than the first one, and a value = 0 if lines are equal
-*
-*/
-
-void QsortLines (Line* Array, int Left, int Right, int (*Compare)(Line, Line) ) {
-
-    ASSERT (Array != NULL);
-    ASSERT (Left >= 0);
-
-    if (Right - Left < 0)
-        return;
-
-        int Last = Left;
-
-        int Mid = (Right + Left)/2;
-
-        SwapLines ( (Array + Left), (Array + Mid) );
-
-        for (int i = Left; i <= Right; ++i) {
-
-            if (Compare ( *(Array + Left), *(Array + i) ) > 0) {
-
-                ++Last;
-
-               SwapLines ( (Array + Last), (Array + i) );
-
-            }
-
-        }
-
-        SwapLines ( (Array + Last), (Array + Left) );
-
-        QsortLines (Array, Left, Last -  1, Compare);
-        QsortLines (Array, Last + 1, Right, Compare);
 
 }
 
