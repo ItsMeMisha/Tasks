@@ -9,6 +9,8 @@
 
 #define StackConstruct( stack ) StackConstructor (stack, #stack)
 
+#ifndef _NODEBUG
+
 #define ASSERTSTK( stack )                      \
                                                 \
     if (!StackOk (stack)) {                     \
@@ -18,14 +20,19 @@
                                                 \
     }
 
+#else 
+
+#define ASSERTSTK( stack )
+
+#endif
 
 #define Dump( name, comment ) 													\
 																				\
 	if (name)  StackDump (name, name -> Name, comment, __LINE__, __FUNCTION__); \
-	else printf ("%s Stack is nullptr");
+	else printf ("%s Stack is nullptr\n");
 
 
-//#define _FullDefend - You should use _FullDefend to define _CanaryDefend and _HashDefend for the correct execution
+//#define _FullDefend 
 //#define _CanaryDefend
 //#define _HashDefend
 
@@ -64,7 +71,7 @@ const int MinSize = 100;
 const  Element_t Poison = {};
 const int ResizeCoef = 2;
 const int delta = 25;
-CanaryCode (const unsigned CanaryDefault = 103295;)
+CanaryCode (const unsigned CanaryDefault = 2863311;)
 CanaryCode (const Element_t CanaryDataDefault = {};)
 
 /*! @brief This structure is realization of stack of Element_t elements
@@ -526,8 +533,7 @@ void StackDump (Stack_t* stk, char* name, char* comment, int Line, const char* F
             printf ("Size = %lu \n", stk -> Size);
 
             if (stk -> Size >= 0 && stk -> Size <= stk -> MaxSize)
-
-            printf ("data[%lu] = [%p]\n", stk -> MaxSize, stk -> data);
+            	printf ("data[%lu] = [%p]\n", stk -> MaxSize, stk -> data);
 
             if (sizeof(Element_t) <= sizeof(int)) {
 
@@ -559,6 +565,9 @@ void StackDump (Stack_t* stk, char* name, char* comment, int Line, const char* F
 
         ErrCodeDecode (stk -> errcode);
 
+		printf ("\n HashStruct: %u\n HashData: %u\n", *(stk -> HashStruct), *(stk -> HashData));
+		printf ("\n CanaryStructBegin: %u\n CanaryStructEnd: %u\n", stk -> CanaryStructBegin, stk -> CanaryStructEnd);
+
         printf ("\n");
 
     }
@@ -572,7 +581,7 @@ void StackDump (Stack_t* stk, char* name, char* comment, int Line, const char* F
 
 void ErrCodeDecode (int errcode) {
 
- switch (errcode) {
+	switch (errcode) {
 
     case 0: printf ("(ok)");
             break;
