@@ -1,0 +1,612 @@
+#ifndef STACK_T_H_INCLUDED
+#define STACK_T_H_INCLUDED
+
+#include <stdio.h>
+#include <malloc.h>
+#include <assert.h>
+#include <string.h>
+#include "Hash.h"
+
+#define StackConstruct( stack ) StackConstructor (stack, #stack)
+
+#define ASSERTSTK( stack )                      \
+                                                \
+    if (!StackOk (stack)) {                     \
+                                                \
+        Dump (stack, "ASSERTAION FAILED!!!!!"); \
+        assert(0);                              \
+                                                \
+    }
+
+
+#define Dump( name, comment ) 													\
+																				\
+	if (name)  StackDump (name, name -> Name, comment, __LINE__, __FUNCTION__); \
+	else printf ("%s Stack is nullptr");
+
+
+//#define _FullDefend - You should use _FullDefend to define _CanaryDefend and _HashDefend for the correct execution
+//#define _CanaryDefend
+//#define _HashDefend
+
+#ifdef _FullDefend
+
+	#define _CanaryDefend
+	#define _HashDefend	
+
+#endif
+
+#ifdef _CanaryDefend
+	
+	const int canary = 2;
+	#define CanaryCode( code ) code
+
+#else 
+
+	const int canary = 0;
+	#define CanaryCode( code ) 
+
+#endif
+
+#ifdef _HashDefend
+
+	#define HashCode( code ) code
+
+#else
+
+	#define HashCode( code )
+
+#endif
+
+typedef int Element_t;
+
+const int MinSize = 100;
+const  Element_t Poison = {};
+const int ResizeCoef = 2;
+const int delta = 25;
+CanaryCode (const unsigned CanaryDefault = 103295;)
+CanaryCode (const Element_t CanaryDataDefault = {};)
+
+/*! @brief This structure is realization of stack of Element_t elements
+*
+*   @details MaxSize - current maximal size of stack \n
+*   data - pointer to the begin of an array of elements \n
+*   Size - current free element numbe r\n
+*   HashStruct - Hash of struct without data's content \n
+*	HashData - hash of data content \n
+*   errcode - code of error \n
+*   CanaryStructBegin - canary at the beginning of the struct \n
+*	CanaryStructEnd - canary at the end of the struct \n
+*	
+*/
+
+struct Stack_t {
+
+    CanaryCode (unsigned CanaryStructBegin;)
+
+	char* Name;
+    size_t MaxSize;
+
+	CanaryCode (
+	
+		Element_t* CanaryDataBegin;
+		Element_t* CanaryDataEnd;
+	
+	)
+
+    Element_t* data;
+
+    size_t Size;
+
+    HashCode ( 
+
+		unsigned* HashStruct;
+    	unsigned* HashData;
+
+	)
+
+    int errcode;
+
+    CanaryCode (unsigned CanaryStructEnd;)
+
+};
+
+bool StackOk (Stack_t* stk);
+
+bool ResizeStackUp (Stack_t* stk);
+
+bool ResizeStackDown (Stack_t* stk);
+
+void StackConstructor (Stack_t* stk, char* name);
+
+void StackDestruct (Stack_t* stk);
+
+bool StackPush (Stack_t* stk, Element_t value);
+
+void StackDump (Stack_t* stk, char* name, char* comment, int Line, const char* Function);
+
+Element_t StackPop (Stack_t* stk);
+
+void ErrCodeDecode (int errcode);
+
+/*! This function checks if stack *stk is ok
+*
+*   @param[in] stk - address of stack that should be checked
+*
+*   @return true if stack is ok
+*   @return false if stack is not ok
+*/
+
+bool StackOk (Stack_t* stk) {
+
+    if (stk == nullptr) {
+
+        return false;
+
+    }
+
+    if (stk -> Size < 0) {
+
+        stk -> errcode = 1;
+        return false;
+
+    }
+
+    if (stk -> Size > stk -> MaxSize) {
+
+        stk -> errcode = 2;
+        return false;
+
+    }
+
+    if (stk -> data == nullptr) {
+
+        stk -> errcode = 3;
+        return false;
+
+    }
+
+	CanaryCode ( 
+
+		if (stk -> CanaryStructBegin != CanaryDefault) {
+
+			stk -> errcode = 6;
+			return false;
+
+		}
+
+		if (stk -> CanaryStructEnd != CanaryDefault) {
+
+			stk -> errcode = 7;
+			return false;
+
+		}
+
+		if (*(stk -> CanaryDataBegin) != CanaryDataDefault) {
+
+			stk -> errcode = 8;
+			return false;
+
+		}
+
+		if (*(stk -> CanaryDataEnd) != CanaryDataDefault) {
+
+			stk -> errcode = 9;
+			return false;
+
+		}	
+
+	)
+
+    HashCode (
+	
+		unsigned CtrlHash = MurmurHash2Light (stk, sizeof (Stack_t));
+
+    	if (*(stk -> HashStruct) != CtrlHash) {	
+    	
+        	stk -> errcode = 4;
+        	return false;
+
+    	}
+
+		unsigned CtrlHashData = MurmurHash2Light (stk -> data, sizeof (Element_t) * (stk -> MaxSize));
+
+    	if (*(stk -> HashData) != CtrlHashData) {
+
+        	stk -> errcode = 5;
+        	return false;
+
+    	}
+
+	)
+
+    if (stk -> errcode > 0) {
+        return false;
+    }
+
+    return true;
+
+}
+
+/*! This function expands size of stack data
+*
+*   @param stk - address of stack
+*
+*   @return true if expanding has been successful
+*   @return false if expanding has failed
+*
+*/
+
+bool ResizeStackUp (Stack_t* stk) {
+
+    ASSERTSTK (stk);
+
+	CanaryCode (--stk -> data;)
+
+    Element_t* NewDataPtr = (Element_t*) realloc (stk -> data, sizeof (Element_t) * ((stk -> MaxSize) * ResizeCoef + canary));
+
+    if (NewDataPtr == nullptr)
+        return false;
+
+    stk -> data = NewDataPtr;
+    stk -> MaxSize *= ResizeCoef;
+
+	memset (stk -> data + stk -> Size, Poison, sizeof (Element_t) * (stk -> MaxSize - stk -> Size));
+
+	CanaryCode ( 
+
+		if (stk -> data != nullptr);
+			++stk -> data;
+
+		stk -> CanaryDataBegin = stk -> data - 1;
+		stk -> CanaryDataEnd = stk -> data + (stk -> MaxSize);
+	
+		*(stk -> CanaryDataBegin) = CanaryDataDefault;
+		*(stk -> CanaryDataEnd) = CanaryDataDefault;
+
+	)
+    
+    return true;
+
+}
+
+/*! This function constricts size of stack data
+*
+*   @param stk - address of stack
+*
+*   @return true if constricting has been successful
+*   @return false if constricting has failed
+*
+*/
+
+bool ResizeStackDown (Stack_t* stk) {
+
+    ASSERTSTK (stk);
+
+	CanaryCode (--stk -> data;)
+
+    if (stk -> MaxSize > MinSize) {
+
+        Element_t* NewDataPtr = (Element_t*) realloc (stk -> data, sizeof (Element_t) * ((stk -> MaxSize / ResizeCoef) + canary));
+
+        if (NewDataPtr == nullptr)
+            return false;
+
+        stk -> data = NewDataPtr;
+        stk -> MaxSize /= ResizeCoef;
+
+		CanaryCode ( 
+
+			if (stk -> data != nullptr);
+				++stk -> data;
+		
+			stk -> CanaryDataBegin = stk -> data - 1;
+			stk -> CanaryDataEnd = stk -> data + (stk -> MaxSize);
+	
+			*(stk -> CanaryDataBegin) = CanaryDataDefault;
+			*(stk -> CanaryDataEnd) = CanaryDataDefault;
+
+		)
+
+    }
+
+    return true;
+
+}
+
+/*! This function is constructor for Stack_t
+*
+*   @param stk - pointer to stack
+*
+*/
+
+void StackConstructor (Stack_t* stk, char* name) {
+
+	stk -> Name = name;
+    stk -> MaxSize = MinSize;
+    stk -> data = (Element_t*) calloc (stk -> MaxSize + canary, sizeof (Element_t));
+
+	CanaryCode ( 
+	
+		if (stk -> data != nullptr);
+			++stk -> data;
+
+		stk -> CanaryDataBegin = stk -> data - 1;
+		*(stk -> CanaryDataBegin) = CanaryDataDefault;
+
+		stk -> CanaryDataEnd = stk -> data + (stk -> MaxSize);
+		*(stk -> CanaryDataEnd) = CanaryDataDefault;
+
+	)
+
+    stk -> Size = 0;
+
+	HashCode ( 
+
+		stk -> HashStruct = (unsigned*) calloc (1, sizeof (unsigned));
+		stk -> HashData = (unsigned*) calloc (1, sizeof (unsigned));
+
+	)
+
+    stk -> errcode = 0;
+
+    CanaryCode ( 
+
+		stk -> CanaryStructBegin = (unsigned) CanaryDefault;
+    	stk -> CanaryStructEnd = (unsigned) CanaryDefault;
+
+	)
+
+	HashCode ( 
+
+		*(stk -> HashData) = MurmurHash2Light (stk -> data, sizeof (Element_t) * (stk -> MaxSize));	
+		*(stk -> HashStruct) = MurmurHash2Light (stk, sizeof (Stack_t));
+    	
+	)
+
+    ASSERTSTK (stk);
+
+}
+
+/*! This function is destructor for Stack_t
+*
+*   @param stk - address of stack
+*
+*/
+
+void StackDestruct (Stack_t* stk) {
+
+    ASSERTSTK (stk);
+
+    stk -> MaxSize = 0;
+	stk -> Name = nullptr;
+
+    free (stk -> data - canary/2);
+    stk -> data = nullptr;
+
+    stk -> Size = 0;
+
+    HashCode ( 
+		
+		*(stk -> HashStruct) = 0;
+    	*(stk -> HashData) = 0;
+
+		free (stk -> HashStruct);
+		free (stk -> HashData);
+
+	)
+
+    stk -> errcode = 0;
+
+	CanaryCode ( 
+
+		stk -> CanaryDataBegin = nullptr;
+		stk -> CanaryDataEnd = nullptr;
+
+    	stk -> CanaryStructBegin = 0;
+    	stk -> CanaryStructEnd = 0;
+
+	)
+
+	stk = nullptr;
+
+}
+
+/*! This function Pushes an element to stack
+*
+*   @param stk - address of stack
+*   @param value - value of element that should be pushed
+*
+*   @return true if pushing has been successful
+*   @return false if pushing has failed
+*/
+
+bool StackPush (Stack_t* stk, Element_t value) {
+
+    ASSERTSTK (stk);
+
+    if (stk -> Size >= stk -> MaxSize)
+
+        if (!ResizeStackUp (stk)) {
+
+        return false;
+
+    }
+
+    stk -> data[stk -> Size++] = value;
+
+	HashCode ( 
+
+		*(stk -> HashStruct) = MurmurHash2Light (stk, sizeof (Stack_t));
+		*(stk -> HashData) = MurmurHash2Light (stk -> data, sizeof (Element_t) * stk -> MaxSize);
+
+	)
+
+    return true;
+
+}
+
+/*! This function pops an element from stack
+*
+*   @param stk - address of stack
+*
+*   @return value if popping has been successful
+*   @return Poison if popping has failed
+*/
+
+Element_t StackPop (Stack_t* stk) {
+
+    ASSERTSTK (stk);
+
+    if (stk -> Size <= 0) {
+
+        printf (" ERROR! Stack is empty, returned poison\n");
+        return Poison;
+
+    }
+
+    if ((stk -> Size < (stk -> MaxSize / ResizeCoef - delta)) && (stk -> MaxSize > MinSize))
+
+        if (!ResizeStackDown (stk))  {
+
+        return Poison;
+
+    }
+
+    stk -> Size--;
+
+    Element_t value = stk -> data[stk -> Size];
+
+    stk -> data[stk -> Size] = Poison;
+
+	HashCode ( 
+
+		*(stk -> HashStruct) = MurmurHash2Light (stk, sizeof (Stack_t));
+		*(stk -> HashData) = MurmurHash2Light (stk -> data, sizeof (Element_t) * stk -> MaxSize);
+
+	)
+
+    return value;
+
+}
+
+/*! This function prints information about stack (and elements in stack as a numbers if their size is less or equal size of int)
+*
+*   @param stk - address of stack
+*   @param name - name of stack
+*   @param comment - comment
+*   @param Line - line from where StackDump has been called
+*   @param Function - name of function from where StackDump has been called
+*
+*/
+
+void StackDump (Stack_t* stk, char* name, char* comment, int Line, const char* Function) {
+
+    bool ok = StackOk (stk);
+
+    printf ("\n\t DUMP \n%s from %s (%d) %s \n", comment, __FILE__, Line, Function);
+
+    printf ("Struct_t %s [%p]", name, stk);
+
+    if (stk == nullptr)
+        printf ("ERROR %s has null-address", name);
+
+    else {
+
+        if (stk -> errcode == 1 || stk -> errcode == 2)
+            printf (" [error]\n MaxSize = %lu \n Size = %lu\n", stk -> MaxSize, stk -> Size);
+
+        else {
+
+            if (ok)
+                printf ("[ok] \n");
+
+            else printf ("[error] \n");
+
+            printf ("Size = %lu \n", stk -> Size);
+
+            if (stk -> Size >= 0 && stk -> Size <= stk -> MaxSize)
+
+            printf ("data[%lu] = [%p]\n", stk -> MaxSize, stk -> data);
+
+            if (sizeof(Element_t) <= sizeof(int)) {
+
+                for (int i = 0; i < stk -> Size; ++i) {
+
+                    printf ("\t*[%d] = %d", i, stk -> data[i]);
+
+                    if (stk -> data[i] == Poison)
+                        printf (" [Poison]\n");
+
+                    else printf ("\n");
+                }
+
+                for (int i = stk -> Size; (i < stk -> MaxSize) && (i < stk -> Size + 5); ++i) {
+
+                    printf ("\t[%d] = %d", i, stk -> data[i]);
+
+                    if (stk -> data[i] == Poison)
+                        printf (" [Poison]\n");
+
+                    else printf ("\n");
+                }
+
+            }
+
+        }
+
+        printf ("\n errcode = %d ", stk -> errcode);
+
+        ErrCodeDecode (stk -> errcode);
+
+        printf ("\n");
+
+    }
+}
+
+/*! This function decodes the errcode of stack and prints the result
+*
+*   @param errcode - code of error
+*
+*/
+
+void ErrCodeDecode (int errcode) {
+
+ switch (errcode) {
+
+    case 0: printf ("(ok)");
+            break;
+
+    case 1: printf ("(Size is less then 0)");
+            break;
+
+    case 2: printf ("(Size more than MaxSize)");
+                break;
+
+    case 3: printf ("(data is nullptr)");
+            break;
+
+    case 4: printf ("(Wrong HashStruct)");
+            break;
+	
+	case 5: printf ("(Wrong HashData)");
+			break;
+
+	case 6: printf ("(Wrong CanaryStructBegin)");
+			break;
+	
+	case 7: printf ("(Wrong CanaryStructEnd)");
+			break;
+    
+	case 8: printf ("(Wrong CanaryDataBegin)");
+			break;
+
+	case 9: printf ("(Wrong CanaryDataEnd)");
+			break;
+
+	}
+
+}
+
+
+#endif // STACK_T_H_INCLUDED
