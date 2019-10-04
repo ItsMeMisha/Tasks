@@ -65,6 +65,19 @@
 
 #endif
 
+enum ERRORS {
+	OK = 0,
+	LowSize,
+	OverSize,
+	NullDataPtr,
+	WrongHashStruct,
+	WrongHashData,
+	WrongCanaryStructBegin,
+	WrongCanaryStructEnd,
+	WrongCanaryDataBegin,
+	WrongCanaryDataEnd,
+	};		
+
 typedef int Element_t;
 
 const int MinSize = 100;
@@ -154,21 +167,21 @@ bool StackOk (Stack_t* stk) {
 
     if (stk -> Size < 0) {
 
-        stk -> errcode = 1;
+        stk -> errcode = LowSize;
         return false;
 
     }
 
     if (stk -> Size > stk -> MaxSize) {
 
-        stk -> errcode = 2;
+        stk -> errcode = OverSize;
         return false;
 
     }
 
     if (stk -> data == nullptr) {
 
-        stk -> errcode = 3;
+        stk -> errcode = NullDataPtr;
         return false;
 
     }
@@ -177,28 +190,28 @@ bool StackOk (Stack_t* stk) {
 
 		if (stk -> CanaryStructBegin != CanaryDefault) {
 
-			stk -> errcode = 6;
+			stk -> errcode = WrongCanaryStructBegin;
 			return false;
 
 		}
 
 		if (stk -> CanaryStructEnd != CanaryDefault) {
 
-			stk -> errcode = 7;
+			stk -> errcode = WrongCanaryStructEnd;
 			return false;
 
 		}
 
 		if (*(stk -> CanaryDataBegin) != CanaryDataDefault) {
 
-			stk -> errcode = 8;
+			stk -> errcode = WrongCanaryDataBegin;
 			return false;
 
 		}
 
 		if (*(stk -> CanaryDataEnd) != CanaryDataDefault) {
 
-			stk -> errcode = 9;
+			stk -> errcode = WrongCanaryDataEnd;
 			return false;
 
 		}	
@@ -211,7 +224,7 @@ bool StackOk (Stack_t* stk) {
 
     	if (*(stk -> HashStruct) != CtrlHash) {	
     	
-        	stk -> errcode = 4;
+        	stk -> errcode = WrongHashStruct;
         	return false;
 
     	}
@@ -220,7 +233,7 @@ bool StackOk (Stack_t* stk) {
 
     	if (*(stk -> HashData) != CtrlHashData) {
 
-        	stk -> errcode = 5;
+        	stk -> errcode = WrongHashData;
         	return false;
 
     	}
@@ -583,34 +596,34 @@ void ErrCodeDecode (int errcode) {
 
 	switch (errcode) {
 
-    case 0: printf ("(ok)");
+    case OK: printf ("(ok)");
             break;
 
-    case 1: printf ("(Size is less then 0)");
+    case LowSize: printf ("(Size is less then 0)");
             break;
 
-    case 2: printf ("(Size more than MaxSize)");
+    case OverSize: printf ("(Size more than MaxSize)");
                 break;
 
-    case 3: printf ("(data is nullptr)");
+    case NullDataPtr: printf ("(data is nullptr)");
             break;
 
-    case 4: printf ("(Wrong HashStruct)");
+    case WrongHashStruct: printf ("(Wrong HashStruct)");
             break;
 	
-	case 5: printf ("(Wrong HashData)");
+	case WrongHashData: printf ("(Wrong HashData)");
 			break;
 
-	case 6: printf ("(Wrong CanaryStructBegin)");
+	case WrongCanaryStructBegin: printf ("(Wrong CanaryStructBegin)");
 			break;
 	
-	case 7: printf ("(Wrong CanaryStructEnd)");
+	case WrongCanaryStructEnd: printf ("(Wrong CanaryStructEnd)");
 			break;
     
-	case 8: printf ("(Wrong CanaryDataBegin)");
+	case WrongCanaryDataBegin: printf ("(Wrong CanaryDataBegin)");
 			break;
 
-	case 9: printf ("(Wrong CanaryDataEnd)");
+	case WrongCanaryDataEnd: printf ("(Wrong CanaryDataEnd)");
 			break;
 
 	}
