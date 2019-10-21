@@ -1,7 +1,17 @@
 #ifndef COMMANDS_H
 #define COMMANDS_H
 
-const char CommandsVersion = 2;
+struct CmdStruct {
+
+    int numofcmd :4;
+    unsigned firstparam :1;
+    unsigned secondparam :1;
+    unsigned thirdparam :1;
+    unsigned fourthparam :1;
+
+};
+
+const char CommandsVersion = 3;
 const int Accuracy = 10000;
 
 #define DEF_CMD(name, cmdNum, numOfArg, codeForCpu) \

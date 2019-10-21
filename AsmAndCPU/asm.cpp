@@ -16,8 +16,9 @@ struct label {
 
 };
 
+char CmdStructToChar (CmdStruct cmd);
 int NumOfSymbols (char* str, char symbol, int size);
-int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label* labelsArr, int* labelsCounter);
+int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label* labelsArr, int* labelsCounter, CmdStruct* cmd);
 
 int main (int argc, char* argv[]) {
 
@@ -62,18 +63,23 @@ int main (int argc, char* argv[]) {
     code[1] = 'V';
     code[2] = CommandsVersion;
 
+    CmdStruct CmdBuf = {};
+
 	int ContentCount = 3;
 
     #define DEF_CMD(name, cmdNum, numOfArgs, codeForCpu)                                        \
                                                                                                 \
         if (strcmp (StrBuf, #name) == 0) {                                                      \
                                                                                                 \
-            code[ContentCount] = CMD_##name;                                                    \
+            CmdBuf.numofcmd = CMD_##name;                                                       \
             ++ContentCount;                                                                     \
             FileContent += strlen (#name) + 1;                                                  \
                                                                                                 \
             if (numOfArgs > 0)                                                                  \
-                FileContent += ArgumentsRead (FileContent, numOfArgs, code, &ContentCount, labelsArr,&labelsCounter);  \
+                FileContent += ArgumentsRead (FileContent, numOfArgs, code, &ContentCount, labelsArr,&labelsCounter, &CmdBuf);  \
+                                                                                                \
+            code[ContentCount] = CmdStructToChar (CmdBuf);                                      \
+            CmdBuf = {};                                                                        \
                                                                                                 \
         } else                                                                             
                                                                                         
@@ -148,6 +154,18 @@ int main (int argc, char* argv[]) {
 
 }
 
+char CmdStructToChar (CmdStruct cmd) {
+
+    char NormalCommand = cmd.numofcmd;
+    NormalCommand |= (cmd.firstparam << 4);
+    NormalCommand |= (cmd.secondparam << 5);
+    NormalCommand |= (cmd.thirdparam << 6);
+    NormalCommand |= (cmd.fourthparam << 7);  
+
+    return NormalCommand;
+
+}
+
 /*This function counts symbol in string
 *
 *   @param str - string
@@ -186,7 +204,7 @@ int NumOfSymbols (char* str, char symbol, int size) {
 *   @return contentShift - shift of content pointer
 */
 
-int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label* labelsArr, int* labelsCounter) {
+int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label* labelsArr, int* labelsCounter, CmdStruct* cmd) {
 
     int contentShift = 0;
 
