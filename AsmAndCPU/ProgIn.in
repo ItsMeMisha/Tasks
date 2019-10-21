@@ -1,0 +1,17 @@
+push 12
+in
+jb :next
+push 12
+in
+add
+push 10
+pop ar
+regpush ar
+sub
+push 2
+div
+push 3
+:next
+mul
+out
+end

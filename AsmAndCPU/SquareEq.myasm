@@ -1,0 +1,131 @@
+in
+in
+in
+pop cx
+pop bx
+pop ax
+regpush ax
+push 0
+jne :aisnotzero
+regpush bx
+regpush cx
+call :lineq
+jmp :output
+
+:aisnotzero
+call :discr
+pop dx
+regpush dx
+push 0
+je :discriszero
+regpush dx
+push 0
+jb :discrispos
+push 0
+jmp :output
+
+:discriszero
+regpush bx
+push -1
+mul
+regpush ax
+push 2
+mul
+div
+push 1
+jmp :output
+
+:discrispos
+regpush bx
+push -1
+mul
+regpush dx
+sqrrt
+sub
+regpush ax
+push 2
+mul
+div
+regpush bx
+push -1
+mul
+regpush dx
+sqrrt
+add
+regpush ax
+push 2
+mul
+div
+push 2
+
+:output
+pop ex
+regpush ex
+push 0
+jae :zeroorinf
+regpush ex
+push 1
+je :onerootout
+regpush ex
+out
+out
+out
+end
+:zeroorinf
+regpush ex
+out
+end
+:onerootout
+regpush ex
+out
+out
+end
+
+
+:discr
+pop Fx
+regpush bx
+regpush bx
+mul
+push 4
+regpush ax
+regpush cx
+mul
+mul
+sub
+regpush Fx
+ret
+
+:lineq
+pop Fx
+push 0
+je :ciszero
+push 0
+je :biszerobutcisnot
+:oneroot
+regpush cx
+push -1
+mul
+regpush bx
+div
+push 1
+regpush Fx
+ret
+
+:ciszero
+push 0
+je :biszero
+jmp :oneroot
+:biszero
+push -1
+regpush Fx
+ret
+
+:biszerobutcisnot
+push 0
+regpush Fx
+ret
+
+:out
+regpush Fx
+ret

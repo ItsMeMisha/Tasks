@@ -1,0 +1,35 @@
+in
+call :fibbo
+out
+end
+
+:fibbo
+pop Fx
+pop ax
+regpush ax
+push 2
+jae :twoorless
+regpush Fx
+regpush ax
+push 1
+sub
+regpush ax
+push 2
+sub
+call :fibbo
+pop ax
+pop bx
+regpush ax
+regpush bx
+call :fibbo
+add
+pop ax
+pop Fx
+regpush ax
+regpush Fx
+ret
+
+:twoorless
+push 1
+regpush Fx
+ret

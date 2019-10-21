@@ -1,0 +1,31 @@
+0 in 
+1 call labeltob 
+2 out 
+3 end 
+4 pop Fx 
+5 pop ax 
+6 regpush ax 
+7 push 2 
+8 jae labelto49 
+9 regpush Fx 
+10 regpush ax 
+11 push 1 
+12 sub 
+13 regpush ax 
+14 push 2 
+15 sub 
+16 call labeltob 
+17 pop ax 
+18 pop bx 
+19 regpush ax 
+20 regpush bx 
+21 call labeltob 
+22 add 
+23 pop ax 
+24 pop Fx 
+25 regpush ax 
+26 regpush Fx 
+27 ret 
+28 push 1 
+29 regpush Fx 
+30 ret 
