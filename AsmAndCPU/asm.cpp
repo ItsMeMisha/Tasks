@@ -130,7 +130,7 @@ int main (int argc, char* argv[]) {
         else {
 
             printf ("Syntax error: unexpected syntax (%s) \n", StrBuf);
-            break;
+            return 1;
 
        }
 
@@ -156,11 +156,12 @@ int main (int argc, char* argv[]) {
 
 char CmdStructToChar (CmdStruct cmd) {
 
-    char NormalCommand = cmd.numofcmd;
-    NormalCommand |= (cmd.firstparam << 4);
-    NormalCommand |= (cmd.secondparam << 5);
-    NormalCommand |= (cmd.thirdparam << 6);
-    NormalCommand |= (cmd.fourthparam << 7);  
+    char NormalCommand = 0;
+    NormalCommand |= (cmd.numofcmd << 4);
+    NormalCommand |= cmd.firstparam;
+    NormalCommand |= (cmd.secondparam << 1);
+    NormalCommand |= (cmd.thirdparam << 2);
+    NormalCommand |= (cmd.fourthparam << 3);  
 
     return NormalCommand;
 
@@ -206,13 +207,15 @@ int NumOfSymbols (char* str, char symbol, int size) {
 
 int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label* labelsArr, int* labelsCounter, CmdStruct* cmd) {
 
+    int BufLen = 0;
+
     int contentShift = 0;
 
     char StrBuffer[30] = {};
 
     for (int i = 0; i < numOfArgs; ++i) {
 
-        sscanf (Content + contentShift, "%s", StrBuffer);
+        sscanf (Content + contentShift, "%s%n", StrBuffer, &BufLen);
         
         if ((isdigit (*StrBuffer)) || (*StrBuffer == '-') && (isdigit (*(StrBuffer + 1)))) {
 
@@ -221,7 +224,8 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
             *((int*) (code + *counter)) = static_cast <int> (NumBuffer * Accuracy);
             *counter += sizeof (int);
 
-            contentShift += strlen (StrBuffer) + 1;
+            contentShift += BufLen + 1;
+            *cmd.firstparam = 1;
 
         } 
 
@@ -250,8 +254,8 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
             }
             
             *counter += sizeof (int);
-
-            contentShift += strlen (StrBuffer) + 1;
+            contentShift += BufLen + 1;
+            *cmd.fourthparam = 1;
 
         } 
 
@@ -259,9 +263,53 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
 
             code[*counter] = *StrBuffer - 'A';
             ++(*counter);
-            contentShift += 3;
+            contentShift += BufLen;
+            
+            *cmd.secondparam = 1;
 
         }
+
+      /*  else if (StrBuffer[0] == '[') { 
+
+            ++contentShift;
+            while (isspace (*(Content + contentShift)))
+                ++contentShift;
+
+            sscanf (Content + contentShift, "%s", StrBuffer);
+
+            if (isdigit (StrBuffer[0])) {
+
+                int NumBuffer = 0;
+                sscanf (StrBuffer, "%d%n", NumBuffer, &BufLen);
+                *((int*) (code + *counter)) = NumBuffer;
+
+                *counter += sizeof (int);
+                contentSift += BufLen;
+
+                *cmd.firstparam = 1;
+
+                 while (isspace (*(Content + contentShift)))
+                    ++contentShift;
+
+                sscanf (Content + contentShift, "%s", StrBuffer);
+
+            }
+
+            if (StrBuffer[0] == '+') {
+            
+             ++contentShift;
+            while (isspace (*(Content + contentShift)))
+                ++contentShift;
+            
+            }
+
+            if (isalpha (StrBuffer[0])                
+
+            *cmd.thirdparam = 1;
+
+        } 
+
+        else return -1; */
             
     }
 
