@@ -154,6 +154,14 @@ int main (int argc, char* argv[]) {
 
 }
 
+/* This function turns CmdStruct to char
+*
+*   @param cmd as CmdStruct
+*
+*   @return NormalCommand - cmd as char 
+*
+*/
+
 char CmdStructToChar (CmdStruct cmd) {
 
     char NormalCommand = 0;
@@ -201,6 +209,7 @@ int NumOfSymbols (char* str, char symbol, int size) {
 *   @param counter - code counter
 *   @param labelsArr - array of labels
 *   @param labelsCounter - counter of labels
+*   @param cmd - pointer to CmdStruct struct
 *
 *   @return contentShift - shift of content pointer
 */
@@ -225,7 +234,7 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
             *counter += sizeof (int);
 
             contentShift += BufLen + 1;
-            *cmd.firstparam = 1;
+            cmd -> firstparam = 1;
 
         } 
 
@@ -255,7 +264,7 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
             
             *counter += sizeof (int);
             contentShift += BufLen + 1;
-            *cmd.fourthparam = 1;
+            cmd -> fourthparam = 1;
 
         } 
 
@@ -265,7 +274,7 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
             ++(*counter);
             contentShift += BufLen;
             
-            *cmd.secondparam = 1;
+            cmd -> secondparam = 1;
 
         }
 
@@ -280,13 +289,13 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
             if (isdigit (StrBuffer[0])) {
 
                 int NumBuffer = 0;
-                sscanf (StrBuffer, "%d%n", NumBuffer, &BufLen);
+                sscanf (StrBuffer, "%d%n", &NumBuffer, &BufLen);
                 *((int*) (code + *counter)) = NumBuffer;
 
                 *counter += sizeof (int);
-                contentSift += BufLen;
+                contentShift += BufLen;
 
-                *cmd.firstparam = 1;
+                cmd -> firstparam = 1;
 
                  while (isspace (*(Content + contentShift)))
                     ++contentShift;
@@ -311,7 +320,7 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
                 ++(*counter);
                 contentShift += 2;
             
-                *cmd.secondparam = 1;
+                cmd -> secondparam = 1;
     
             }
 
