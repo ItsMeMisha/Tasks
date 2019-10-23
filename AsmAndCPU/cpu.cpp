@@ -6,6 +6,8 @@
 #include <assert.h>
 #include "Stack_t.h"
 
+int RAM[4096] = {};
+
 char FileInDefault[] = "MyProg.myexe";
 
 int main (int argc, char* argv[]) {
