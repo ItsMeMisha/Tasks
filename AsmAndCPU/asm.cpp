@@ -79,7 +79,7 @@ int main (int argc, char* argv[]) {
             if (numOfArgs > 0)                                                                  \
                 FileContent += ArgumentsRead (FileContent, numOfArgs, code, &ContentCount, labelsArr,&labelsCounter, &CmdBuf);  \
                                                                                                 \
-            *CurCode = CmdStructToChar (CmdBuf); printf ("%x\n", *CurCode);                                      \
+            *CurCode = CmdStructToChar (CmdBuf);                                                \
             CmdBuf = {};                                                                        \
                                                                                                 \
         } else                                                                             
