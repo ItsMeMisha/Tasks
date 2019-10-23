@@ -74,11 +74,12 @@ int main (int argc, char* argv[]) {
             CmdBuf.numofcmd = CMD_##name;                                                       \
             ++ContentCount;                                                                     \
             FileContent += strlen (#name) + 1;                                                  \
+            char* CurCode = code + ContentCount - 1;                                            \
                                                                                                 \
             if (numOfArgs > 0)                                                                  \
                 FileContent += ArgumentsRead (FileContent, numOfArgs, code, &ContentCount, labelsArr,&labelsCounter, &CmdBuf);  \
                                                                                                 \
-            code[ContentCount] = CmdStructToChar (CmdBuf);                                      \
+            *CurCode = CmdStructToChar (CmdBuf); printf ("%x\n", *CurCode);                                      \
             CmdBuf = {};                                                                        \
                                                                                                 \
         } else                                                                             
@@ -165,11 +166,10 @@ int main (int argc, char* argv[]) {
 char CmdStructToChar (CmdStruct cmd) {
 
     char NormalCommand = 0;
-    NormalCommand |= (cmd.numofcmd << 4);
+    NormalCommand |= (cmd.numofcmd << 3);
     NormalCommand |= cmd.firstparam;
     NormalCommand |= (cmd.secondparam << 1);
-    NormalCommand |= (cmd.thirdparam << 2);
-    NormalCommand |= (cmd.fourthparam << 3);  
+    NormalCommand |= (cmd.thirdparam << 2);  
 
     return NormalCommand;
 
@@ -264,7 +264,6 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
             
             *counter += sizeof (int);
             contentShift += BufLen + 1;
-            cmd -> fourthparam = 1;
 
         } 
 
