@@ -269,7 +269,7 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
 
         }
 
-      /*  else if (StrBuffer[0] == '[') { 
+        else if (StrBuffer[0] == '[') { 
 
             ++contentShift;
             while (isspace (*(Content + contentShift)))
@@ -300,16 +300,32 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
              ++contentShift;
             while (isspace (*(Content + contentShift)))
                 ++contentShift;
+
+            sscanf (Content + contentShift, "%s", StrBuffer);
             
             }
 
-            if (isalpha (StrBuffer[0])                
+            if (isalpha (StrBuffer[0]) && StrBuffer[1] == 'x') {
 
-            *cmd.thirdparam = 1;
+                code[*counter] = *StrBuffer - 'A';
+                ++(*counter);
+                contentShift += 2;
+            
+                *cmd.secondparam = 1;
+    
+            }
+
+            while (isspace (*(Content + contentShift)) || *(Content + contentShift) != ']')
+                ++contentShift;
+
+            if (*(Content + contentShift) != ']')
+                return -1;
+
+            ++contentShift;
 
         } 
 
-        else return -1; */
+        else return -1;
             
     }
 
