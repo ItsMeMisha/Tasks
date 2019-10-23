@@ -47,13 +47,13 @@ int main (int argc, char* argv[]) {
 
 	while (!EndOfProgram) {
 
-        switch (cmd[current]) {
+        switch ((cmd[current] & CmdNumMask) >> 3) {
 
 		    #include "commands.h"
 
             default: {
 
-                printf ("unknown command (%d, %x)\n", cmd[current], current);
+                printf ("unknown command (%d, %x)\n", (cmd[current] & CmdNumMask) >> 3, current);
                 return 1;
                 break;
             }
