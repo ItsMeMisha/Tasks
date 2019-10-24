@@ -56,7 +56,7 @@ DEF_CMD (push, 1, 1, {
 
     else if (tmpValue < 0) {
 
-        printf ("Invalid RAM address");
+        printf ("Invalid RAM address\n");
         return 2;
 
     }
@@ -103,7 +103,7 @@ DEF_CMD (pop, 2, 1, {
 
         else {
 
-            printf ("Invalid RAM address");
+            printf ("Invalid RAM address\n");
             return 2;
 
         }
@@ -141,6 +141,14 @@ DEF_CMD (mul, 5, 0, {
 DEF_CMD (div, 6, 0, {
 
     Element_t buf = POP;
+
+    if (buf == 0) {
+        
+        printf ("Division by zero\n");
+        return 3;
+
+    }
+
     PUSH ((int) ( (double) POP / (double) buf * Accuracy));
     NEXT (1);
 
