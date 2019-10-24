@@ -87,11 +87,11 @@ int main (int argc, char* argv[]) {
                if (LabelsArr[j].place == content - FileBegin)
                    fprintf (FileOut, "%s\n", LabelsArr[j].name);
  
-            switch ((*content & CmdNumMask) >> 3) {
+            switch (((*content & CmdNumMask) >> 3) & 0x1f) {
 
                 #include "commands.h"
 
-                default: printf ("unknown command (%x) (%x)", (*content & CmdNumMask) >> 3, content - FileBegin);
+                default: printf ("unknown command (%x) (%x)", ((*content & CmdNumMask) >> 3), content - FileBegin);
                          return 1;
 
             }
@@ -119,6 +119,7 @@ void PrintArgs (FILE* file, char** code, int numOfArgs, label* LabelsArr, int* l
     CmdStruct CmdBuf = CharToCmdStruct (**code);
 
     if (CmdBuf.numofcmd >= CMD_jmp && CmdBuf.numofcmd <= CMD_call) {
+
         ++(*code);
         fprintf (file, ":labelto%x ", *((int*) *code));
 
