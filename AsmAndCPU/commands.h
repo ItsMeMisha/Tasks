@@ -54,7 +54,7 @@ DEF_CMD (push, 1, 1, {
     if ((IsRamParam) && (tmpValue >= 0)) 
         PUSH (RAM[tmpValue / Accuracy]);
 
-    else if (tmpValue < 0) {
+    else if ((tmpValue < 0) && IsRamParam) {
 
         printf ("Invalid RAM address\n");
         return 2;
@@ -190,6 +190,7 @@ DEF_CMD (regpush, 10, 1, {
 
     }
 )
+
 DEF_CMD (jmp, 11, 1, {
 
     NEXT (1);
