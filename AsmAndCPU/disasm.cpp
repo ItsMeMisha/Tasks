@@ -53,7 +53,7 @@ int main (int argc, char* argv[]) {
 
     int LabelsNum = 0;
 
-    const char* FileBegin = content - 3;
+    char* FileBegin = content - 3;
 
     fclose (FileIn);
 
@@ -78,13 +78,15 @@ int main (int argc, char* argv[]) {
             break; }                                        
 
     for (int i = 0; i < 2; ++i) {
+        
+       fseek (FileOut, 0, SEEK_SET);
 
-        for (int j = 0; j < LabelsNum; ++j)
-            if (LabelsArr[j].place == content - FileBegin)
-                printf ("%s\n", LabelsArr[j].name);
+       while (content - FileBegin < FileInfoPtr -> st_size) {
 
-        while (content - FileBegin < FileInfoPtr -> st_size) {
-
+           for (int j = 0; j < LabelsNum; ++j)
+               if (LabelsArr[j].place == content - FileBegin)
+                   fprintf (FileOut, "%s\n", LabelsArr[j].name);
+ 
             switch ((*content & CmdNumMask) >> 3) {
 
                 #include "commands.h"
@@ -96,11 +98,14 @@ int main (int argc, char* argv[]) {
 
         }
 
+        content = FileBegin + 3;
+
     }
 
     #undef DEF_CMD
 
     fclose (FileOut);
+    free (FileBegin);
 
     return 0;
 
@@ -137,6 +142,7 @@ void PrintArgs (FILE* file, char** code, int numOfArgs, label* LabelsArr, int* l
         if (!labelExist) {
 
             strcpy(LabelsArr[*labelsNum].name, LblName);
+            LabelsArr[*labelsNum].place = **code;
             ++(*labelsNum);
 
         }
