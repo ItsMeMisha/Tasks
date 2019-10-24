@@ -105,7 +105,7 @@ struct Stack_t {
 
     CanaryCodeON (unsigned CanaryStructBegin;)
 
-    char* Name;
+    char Name[100];
     size_t MaxSize;
 
     CanaryCodeON (
@@ -400,7 +400,6 @@ void StackDestruct (Stack_t* stk) {
     ASSERTSTK (stk);
 
     stk -> MaxSize = 0;
-    stk -> Name = nullptr;
 
     free (stk -> data - canary/2);
     stk -> data = nullptr;
