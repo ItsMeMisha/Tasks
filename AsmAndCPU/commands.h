@@ -15,7 +15,6 @@
                                             \
     else NEXT (sizeof (int));
 
-
 // DEF_CMD (name, cmdNum, numOfArg, codeForCpu)
 
 // push, pop, add, sub, mul, div, end, in, out, regpush,
@@ -24,12 +23,40 @@
 
 DEF_CMD (push, 1, 1, {
 
-    NEXT (1);
-    PUSH (*((int*) (cmd +current)));
+    int commandNum = current;
 
-    NEXT (sizeof (Element_t)); 
+    NEXT (1);
+    
+    int tmpValue = -1;
+    
+    if (cmd[commandNum] & FirstparamMask) {
+
+        tmpValue = *((int*) (cmd + current));
+        NEXT (sizeof (Element_t)); 
 
     }
+
+    if (cmd[commandNum] & SecondparamMask){
+
+        tmpValue += cmd[current];
+        NEXT (1);
+
+    }
+
+    if ((cmd[commandNum] & ThirdparamMask) && (tmpValue != -1)) 
+        PUSH (RAM[tmpValue]);
+
+    else if (tmpValue == -1) {
+
+        printf ("Invalid RAM address");
+        return 2;
+
+    }
+    
+    else if (cmd[commandNum] & ThirdparamMask == 0)
+        PUSH (tmpValue);
+
+}
 )
 
 DEF_CMD (pop, 2, 1, {
