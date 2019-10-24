@@ -289,7 +289,7 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
 
                 int NumBuffer = 0;
                 sscanf (StrBuffer, "%d%n", &NumBuffer, &BufLen);
-                *((int*) (code + *counter)) = NumBuffer;
+                *((int*) (code + *counter)) = NumBuffer * Accuracy;
 
                 *counter += sizeof (int);
                 contentShift += BufLen;
