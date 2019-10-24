@@ -115,7 +115,7 @@ void PrintArgs (FILE* file, char** code, int numOfArgs) {
 
     if (CmdBuf.numofcmd >= CMD_jmp && CmdBuf.numofcmd <= CMD_call) {
         ++(*code);
-        fprintf (file, "labelto%x ", *((int*) *code));
+        fprintf (file, ":labelto%x ", *((int*) *code));
         *code += sizeof (int);
     }
 
@@ -150,7 +150,7 @@ void PrintArgs (FILE* file, char** code, int numOfArgs) {
 
         }
 
-        if (CmdBuf.registerparam) {
+        if (CmdBuf.registerparam && (CmdBuf.numberparam == 0)) {
             
             fprintf (file, "%cx ", 'A' + **code);
             ++(*code);
