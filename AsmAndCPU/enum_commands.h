@@ -1,10 +1,10 @@
 #ifndef COMMANDS_H
 #define COMMANDS_H
 
-char CmdNumMask = 0xf8;
-char NumberparamMask = 0x1;
-char RegisterparamMask = 0x2;
-char RamparamMask = 0x4;
+const char CmdNumMask = 0xf8;
+const char NumberparamMask = 0x1;
+const char RegisterparamMask = 0x2;
+const char RamparamMask = 0x4;
 
 struct CmdStruct {
 
