@@ -1,12 +1,14 @@
 push 12
 in
 jb :next
-push 12
+push [12 + ax]
 in
 add
 push 10
-pop ar
-regpush ar
+pop ax
+push 9
+pop [1 + ax]
+push [ax]
 sub
 push 2
 div
