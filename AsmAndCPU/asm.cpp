@@ -167,9 +167,9 @@ char CmdStructToChar (CmdStruct cmd) {
 
     char NormalCommand = 0;
     NormalCommand |= (cmd.numofcmd << 3);
-    NormalCommand |= cmd.firstparam;
-    NormalCommand |= (cmd.secondparam << 1);
-    NormalCommand |= (cmd.thirdparam << 2);  
+    NormalCommand |= cmd.numberparam;
+    NormalCommand |= (cmd.registerparam << 1);
+    NormalCommand |= (cmd.ramparam << 2);  
 
     return NormalCommand;
 
@@ -234,7 +234,7 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
             *counter += sizeof (int);
 
             contentShift += BufLen + 1;
-            cmd -> firstparam = 1;
+            cmd -> numberparam = 1;
 
         } 
 
@@ -273,7 +273,7 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
             ++(*counter);
             contentShift += BufLen;
             
-            cmd -> secondparam = 1;
+            cmd -> registerparam = 1;
 
         }
 
@@ -294,7 +294,7 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
                 *counter += sizeof (int);
                 contentShift += BufLen;
 
-                cmd -> firstparam = 1;
+                cmd -> numberparam = 1;
 
                  while (isspace (*(Content + contentShift)))
                     ++contentShift;
@@ -319,7 +319,7 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
                 ++(*counter);
                 contentShift += 2;
             
-                cmd -> secondparam = 1;
+                cmd -> registerparam = 1;
     
             }
 
@@ -328,6 +328,8 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
 
             if (*(Content + contentShift) != ']')
                 return -1;
+
+            cmd -> ramparam = 1;
 
             ++contentShift;
 
