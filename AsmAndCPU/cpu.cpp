@@ -49,7 +49,7 @@ int main (int argc, char* argv[]) {
 
 	while (!EndOfProgram) {
 
-        switch ((cmd[current] & CmdNumMask) >> 3) {
+        switch (((cmd[current] & CmdNumMask) >> 3) & 0x1f) {
 
 		    #include "commands.h"
 
