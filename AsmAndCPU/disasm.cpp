@@ -10,13 +10,13 @@ const char FileOutDefault[] = "ProgText.out";
 
 struct label {
 
-  char name[256];
+    char name[256];
     int place;
 
 }; 
 
 CmdStruct CharToCmdStruct (const char cmd);
-void PrintArgs (FILE* file, char** code, int numOfArgs);
+void PrintArgs (FILE* file, char** code, int numOfArgs, label* LabelsArr, int* labelsNum);
 
 int main (int argc, char* argv[]) {
 
@@ -68,7 +68,7 @@ int main (int argc, char* argv[]) {
             fprintf (FileOut, "%s ", #name);                \
                                                             \
             if (numOfArgs > 0)                              \
-                PrintArgs (FileOut, &content, numOfArgs);   \
+                PrintArgs (FileOut, &content, numOfArgs, LabelsArr, &LabelsNum);   \
             else {                                          \
                 fprintf (FileOut, "\n");                    \
                 ++content;                                  \
@@ -106,7 +106,7 @@ int main (int argc, char* argv[]) {
 
 }
 
-void PrintArgs (FILE* file, char** code, int numOfArgs) {
+void PrintArgs (FILE* file, char** code, int numOfArgs, label* LabelsArr, int* labelsNum) {
 
     assert (file);
     assert (code);
@@ -116,6 +116,31 @@ void PrintArgs (FILE* file, char** code, int numOfArgs) {
     if (CmdBuf.numofcmd >= CMD_jmp && CmdBuf.numofcmd <= CMD_call) {
         ++(*code);
         fprintf (file, ":labelto%x ", *((int*) *code));
+
+        char LblName[256] = "";
+
+        sprintf (LblName, ":labelto%x", *((int*) *code));
+        
+        bool labelExist = false;
+
+        for (int i = 0; i < *labelsNum; ++i) {
+
+            if (strcmp (LblName, LabelsArr[i].name) == 0) {
+
+                labelExist = true;
+                break;
+
+            }                
+
+        }
+
+        if (!labelExist) {
+
+            strcpy(LabelsArr[*labelsNum].name, LblName);
+            ++(*labelsNum);
+
+        }
+
         *code += sizeof (int);
     }
 
