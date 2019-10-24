@@ -4,6 +4,12 @@
 
 #define NEXT(shift) current += shift
 
+#define IsFirstParam cmd[commandNum] & FirstparamMask
+
+#define IsSecondParam cmd[commandNum] & SecondparamMask
+
+#define IsThirdParam cmd[commandNum] & ThirdparamMask
+
 #define jumpComp(sign)                      \
                                             \
     NEXT (1);                               \
@@ -29,21 +35,21 @@ DEF_CMD (push, 1, 1, {
     
     int tmpValue = -1;
     
-    if (cmd[commandNum] & FirstparamMask) {
+    if (IsFirstParam) {
 
         tmpValue = *((int*) (cmd + current));
         NEXT (sizeof (Element_t)); 
 
     }
 
-    if (cmd[commandNum] & SecondparamMask){
+    if (IsSecondParam){
 
         tmpValue += cmd[current];
         NEXT (1);
 
     }
 
-    if ((cmd[commandNum] & ThirdparamMask) && (tmpValue != -1)) 
+    if ((IsThirdParam) && (tmpValue != -1)) 
         PUSH (RAM[tmpValue]);
 
     else if (tmpValue == -1) {
@@ -53,7 +59,7 @@ DEF_CMD (push, 1, 1, {
 
     }
     
-    else if (cmd[commandNum] & ThirdparamMask == 0)
+    else if (IsThirdParam == 0)
         PUSH (tmpValue);
 
 }
