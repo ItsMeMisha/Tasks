@@ -113,34 +113,58 @@ void PrintArgs (FILE* file, char** code, int numOfArgs) {
 
     CmdStruct CmdBuf = CharToCmdStruct (**code);
 
-    if (CmdBuf.numofcmd  == CMD_push) {
+    if (CmdBuf.numofcmd >= CMD_jmp && CmdBuf.numofcmd <= CMD_call) {
         ++(*code);
-        fprintf (file, "%lg ", (double) *((int*) *code) / Accuracy);
+        fprintf (file, "labelto%x ", *((int*) *code));
         *code += sizeof (int);
-    
-    } 
+    }
 
-    else {
+    else for (int i = 0; i < numOfArgs; ++i) { 
 
-        for (int i = 0; i < numOfArgs; ++i) {
+        bool usesRam = false;
 
-            if (CmdBuf.numofcmd >= CMD_jmp && CmdBuf.numofcmd <= CMD_call) {
-                ++(*code);
-                fprintf (file, "labelto%x ", *((int*) *code));
-                *code += sizeof (int);
+        if (CmdBuf.ramparam) {
+
+            usesRam = true;
+            fprintf (file, "[");
+
+        }
+
+        ++(*code);
+
+        if (CmdBuf.numberparam) {
+
+            fprintf (file, "%lg ", ((double) *((int*) *code) / Accuracy));
+            *code += sizeof (int);
+
+            if (usesRam && CmdBuf.registerparam) {
+
+                fprintf (file, "+ ");
+                fprintf (file, "%cx] ", 'A' + **code);
+                ++(*code);                      
+
             }
 
-            else if (CmdBuf.numofcmd == CMD_pop || CmdBuf.numofcmd == CMD_regpush) {
-                ++(*code);
-                fprintf (file, "%cx ", 'A' + **code);
-                ++(*code);
+            else if (usesRam)
+                fprintf (file, "] "); 
 
-            }
+        }
+
+        if (CmdBuf.registerparam) {
+            
+            fprintf (file, "%cx ", 'A' + **code);
+            ++(*code);
+
+            if (usesRam)
+                fprintf (file, "]");
 
         }
 
     }
-   fprintf (file, "\n"); 
+   
+    fprintf (file, "\n"); 
+
+    return;
 }
 
 CmdStruct CharToCmdStruct (const char cmd) {
