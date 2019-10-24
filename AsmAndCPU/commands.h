@@ -4,11 +4,11 @@
 
 #define NEXT(shift) current += shift
 
-#define IsNumberParam cmd[commandNum] & NumberparamMask
+#define IsNumberParam (cmd[commandNum] & NumberparamMask)
 
-#define IsRegisterParam cmd[commandNum] & RegisterparamMask
+#define IsRegisterParam (cmd[commandNum] & RegisterparamMask)
 
-#define IsRamParam cmd[commandNum] & RamparamMask
+#define IsRamParam (cmd[commandNum] & RamparamMask)
 
 #define NumRead *((int*) (cmd + current))
 
@@ -61,9 +61,9 @@ DEF_CMD (push, 1, 1, {
 
     }
     
-    else if (IsRamParam == 0)
+    else if (IsRamParam == 0) 
         PUSH (tmpValue);
-
+    
 }
 )
 
