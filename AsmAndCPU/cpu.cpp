@@ -55,7 +55,7 @@ int main (int argc, char* argv[]) {
 
             default: {
 
-                printf ("unknown command (%x, %x)\n", (cmd[current] & CmdNumMask) >> 3, current);
+                printf ("unknown command (%x, %x)\n", ((cmd[current] & CmdNumMask) >> 3) & 0x1f, current);
                 return 1;
                 break;
             }
