@@ -52,7 +52,7 @@ DEF_CMD (push, 1, 1, {
     }
 
     if ((IsRamParam) && (tmpValue >= 0)) 
-        PUSH (RAM[tmpValue]);
+        PUSH (RAM[tmpValue / Accuracy]);
 
     else if (tmpValue < 0) {
 
@@ -167,7 +167,7 @@ DEF_CMD (in, 8, 0, {
 
     double buf = 0;
     scanf ("%lg", &buf);
-    PUSH (static_cast <int> (buf * Accuracy));
+    PUSH ((int) (buf * Accuracy));
     NEXT (1);
 
     }
@@ -176,7 +176,7 @@ DEF_CMD (in, 8, 0, {
 DEF_CMD (out, 9, 0, {
 
     Element_t buf = POP;
-    printf ("%g\n", (double) buf / Accuracy);
+    printf ("%lg\n", (double) buf / Accuracy);
     NEXT (1);
 
     }
