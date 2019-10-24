@@ -15,6 +15,7 @@ struct label {
 
 }; 
 
+CmdStruct CharToCmdStruct (const char cmd);
 void PrintArgs (FILE* file, char** code, int numOfArgs);
 
 int main (int argc, char* argv[]) {
@@ -84,11 +85,11 @@ int main (int argc, char* argv[]) {
 
         while (content - FileBegin < FileInfoPtr -> st_size) {
 
-            switch (*content & CmdNumMask) {
+            switch ((*content & CmdNumMask) >> 3) {
 
                 #include "commands.h"
 
-                default: printf ("unknown command (%d) (%x)", (*content & CmdNumMask), content - FileBegin);
+                default: printf ("unknown command (%x) (%x)", (*content & CmdNumMask) >> 3, content - FileBegin);
                          return 1;
 
             }
@@ -110,7 +111,9 @@ void PrintArgs (FILE* file, char** code, int numOfArgs) {
     assert (file);
     assert (code);
 
-    if (**code  == CMD_push) {
+    CmdStruct CmdBuf = CharToCmdStruct (**code);
+
+    if (CmdBuf.numofcmd  == CMD_push) {
         ++(*code);
         fprintf (file, "%lg ", (double) *((int*) *code) / Accuracy);
         *code += sizeof (int);
@@ -121,13 +124,13 @@ void PrintArgs (FILE* file, char** code, int numOfArgs) {
 
         for (int i = 0; i < numOfArgs; ++i) {
 
-            if (**code >= CMD_jmp && **code <= CMD_call) {
+            if (CmdBuf.numofcmd >= CMD_jmp && CmdBuf.numofcmd <= CMD_call) {
                 ++(*code);
                 fprintf (file, "labelto%x ", *((int*) *code));
                 *code += sizeof (int);
             }
 
-            else if (**code == CMD_pop || **code == CMD_regpush) {
+            else if (CmdBuf.numofcmd == CMD_pop || CmdBuf.numofcmd == CMD_regpush) {
                 ++(*code);
                 fprintf (file, "%cx ", 'A' + **code);
                 ++(*code);
@@ -138,4 +141,16 @@ void PrintArgs (FILE* file, char** code, int numOfArgs) {
 
     }
    fprintf (file, "\n"); 
+}
+
+CmdStruct CharToCmdStruct (const char cmd) {
+
+    CmdStruct TmpCmd = {};
+    TmpCmd.numofcmd = (cmd & CmdNumMask) >> 3;
+    TmpCmd.numberparam = (cmd & NumberparamMask);
+    TmpCmd.registerparam = (cmd & RegisterparamMask) >> 1;
+    TmpCmd.ramparam = (cmd & RamparamMask) >> 2;
+
+    return TmpCmd;
+
 }
