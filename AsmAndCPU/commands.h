@@ -44,7 +44,7 @@ DEF_CMD (push, 1, 1, {
 
     if (IsRegisterParam){
 
-        tmpValue += cmd[current];
+        tmpValue += regstr[cmd[current]];
         NEXT (1);
 
     }
