@@ -138,13 +138,13 @@ bool ResizeStackUp (Stack_t* stk);
 
 bool ResizeStackDown (Stack_t* stk);
 
-void StackConstructor (Stack_t* stk, char* name);
+void StackConstructor (Stack_t* stk, const char* name);
 
 void StackDestruct (Stack_t* stk);
 
 bool StackPush (Stack_t* stk, Element_t value);
 
-void StackDump (Stack_t* stk, char* name, char* comment, int Line, const char* Function);
+void StackDump (Stack_t* stk, const char* name, const char* comment, int Line, const char* Function);
 
 Element_t StackPop (Stack_t* stk);
 
@@ -341,9 +341,9 @@ bool ResizeStackDown (Stack_t* stk) {
 *
 */
 
-void StackConstructor (Stack_t* stk, char* name) {
+void StackConstructor (Stack_t* stk, const char* name) {
 
-    stk -> Name = name;
+    strcpy (stk -> Name, name);
     stk -> MaxSize = MinSize;
     stk -> data = (Element_t*) calloc (stk -> MaxSize + canary, sizeof (Element_t));
 
@@ -522,7 +522,7 @@ Element_t StackPop (Stack_t* stk) {
 *
 */
 
-void StackDump (Stack_t* stk, char* name, char* comment, int Line, const char* Function) {
+void StackDump (Stack_t* stk, const char* name, const char* comment, int Line, const char* Function) {
 
     bool ok = StackOk (stk);
 
