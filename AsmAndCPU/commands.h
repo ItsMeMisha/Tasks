@@ -99,7 +99,7 @@ DEF_CMD (pop, 2, 1, {
         }
 
         if (tmpPointer >= 0)
-            RAM[tmpPointer] = POP;
+            RAM[tmpPointer / Accuracy] = POP;
 
         else {
 
