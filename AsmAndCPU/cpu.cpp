@@ -5,6 +5,7 @@
 #include <malloc.h>
 #include <assert.h>
 #include "Stack_t.h"
+#include <unistd.h>
 
 int RAM[4096] = {};
 

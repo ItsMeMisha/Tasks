@@ -47,12 +47,17 @@ DEF_CMD (push, 1, 1, {
     if (IsRegisterParam){
 
         tmpValue += regstr[cmd[current]];
+        sleep (0.1);
         NEXT (1);
 
     }
 
-    if ((IsRamParam) && (tmpValue >= 0)) 
+    if ((IsRamParam) && (tmpValue >= 0)) {
+
+        sleep (1);
         PUSH (RAM[tmpValue / Accuracy]);
+
+    }
 
     else if ((tmpValue < 0) && IsRamParam) {
 
@@ -93,13 +98,18 @@ DEF_CMD (pop, 2, 1, {
 
         if (IsRegisterParam) {
 
+            sleep (0.1);
             tmpPointer += regstr[cmd[current]];
             NEXT (1);
 
         }
 
-        if (tmpPointer >= 0)
+        if (tmpPointer >= 0) {
+
+            sleep (1);
             RAM[tmpPointer / Accuracy] = POP;
+
+        }
 
         else {
 
@@ -185,6 +195,7 @@ DEF_CMD (out, 9, 0, {
 DEF_CMD (regpush, 10, 1, {
 
     NEXT (1);
+    sleep (0.1);
     PUSH (regstr[cmd[current]]);
     NEXT (1);
 
