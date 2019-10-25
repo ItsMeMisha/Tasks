@@ -70,7 +70,7 @@ int main (int argc, char* argv[]) {
     label* labelsArr = (label*) calloc (256, sizeof (label));
     int labelsCounter = 0;
 
-	char StrBuf[100] = {};
+	char StrBuf[100] = "";
     char* code = (char*) calloc (4 * NumOfCommandsAndParameters + 16, sizeof (char));
 
     ASSERT (code);
@@ -108,7 +108,7 @@ int main (int argc, char* argv[]) {
 	while (FileContent - FileContentStartPtr < FileInfoPtr -> st_size) {
 
         while (isspace (*FileContent) && FileContent - FileContentStartPtr < FileInfoPtr -> st_size) 
-    ++FileContent;
+            ++FileContent;
 	
 		sscanf (FileContent, "%s", StrBuf);
 
@@ -349,7 +349,7 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
             while (isspace (*(Content + contentShift)) || *(Content + contentShift) != ']')
                 ++contentShift;
 
-            if (*(Content + contentShift) != ']')
+            if (*(Content + contentShift) != ']') 
                 return -1;
 
             cmd -> ramparam = 1;

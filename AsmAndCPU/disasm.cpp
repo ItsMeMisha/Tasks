@@ -125,6 +125,16 @@ int main (int argc, char* argv[]) {
 
 }
 
+/* This function prints arguments of command in file
+*
+*   @param file
+*   @param code - pointer to the array of binary code
+*   @param numOfArgs - number of arguments
+*   @param LabelsArr - array of labels
+*   @param labelsNum - pointer to number of labels
+*
+*/
+
 void PrintArgs (FILE* file, char** code, int numOfArgs, label* LabelsArr, int* labelsNum) {
 
     ASSERT (file);
