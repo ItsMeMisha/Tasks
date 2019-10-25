@@ -92,8 +92,18 @@ int main (int argc, char* argv[]) {
             FileContent += strlen (#name) + 1;                                                  \
             char* CurCode = code + ContentCount - 1;                                            \
                                                                                                 \
-            if (numOfArgs > 0)                                                                  \
-                FileContent += ArgumentsRead (FileContent, numOfArgs, code, &ContentCount, labelsArr,&labelsCounter, &CmdBuf);  \
+            if (numOfArgs > 0) {                                                                \
+                                                                                                \
+                int contentShift = ArgumentsRead (FileContent, numOfArgs, code, &ContentCount, labelsArr,&labelsCounter, &CmdBuf);  \
+                                                                                                \
+                if (contentShift < 0) {                                                         \
+                    printf ("Invalid parameters near %10s\n", FileContent);                     \
+                    return 3;                                                                   \
+                }                                                                               \
+                                                                                                \
+                FileContent += contentShift;                                                    \
+                                                                                                \
+            }                                                                                   \
                                                                                                 \
             *CurCode = CmdStructToChar (CmdBuf);                                                \
             CmdBuf = {};                                                                        \
@@ -253,7 +263,7 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
 
             double NumBuffer = 0;
             sscanf (Content, "%lg", &NumBuffer);
-            *((int*) (code + *counter)) = static_cast <int> (NumBuffer * Accuracy);
+            *((int*) (code + *counter)) = (int) (NumBuffer * Accuracy);
             *counter += sizeof (int);
 
             contentShift += BufLen + 1;
