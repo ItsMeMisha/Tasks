@@ -32,45 +32,45 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
 
 int main (int argc, char* argv[]) {
 
-	char FileInName[100] = "";
+    char FileInName[100] = "";
     strcpy (FileInName, FileInDefault);
 
-	if (argc > 1)
-		strcpy (FileInName, argv[1]);
+    if (argc > 1)
+        strcpy (FileInName, argv[1]);
 
     char FileOutName[100] = "";
     strcpy (FileOutName, FileOutDefault);
 
-	if (argc > 2)
-		strcpy (FileOutName, argv[2]);
-			
-	FILE* FileIn = fopen (FileInName, "r");
+    if (argc > 2)
+        strcpy (FileOutName, argv[2]);
+            
+    FILE* FileIn = fopen (FileInName, "r");
 
-	ASSERT (FileIn);
+    ASSERT (FileIn);
 
-	struct stat FileInfo = {};
+    struct stat FileInfo = {};
 
-	struct stat* FileInfoPtr = &FileInfo;
+    struct stat* FileInfoPtr = &FileInfo;
 
     ASSERT (FileInfoPtr);
 
-	stat (FileInName, FileInfoPtr);
+    stat (FileInName, FileInfoPtr);
 
-	char* FileContent = (char*) calloc (FileInfoPtr -> st_size, 1);
-	char* FileContentStartPtr = FileContent;
+    char* FileContent = (char*) calloc (FileInfoPtr -> st_size, 1);
+    char* FileContentStartPtr = FileContent;
 
     ASSERT (FileContent);
-	
-	fread (FileContent, sizeof (char), FileInfoPtr -> st_size, FileIn);
+    
+    fread (FileContent, sizeof (char), FileInfoPtr -> st_size, FileIn);
 
-	fclose (FileIn);
+    fclose (FileIn);
 
     int NumOfCommandsAndParameters = NumOfSymbols (FileContent, ' ', FileInfoPtr -> st_size) + NumOfSymbols (FileContent, '\0', FileInfoPtr -> st_size); 
 
     label* labelsArr = (label*) calloc (256, sizeof (label));
     int labelsCounter = 0;
 
-	char StrBuf[100] = "";
+    char StrBuf[100] = "";
     char* code = (char*) calloc (4 * NumOfCommandsAndParameters + 16, sizeof (char));
 
     ASSERT (code);
@@ -81,7 +81,7 @@ int main (int argc, char* argv[]) {
 
     CmdStruct CmdBuf = {};
 
-	int ContentCount = 3;
+    int ContentCount = 3;
 
     #define DEF_CMD(name, cmdNum, numOfArgs, codeForCpu)                                        \
                                                                                                 \
@@ -115,12 +115,12 @@ int main (int argc, char* argv[]) {
     ContentCount = 3;
     FileContent = FileContentStartPtr;
 
-	while (FileContent - FileContentStartPtr < FileInfoPtr -> st_size) {
+    while (FileContent - FileContentStartPtr < FileInfoPtr -> st_size) {
 
         while (isspace (*FileContent) && FileContent - FileContentStartPtr < FileInfoPtr -> st_size) 
             ++FileContent;
-	
-		sscanf (FileContent, "%s", StrBuf);
+    
+        sscanf (FileContent, "%s", StrBuf);
 
         #include "commands.h"
 
@@ -166,18 +166,18 @@ int main (int argc, char* argv[]) {
     }
 
     #undef DEF_CMD
-	
-	FILE* FileOut = fopen (FileOutName, "wb");
-	
-	fwrite (code, sizeof (char), ContentCount, FileOut);
+    
+    FILE* FileOut = fopen (FileOutName, "wb");
+    
+    fwrite (code, sizeof (char), ContentCount, FileOut);
 
-	fclose (FileOut);
+    fclose (FileOut);
 
     free (code);
-	free (FileContentStartPtr);	
+    free (FileContentStartPtr); 
     free (labelsArr);
 
-	return 0;
+    return 0;
 
 }
 

@@ -13,7 +13,7 @@
 #define NumRead *((int*) (cmd + current))
 
 #define CheckLabel                                       \
-    if (*((int*)(cmd + current))) {                      \
+    if (*((int*)(cmd + current)) == 0) {                 \
         printf ("undefined label at %x\n", current - 1); \
         return 3;                                        \
         }                                   

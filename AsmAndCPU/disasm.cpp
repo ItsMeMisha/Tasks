@@ -30,29 +30,29 @@ void PrintArgs (FILE* file, char** code, int numOfArgs, label* LabelsArr, int* l
 
 int main (int argc, char* argv[]) {
 
-   	char FileOutName[256] = "";
+    char FileOutName[256] = "";
     strcpy (FileOutName, FileOutDefault);
 
-	char FileInName[256] = "";
+    char FileInName[256] = "";
     strcpy (FileInName, FileInDefault);
 
-	if (argc > 1)
-		strcpy (FileInName, argv[1]);
+    if (argc > 1)
+        strcpy (FileInName, argv[1]);
 
-	if (argc > 2)
-		strcpy (FileOutName, argv[2]);
-	
-	FILE* FileIn = fopen (FileInName, "rb");
+    if (argc > 2)
+        strcpy (FileOutName, argv[2]);
+    
+    FILE* FileIn = fopen (FileInName, "rb");
 
-	ASSERT (FileIn);
+    ASSERT (FileIn);
 
-	struct stat FileInfo = {};
+    struct stat FileInfo = {};
 
-	struct stat* FileInfoPtr = &FileInfo;
+    struct stat* FileInfoPtr = &FileInfo;
 
     ASSERT (FileInfoPtr);
 
-	stat (FileInName, FileInfoPtr);
+    stat (FileInName, FileInfoPtr);
 
     char* content = (char*) calloc (FileInfoPtr -> st_size, sizeof (char));
 
