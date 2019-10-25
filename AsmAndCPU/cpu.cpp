@@ -7,11 +7,13 @@
 #include "Stack_t.h"
 #include <unistd.h>
 
-int RAM[4096] = {};
+const int RAMSize = 4096;
 
-char FileInDefault[] = "MyProg.myexe";
+const char FileInDefault[] = "MyProg.myexe";
 
 int main (int argc, char* argv[]) {
+
+    int RAM[RAMSize] = {};
 
     char FileInName[100] = "";
     strcpy (FileInName, FileInDefault);

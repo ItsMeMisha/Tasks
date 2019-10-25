@@ -61,14 +61,14 @@ DEF_CMD (push, 1, 1, {
 
     }
 
-    if ((IsRamParam) && (tmpValue >= 0)) {
+    if ((IsRamParam) && (tmpValue >= 0) && (tmpValue < RAMSize * Accuracy)) {
 
         sleep (1);
         PUSH (RAM[tmpValue / Accuracy]);
 
     }
 
-    else if ((tmpValue < 0) && IsRamParam) {
+    else if (((tmpValue < 0) || (tmpValue >= RAMSize * Accuracy)) && IsRamParam) {
 
         printf ("Invalid RAM address\n");
         return 2;
@@ -113,7 +113,7 @@ DEF_CMD (pop, 2, 1, {
 
         }
 
-        if (tmpPointer >= 0) {
+        if ((tmpPointer >= 0) && (tmpPointer < RAMSize * Accuracy)) {
 
             sleep (1);
             RAM[tmpPointer / Accuracy] = POP;
