@@ -8,7 +8,7 @@ const char RamparamMask = 0x4;
 
 struct CmdStruct {
 
-    int numofcmd :5;
+    unsigned numofcmd :5;
     unsigned numberparam :1;
     unsigned registerparam :1;
     unsigned ramparam :1;

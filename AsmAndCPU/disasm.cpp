@@ -91,7 +91,7 @@ int main (int argc, char* argv[]) {
 
                 #include "commands.h"
 
-                default: printf ("unknown command (%x) (%x)", ((*content & CmdNumMask) >> 3), content - FileBegin);
+                default: printf ("unknown command (%x) (%x)", ((*content & CmdNumMask) >> 3) & 0x1f, content - FileBegin);
                          return 1;
 
             }
@@ -202,7 +202,7 @@ void PrintArgs (FILE* file, char** code, int numOfArgs, label* LabelsArr, int* l
 CmdStruct CharToCmdStruct (const char cmd) {
 
     CmdStruct TmpCmd = {};
-    TmpCmd.numofcmd = (cmd & CmdNumMask) >> 3;
+    TmpCmd.numofcmd = ((cmd & CmdNumMask) >> 3) & 0x1f;
     TmpCmd.numberparam = (cmd & NumberparamMask);
     TmpCmd.registerparam = (cmd & RegisterparamMask) >> 1;
     TmpCmd.ramparam = (cmd & RamparamMask) >> 2;
