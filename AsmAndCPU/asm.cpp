@@ -6,6 +6,16 @@
 #include "enum_commands.h"
 #include <sys/stat.h>
 
+#ifdef DEBUG
+
+    #define ASSERT( cond ) assert (cond)
+
+#else 
+
+    #define ASSERT( cond ) assert (cond)
+
+#endif
+
 char FileInDefault[] = "ProgIn.in";
 char FileOutDefault[] = "MyProg.myexe";
 
@@ -36,16 +46,20 @@ int main (int argc, char* argv[]) {
 			
 	FILE* FileIn = fopen (FileInName, "r");
 
-	assert (FileIn);
+	ASSERT (FileIn);
 
 	struct stat FileInfo = {};
 
 	struct stat* FileInfoPtr = &FileInfo;
 
+    ASSERT (FileInfoPtr);
+
 	stat (FileInName, FileInfoPtr);
 
 	char* FileContent = (char*) calloc (FileInfoPtr -> st_size, 1);
 	char* FileContentStartPtr = FileContent;
+
+    ASSERT (FileContent);
 	
 	fread (FileContent, sizeof (char), FileInfoPtr -> st_size, FileIn);
 
@@ -58,6 +72,8 @@ int main (int argc, char* argv[]) {
 
 	char StrBuf[100] = {};
     char* code = (char*) calloc (4 * NumOfCommandsAndParameters + 16, sizeof (char));
+
+    ASSERT (code);
     
     code[0] = 'M';
     code[1] = 'V';
@@ -216,6 +232,13 @@ int NumOfSymbols (char* str, char symbol, int size) {
 
 int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label* labelsArr, int* labelsCounter, CmdStruct* cmd) {
 
+    ASSERT (Content);
+    ASSERT (code);
+    ASSERT (counter);
+    ASSERT (labelsArr);
+    ASSERT (labelsCounter);
+    ASSERT (cmd);
+
     int BufLen = 0;
 
     int contentShift = 0;
@@ -342,3 +365,4 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
     return contentShift;
 
 }
+

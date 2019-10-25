@@ -5,6 +5,16 @@
 #include <malloc.h>
 #include <string.h>
 
+#ifdef DEBUG 
+
+    #define ASSERT( cond ) assert (code)
+
+#else 
+
+    #define ASSERT( cond )
+
+#endif
+
 const char FileInDefault[] = "MyProg.myexe";
 const char FileOutDefault[] = "ProgText.out";
 
@@ -34,15 +44,19 @@ int main (int argc, char* argv[]) {
 	
 	FILE* FileIn = fopen (FileInName, "rb");
 
-	assert (FileIn);
+	ASSERT (FileIn);
 
 	struct stat FileInfo = {};
 
 	struct stat* FileInfoPtr = &FileInfo;
 
+    ASSERT (FileInfoPtr);
+
 	stat (FileInName, FileInfoPtr);
 
     char* content = (char*) calloc (FileInfoPtr -> st_size, sizeof (char));
+
+    ASSERT (content);
 
     fread (content, 1, FileInfoPtr -> st_size, FileIn);
 
@@ -59,7 +73,7 @@ int main (int argc, char* argv[]) {
 
     FILE* FileOut = fopen (FileOutName, "w");
 
-    assert (FileOut);
+    ASSERT (FileOut);
 
     #define DEF_CMD(name, cmdNum, numOfArgs, codeForCpu)    \
                                                             \
@@ -113,8 +127,10 @@ int main (int argc, char* argv[]) {
 
 void PrintArgs (FILE* file, char** code, int numOfArgs, label* LabelsArr, int* labelsNum) {
 
-    assert (file);
-    assert (code);
+    ASSERT (file);
+    ASSERT (code);
+    ASSERT (LabelsArr);
+    ASSERT (labelsNum);
 
     CmdStruct CmdBuf = CharToCmdStruct (**code);
 
