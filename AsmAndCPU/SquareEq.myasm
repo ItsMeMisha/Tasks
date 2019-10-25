@@ -4,31 +4,31 @@ in
 pop cx
 pop bx
 pop ax
-regpush ax
+push ax
 push 0
 jne :aisnotzero
-regpush bx
-regpush cx
+push bx
+push cx
 call :lineq
 jmp :output
 
 :aisnotzero
 call :discr
 pop dx
-regpush dx
+push dx
 push 0
 je :discriszero
-regpush dx
+push dx
 push 0
 jb :discrispos
 push 0
 jmp :output
 
 :discriszero
-regpush bx
+push bx
 push -1
 mul
-regpush ax
+push ax
 push 2
 mul
 div
@@ -36,23 +36,23 @@ push 1
 jmp :output
 
 :discrispos
-regpush bx
+push bx
 push -1
 mul
-regpush dx
+push dx
 sqrrt
 sub
-regpush ax
+push ax
 push 2
 mul
 div
-regpush bx
+push bx
 push -1
 mul
-regpush dx
+push dx
 sqrrt
 add
-regpush ax
+push ax
 push 2
 mul
 div
@@ -60,23 +60,23 @@ push 2
 
 :output
 pop ex
-regpush ex
+push ex
 push 0
 jae :zeroorinf
-regpush ex
+push ex
 push 1
 je :onerootout
-regpush ex
+push ex
 out
 out
 out
 end
 :zeroorinf
-regpush ex
+push ex
 out
 end
 :onerootout
-regpush ex
+push ex
 out
 out
 end
@@ -84,16 +84,16 @@ end
 
 :discr
 pop Fx
-regpush bx
-regpush bx
+push bx
+push bx
 mul
 push 4
-regpush ax
-regpush cx
+push ax
+push cx
 mul
 mul
 sub
-regpush Fx
+push Fx
 ret
 
 :lineq
@@ -103,13 +103,13 @@ je :ciszero
 push 0
 je :biszerobutcisnot
 :oneroot
-regpush cx
+push cx
 push -1
 mul
-regpush bx
+push bx
 div
 push 1
-regpush Fx
+push Fx
 ret
 
 :ciszero
@@ -118,14 +118,14 @@ je :biszero
 jmp :oneroot
 :biszero
 push -1
-regpush Fx
+push Fx
 ret
 
 :biszerobutcisnot
 push 0
-regpush Fx
+push Fx
 ret
 
 :out
-regpush Fx
+push Fx
 ret
