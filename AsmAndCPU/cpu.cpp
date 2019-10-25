@@ -42,7 +42,7 @@ int main (int argc, char* argv[]) {
     int regstr[64] = {};
 
     #define DEF_CMD(name, cmdNum, numOfArgs, codeForCpu) \
-        case CMD_##name: { codeForCpu break; }              \
+        case CMD_##name: { codeForCpu break; }              
 
     bool EndOfProgram = false;
 
