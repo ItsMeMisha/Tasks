@@ -93,7 +93,7 @@ DEF_CMD (pop, 2, 1, {
 
         if (IsRegisterParam) {
 
-            tmpPointer += cmd[current];
+            tmpPointer += regstr[cmd[current]];
             NEXT (1);
 
         }
