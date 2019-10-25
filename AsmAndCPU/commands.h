@@ -12,6 +12,27 @@
 
 #define NumRead *((int*) (cmd + current))
 
+#define ReadNumParam                \
+                                    \
+    if (IsNumberParam) {            \
+                                    \
+        tmpValue = NumRead;         \
+        NEXT (sizeof (Element_t));  \
+                                    \
+    }
+
+#define ReadRegParam                        \
+                                            \
+    if (IsRegisterParam){                   \
+                                            \
+        tmpValue += regstr[cmd[current]];   \
+        sleep (0.1);                        \
+        NEXT (1);                           \
+                                            \
+    }
+
+
+
 #define CheckLabel                                       \
     if (*((int*)(cmd + current)) == 0) {                 \
         printf ("undefined label at %x\n", current - 1); \
@@ -46,20 +67,8 @@ DEF_CMD (push, 1, 1, {
     
     int tmpValue = 0;
     
-    if (IsNumberParam) {
-
-        tmpValue = NumRead;
-        NEXT (sizeof (Element_t)); 
-
-    }
-
-    if (IsRegisterParam){
-
-        tmpValue += regstr[cmd[current]];
-        sleep (0.1);
-        NEXT (1);
-
-    }
+    ReadNumParam;
+    ReadRegParam;
 
     if ((IsRamParam) && (tmpValue >= 0) && (tmpValue < RAMSize * Accuracy)) {
 
@@ -96,27 +105,15 @@ DEF_CMD (pop, 2, 1, {
 
     else if (IsRamParam) {
 
-        int tmpPointer = 0;
+        int tmpValue = 0;
         
-        if (IsNumberParam) {
-        
-            tmpPointer = NumRead;
-            NEXT (sizeof (Element_t));    
-    
-        }
+        ReadNumParam;
+        ReadRegParam;
 
-        if (IsRegisterParam) {
-
-            sleep (0.1);
-            tmpPointer += regstr[cmd[current]];
-            NEXT (1);
-
-        }
-
-        if ((tmpPointer >= 0) && (tmpPointer < RAMSize * Accuracy)) {
+        if ((tmpValue >= 0) && (tmpValue < RAMSize * Accuracy)) {
 
             sleep (1);
-            RAM[tmpPointer / Accuracy] = POP;
+            RAM[tmpValue / Accuracy] = POP;
 
         }
 
