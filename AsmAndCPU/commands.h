@@ -12,14 +12,23 @@
 
 #define NumRead *((int*) (cmd + current))
 
+#define CheckLabel                                       \
+    if (*((int*)(cmd + current))) {                      \
+        printf ("undefined label at %x\n", current - 1); \
+        return 3;                                        \
+        }                                   
+        
+
 #define jumpComp(sign)                      \
                                             \
     NEXT (1);                               \
     Element_t firstElem = POP;              \
     Element_t secondElem = POP;             \
                                             \
-    if (firstElem sign secondElem)          \
+    if (firstElem sign secondElem) {        \
+        CheckLabel;                         \
         current = *((int*) (cmd + current));\
+    }                                       \
                                             \
     else NEXT (sizeof (int));
 
@@ -205,6 +214,7 @@ DEF_CMD (regpush, 10, 1, {
 DEF_CMD (jmp, 11, 1, {
 
     NEXT (1);
+    CheckLabel;
     current = NumRead;
 
     }
@@ -255,6 +265,7 @@ DEF_CMD (jne, 17, 1, {
 DEF_CMD (call, 18, 1, {
 
     NEXT (1);
+    CheckLabel;
     PUSH (current + sizeof (int));
     current = NumRead;
 
