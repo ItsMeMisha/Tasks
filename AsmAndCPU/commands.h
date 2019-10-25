@@ -294,4 +294,5 @@ DEF_CMD (sqrrt, 20, 0, {
 #undef IsRegisterParam
 #undef IsRamParam 
 #undef NumRead
+#undef CheckLabel
 #undef jumpComp
