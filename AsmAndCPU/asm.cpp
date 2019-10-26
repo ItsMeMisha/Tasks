@@ -39,13 +39,13 @@ void SkipSpace (char* Content, int* contentShift);
 bool DoubleNumArgRead (char* Content, int* contentShift, char* code, int* counter, CmdStruct* cmd);
 bool IntNumArgRead (char* Content, int* contentShift, char* code, int* counter, CmdStruct* cmd);
 int LabelExist (ManyLabels lblArr, char* NewLabelName);
-bool labelArgRead (char* Content, int* contentShift, char* code, int* counter, ManyLabels* lnlArr, CmdStruct* cmd);
+bool LabelArgRead (char* Content, int* contentShift, char* code, int* counter, ManyLabels* lblArr, CmdStruct* cmd);
 bool RegArgRead (char* Content, int* contentShift, char* code, int* counter, CmdStruct* cmd);
 bool RamArgRead  (char* Content, int* contentShift, char* code, int* counter, CmdStruct* cmd);
 
 char CmdStructToChar (CmdStruct cmd);
 int NumOfSymbols (char* str, char symbol, int size);
-int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, /*ManyLabels**/label* labelsArr, int* labelsCounter, CmdStruct* cmd);
+int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, ManyLabels* lblArr, CmdStruct* cmd);
 
 int main (int argc, char* argv[]) {
 
@@ -84,10 +84,8 @@ int main (int argc, char* argv[]) {
 
     int NumOfCommandsAndParameters = NumOfSymbols (FileContent, ' ', FileInfoPtr -> st_size) + NumOfSymbols (FileContent, '\0', FileInfoPtr -> st_size); 
 
-    label* labelsArr = (label*) calloc (MaxLabels, sizeof (label));
-    //ManyLabels labelsArr = {};
-    int labelsCounter = 0;
-    //labelsArr.num = 0;
+    ManyLabels labelsArr = {};
+    labelsArr.num = 0;
 
     char StrBuf[MaxStrLen] = "";
     char* code = (char*) calloc (sizeof (int) * NumOfCommandsAndParameters + 4*sizeof(int), sizeof (char));
@@ -113,7 +111,7 @@ int main (int argc, char* argv[]) {
                                                                                                 \
             if (numOfArgs > 0) {                                                                \
                                                                                                 \
-                int contentShift = ArgumentsRead (FileContent, numOfArgs, code, &ContentCount, /*&*/labelsArr,&labelsCounter, &CmdBuf);  \
+                int contentShift = ArgumentsRead (FileContent, numOfArgs, code, &ContentCount, &labelsArr, labelsCounter, &CmdBuf);  \
                                                                                                 \
                 if (contentShift < 0) {                                                         \
                     printf ("Invalid parameters near %10s\n", FileContent);                     \
@@ -147,12 +145,12 @@ int main (int argc, char* argv[]) {
 
             bool labelExist = false;
 
-            for (int i = 0; i < /*labelsArr.num*/labelsCounter; ++i) {
+            for (int i = 0; i < labelsArr.num; ++i) {
                 
-                if (strcmp (StrBuf, labelsArr[i].name) == 0) {
+                if (strcmp (StrBuf, labelsArr.array[i].name) == 0) {
 
                     labelExist = true;
-                    labelsArr[i].place = ContentCount;
+                    labelsArr.array[i].place = ContentCount;
 
                     break;
 
@@ -162,10 +160,10 @@ int main (int argc, char* argv[]) {
 
             if (!labelExist) {        
 
-                strcpy (labelsArr[labelsCounter].name, StrBuf);
-                labelsArr[labelsCounter].place = ContentCount;
+                strcpy (labelsArr.array[labelsCounter].name, StrBuf);
+                labelsArr.array[labelsCounter].place = ContentCount;
 
-                ++labelsCounter;
+                ++labelsArr.num;
 
             }
 
@@ -261,7 +259,7 @@ void SkipSpace (char* Content, int* contentShift) {
 
 /* This function reads double number from Content and writes it in code
 *
-*   @return true if such argument exist
+*   @return true if such argument exists
 *
 */
 
@@ -293,7 +291,7 @@ bool DoubleNumArgRead (char* Content, int* contentShift, char* code, int* counte
 
 /* This function reads integer number from Content and writes it in code
 *
-*   @return true if such argument exist
+*   @return true if such argument exists
 *
 */
 
@@ -325,7 +323,11 @@ bool IntNumArgRead (char* Content, int* contentShift, char* code, int* counter, 
 
 }
 
-
+/* This function checks if label already exist
+*
+*   @return index of label if it exists
+*
+*/
 
 int LabelExist (ManyLabels lblArr, char* NewLabelName) {
 
@@ -340,10 +342,92 @@ int LabelExist (ManyLabels lblArr, char* NewLabelName) {
     return index;
 
 }
+
+/* This Function reads label from content and writes it ot code
+*
+*   @return true if such argument exists
+*
+*/
     
-bool labelArgRead (char* Content, int* contentShift, char* code, int* counter, ManyLabels* lnlArr, CmdStruct* cmd);
-bool RegArgRead (char* Content, int* contentShift, char* code, int* counter, CmdStruct* cmd);
-bool RamArgRead  (char* Content, int* contentShift, char* code, int* counter, CmdStruct* cmd);
+bool LabelArgRead (char* Content, int* contentShift, char* code, int* counter, ManyLabels* lblArr, CmdStruct* cmd) {
+
+    ASSERT (Content);
+    ASSERT (contentShift);
+    ASSERT (code);
+    ASSERT (counter);
+    ASSERT (lblArr);
+    ASSERT (cmd);
+
+    char StrBuf[MaxStrLen] = "";
+    int BufLen = 0;
+
+    sscanf (Content + *contentShift, "%s%n", StrBuf, &BufLen);
+
+    if (StrBuf[0] == ':') { 
+
+        const int index = LabelExist (*lblArr, StrBuf);
+
+        if (lblArr -> num == index) {
+
+            
+
+        }     
+//todo
+    }
+    
+    else return false;
+
+}
+
+/* This Function reads register from content and writes it ot code
+*
+*   @return true if such argument exists
+*
+*/
+ 
+bool RegArgRead (char* Content, int* contentShift, char* code, int* counter, CmdStruct* cmd) {
+
+    ASSERT (Content);
+    ASSERT (contentShift);
+    ASSERT (code);
+    ASSERT (counter);
+    ASSERT (cmd);
+
+    const int BufLen = 2;
+
+    if (isalpha (Content[contentShift]) && (Content[contentShift + 1] == 'x')) {
+
+        code[*counter] = Content[contentShift] - 'A';
+        ++(*counter);
+        contentShift += BufLen;
+            
+        cmd -> registerparam = 1;
+
+        return true;
+
+    }
+
+    else return false;
+
+}
+
+/* This Function reads ram argument from content and writes it ot code
+*
+*   @return true if such argument exists
+*
+*/
+ 
+bool RamArgRead  (char* Content, int* contentShift, char* code, int* counter, CmdStruct* cmd) {
+
+    ASSERT (Content);
+    ASSERT (contentShift);
+    ASSERT (code);
+    ASSERT (counter);
+    ASSERT (cmd);
+
+//todo
+
+}
 
 /*This function reads numOfArgs arguments from Content and records them to code\n
 *    If argument is a label then function records it to labalsArr and increases labelsCounter
@@ -359,7 +443,7 @@ bool RamArgRead  (char* Content, int* contentShift, char* code, int* counter, Cm
 *   @return contentShift - shift of content pointer
 */
 
-int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label* labelsArr, int* labelsCounter, CmdStruct* cmd) {
+int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, Manylabels* lblArr, CmdStruct* cmd) {
 
     ASSERT (Content);
     ASSERT (code);
@@ -368,126 +452,19 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, label
     ASSERT (labelsCounter);
     ASSERT (cmd);
 
-    int BufLen = 0;
-
     int contentShift = 0;
-
-    char StrBuffer[30] = {};
 
     for (int i = 0; i < numOfArgs; ++i) {
 
-        sscanf (Content + contentShift, "%s%n", StrBuffer, &BufLen);
-        
-        if ((isdigit (*StrBuffer)) || (*StrBuffer == '-') && (isdigit (*(StrBuffer + 1)))) {
+        if (!DoubleNumArdRead (Content, &contentSift, code, counter, cmd))
 
-            double NumBuffer = 0;
-            sscanf (Content, "%lg", &NumBuffer);
-            *((int*) (code + *counter)) = (int) (NumBuffer * Accuracy);
-            *counter += sizeof (int);
-
-            contentShift += BufLen + 1;
-            cmd -> numberparam = 1;
-
-        } 
-
-        else if (*StrBuffer == ':') {
-
-            bool labelExist = false;
-
-            for (int i = 0; i < *labelsCounter; ++i) {
-                
-                if (strcmp (StrBuffer, labelsArr[i].name) == 0) {
-
-                    labelExist = true;
-                    *((int*) (code + *counter)) = labelsArr[i].place;
-                    
-                    break;
-
-                }
-
-            }
-
-            if (!labelExist) {        
-
-                strcpy (labelsArr[*labelsCounter].name, StrBuffer);
-                ++(*labelsCounter); 
-
-            }
-            
-            *counter += sizeof (int);
-            contentShift += BufLen + 1;
-
-        } 
-
-        else if (isalpha (StrBuffer[0]) && (StrBuffer[1] == 'x')) {
-
-            code[*counter] = *StrBuffer - 'A';
-            ++(*counter);
-            contentShift += BufLen;
-            
-            cmd -> registerparam = 1;
-
-        }
-
-        else if (StrBuffer[0] == '[') { 
-
-            ++contentShift;
-            while (isspace (*(Content + contentShift)))
-                ++contentShift;
-
-            sscanf (Content + contentShift, "%s", StrBuffer);
-
-            if (isdigit (StrBuffer[0])) {
-
-                int NumBuffer = 0;
-                sscanf (StrBuffer, "%d%n", &NumBuffer, &BufLen);
-                *((int*) (code + *counter)) = NumBuffer * Accuracy;
-
-                *counter += sizeof (int);
-                contentShift += BufLen;
-
-                cmd -> numberparam = 1;
-
-                 while (isspace (*(Content + contentShift)))
-                    ++contentShift;
-
-                sscanf (Content + contentShift, "%s", StrBuffer);
-
-            }
-
-            if (StrBuffer[0] == '+') {
-            
-             ++contentShift;
-            while (isspace (*(Content + contentShift)))
-                ++contentShift;
-
-            sscanf (Content + contentShift, "%s", StrBuffer);
-            
-            }
-
-            if (isalpha (StrBuffer[0]) && StrBuffer[1] == 'x') {
-
-                code[*counter] = *StrBuffer - 'A';
-                ++(*counter);
-                contentShift += 2;
-            
-                cmd -> registerparam = 1;
+        if (!LabelArgRead (Content, &contentShift, code, counter, lblArr, cmd))
     
-            }
+        if (!RegArgRead (Content, &contentShift, code, counter, cmd))
 
-            while (isspace (*(Content + contentShift)) || *(Content + contentShift) != ']')
-                ++contentShift;
+        if (!RamArgRead (Content, &contentShift, code, counter, cmd))
 
-            if (*(Content + contentShift) != ']') 
-                return -1;
-
-            cmd -> ramparam = 1;
-
-            ++contentShift;
-
-        } 
-
-        else return -1;
+        return -1;
             
     }
 
