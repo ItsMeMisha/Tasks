@@ -35,6 +35,8 @@ struct ManyLabels {
 
 };
 
+void ReadCmdLineOptions (char* FileInName, char* FileOutName, int argc, char* argv[]);
+
 void AddIntToBinCode (char* code, int* counter, int value);
 void SkipSpace (char* Content, int* contentShift);
 
@@ -58,17 +60,10 @@ int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, ManyL
 int main (int argc, char* argv[]) {
 
     char FileInName[MaxStrLen] = "";
-    strcpy (FileInName, FileInDefault);
-
-    if (argc > 1)
-        strcpy (FileInName, argv[1]);
-
     char FileOutName[MaxStrLen] = "";
-    strcpy (FileOutName, FileOutDefault);
 
-    if (argc > 2)
-        strcpy (FileOutName, argv[2]);
-            
+    ReadCmdLineOptions (FileInName, FileOutName, argc, argv);
+           
     FILE* FileIn = fopen (FileInName, "r");
 
     ASSERT (FileIn);
@@ -202,6 +197,31 @@ int main (int argc, char* argv[]) {
     free (FileContentStartPtr); 
 
     return 0;
+
+}
+
+/* This function reads command line options
+*
+*   @param FileInName
+*   @param FileOutName
+*   @param argc
+*   @param argv
+*
+*/
+
+void ReadCmdLineOptions (char* FileInName, char* FileOutName, int argc, char* argv[]) {
+
+    strncpy (FileInName, FileInDefault, MaxStrLen);
+
+    if (argc > 1)
+        strncpy (FileInName, argv[1], MaxStrLen);
+
+    strncpy (FileOutName, FileOutDefault, MaxStrLen);
+
+    if (argc > 2)
+        strncpy (FileOutName, argv[2], MaxStrLen);
+ 
+    return;
 
 }
 
