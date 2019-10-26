@@ -35,7 +35,9 @@ struct ManyLabels {
 
 };
 
-void ReadCmdLineOptions (char* FileInName, char* FileOutName, int argc, char* argv[]);
+void ReadCmdLineOptions (char* FileInName, char* FileOutName, int argc, const char* argv[]);
+char* ReadFile (const char* FileInName, int* fileSize, char* FileContent);
+char* NewCode (const char* FileContent, const int FileSize, char* code);
 
 void AddIntToBinCode (char* code, int* counter, int value);
 void SkipSpace (char* Content, int* contentShift);
@@ -54,51 +56,29 @@ bool ReadAfterPlusArg (char* Content, int* contentShift, char* code, int* counte
 bool RamArgRead  (char* Content, int* contentShift, char* code, int* counter, CmdStruct* cmd);
 
 char CmdStructToChar (CmdStruct cmd);
-int NumOfSymbols (char* str, char symbol, int size);
+int NumOfSymbols (const char* str, const char symbol, const int size);
 int ArgumentsRead (char* Content, int numOfArgs, char* code, int* counter, ManyLabels* lblArr, CmdStruct* cmd);
 
-int main (int argc, char* argv[]) {
+int main (int argc, const char* argv[]) {
 
     char FileInName[MaxStrLen] = "";
     char FileOutName[MaxStrLen] = "";
 
     ReadCmdLineOptions (FileInName, FileOutName, argc, argv);
-           
-    FILE* FileIn = fopen (FileInName, "r");
 
-    ASSERT (FileIn);
+    int fileSize = 0;
+    char* FileContent = nullptr; //!!!
 
-    struct stat FileInfo = {};
-
-    struct stat* FileInfoPtr = &FileInfo;
-
-    ASSERT (FileInfoPtr);
-
-    stat (FileInName, FileInfoPtr);
-
-    char* FileContent = (char*) calloc (FileInfoPtr -> st_size, sizeof (char));
+    FileContent = ReadFile (FileInName, &fileSize, FileContent);
     char* FileContentStartPtr = FileContent;
 
-    ASSERT (FileContent);
+    char* code = nullptr; //!!!
+    code = NewCode (FileContent, fileSize, code);
     
-    fread (FileContent, sizeof (char), FileInfoPtr -> st_size, FileIn);
-
-    fclose (FileIn);
-
-    int NumOfCommandsAndParameters = NumOfSymbols (FileContent, ' ', FileInfoPtr -> st_size) + NumOfSymbols (FileContent, '\0', FileInfoPtr -> st_size); 
-
     ManyLabels labelsArr = {};
     labelsArr.num = 0;
 
     char StrBuf[MaxStrLen] = "";
-    char* code = (char*) calloc (sizeof (int) * NumOfCommandsAndParameters + 4*sizeof(int), sizeof (char));
-
-    ASSERT (code);
-    
-    code[0] = 'M';
-    code[1] = 'V';
-    code[2] = CommandsVersion;
-
     CmdStruct CmdBuf = {};
 
     int ContentCount = 3;
@@ -135,9 +115,9 @@ int main (int argc, char* argv[]) {
     ContentCount = 3;
     FileContent = FileContentStartPtr;
 
-    while (FileContent - FileContentStartPtr < FileInfoPtr -> st_size) {
+    while (FileContent - FileContentStartPtr < fileSize) {
 
-        while (isspace (*FileContent) && FileContent - FileContentStartPtr < FileInfoPtr -> st_size) 
+        while (isspace (*FileContent) && FileContent - FileContentStartPtr < fileSize) 
             ++FileContent;
     
         sscanf (FileContent, "%s", StrBuf);
@@ -200,7 +180,7 @@ int main (int argc, char* argv[]) {
 
 }
 
-/* This function reads command line options
+/*! This function reads command line options
 *
 *   @param FileInName
 *   @param FileOutName
@@ -209,7 +189,7 @@ int main (int argc, char* argv[]) {
 *
 */
 
-void ReadCmdLineOptions (char* FileInName, char* FileOutName, int argc, char* argv[]) {
+void ReadCmdLineOptions (char* FileInName, char* FileOutName, int argc, const char* argv[]) {
 
     strncpy (FileInName, FileInDefault, MaxStrLen);
 
@@ -225,7 +205,72 @@ void ReadCmdLineOptions (char* FileInName, char* FileOutName, int argc, char* ar
 
 }
 
-/* This functions adds a value of int element to binary code
+/*! This function reads content from file and records it to FileContent\n
+*       !!! NEED TO free (FileContent) !!!
+*
+*   @param FileInName
+*   @param fileSize - here recording information about size of file
+*   @param FileContent - !!! NEEDS TO FREE !!!
+*
+*   @return FileContent new address
+*
+*/
+
+char* ReadFile (const char* FileInName, int* fileSize, char* FileContent) {
+
+    ASSERT (FileInName);
+    ASSERT (fileSize);
+
+    FILE* FileIn = fopen (FileInName, "r");
+    ASSERT (FileIn);
+
+    struct stat FileInfo = {};
+
+    stat (FileInName, &FileInfo);
+
+    *fileSize = FileInfo.st_size;
+
+    FileContent = (char*) calloc (*fileSize, sizeof (char));
+    
+    ASSERT (FileContent);
+    
+    fread (FileContent, sizeof (char), *fileSize, FileIn);
+
+    fclose (FileIn);
+
+    return FileContent;
+
+}
+
+/*! This function creats array for binary code
+*
+*   @param FileContent
+*   @param FileSize
+*   @param code !!! NEEDS TO FREE !!!
+*
+*   @return code - new address
+*/
+
+char* NewCode (const char* FileContent, const int FileSize, char* code) {
+
+    ASSERT (FileContent);
+    
+    int NumOfCommandsAndParameters = NumOfSymbols (FileContent, ' ', FileSize) + NumOfSymbols (FileContent, '\0', FileSize); 
+
+    code = (char*) calloc (sizeof (int) * NumOfCommandsAndParameters + 4*sizeof(int), sizeof (char));
+
+    ASSERT (code);
+    
+    code[0] = 'M';
+    code[1] = 'V';
+    code[2] = CommandsVersion;
+
+
+    return code;
+
+}
+
+/*! This functions adds a value of int element to binary code
 *
 *   @param code
 *   @param counter
@@ -245,7 +290,7 @@ void AddIntToBinCode (char* code, int* counter, int value) {
 
 }
 
-/* This function turns CmdStruct to char
+/*! This function turns CmdStruct to char
 *
 *   @param cmd as CmdStruct
 *
@@ -265,7 +310,7 @@ char CmdStructToChar (CmdStruct cmd) {
 
 }
 
-/*This function counts symbol in string
+/*! This function counts symbol in string
 *
 *   @param str - string
 *   @param symbol
@@ -275,7 +320,7 @@ char CmdStructToChar (CmdStruct cmd) {
 *
 */
 
-int NumOfSymbols (char* str, char symbol, int size) {
+int NumOfSymbols (const char* str, const char symbol, const int size) {
 
     assert (str);
 
@@ -290,7 +335,7 @@ int NumOfSymbols (char* str, char symbol, int size) {
 
 }
 
-/* This function skip space in line
+/*! This function skip space in line
 *
 *   @param Content - line
 *   @param contentSift - shift from the begining of line
@@ -304,7 +349,7 @@ void SkipSpace (char* Content, int* contentShift) {
 
 }
 
-/* This function reads double number from Content and writes it in code
+/*! This function reads double number from Content and writes it in code
 *
 *   @return true if such argument exists
 *
@@ -335,7 +380,7 @@ bool DoubleNumArgRead (char* Content, int* contentShift, char* code, int* counte
 
 }
 
-/* This function reads integer number from Content and writes it in code\n
+/*! This function reads integer number from Content and writes it in code\n
 *       !!! This function does NOT multiply a readed value by Accuray !!!
 *
 *   @return true if such argument exists
@@ -369,7 +414,7 @@ bool IntNumArgRead (char* Content, int* contentShift, char* code, int* counter, 
 
 }
 
-/* This function checks if label already exist
+/*! This function checks if label already exist
 *
 *   @return index of label if it exists and index = lblArr.num if it does not
 *
@@ -389,7 +434,7 @@ int LabelExist (ManyLabels lblArr, char* NewLabelName) {
 
 }
 
-/* This function adds new label with name newName and place newPlace to label's array
+/*! This function adds new label with name newName and place newPlace to label's array
 *
 *   @param lblArr - array of labels
 *   @param newName
@@ -423,7 +468,7 @@ bool AddNewLabel (ManyLabels* lblArr, char* newName, int newPlace) {
 
 }
 
-/* This Function reads label from content and writes it ot code
+/*! This Function reads label from content and writes it ot code
 *
 *   @return true if such argument exists
 *
@@ -463,7 +508,7 @@ bool LabelArgRead (char* Content, int* contentShift, char* code, int* counter, M
 
 }
 
-/* This Function reads register from content and writes it ot code
+/*! This Function reads register from content and writes it ot code
 *
 *   @return true if such argument exists
 *
@@ -495,7 +540,7 @@ bool RegArgRead (char* Content, int* contentShift, char* code, int* counter, Cmd
 
 }
 
-/* This function reads argument before + for RamParam
+/*! This function reads argument before + for RamParam
 *
 *   @return true if successfully readed
 *
@@ -526,7 +571,7 @@ bool ReadBeforePlusArg (char* Content, int* contentShift, char* code, int* count
 
 }
 
-/* This function reads argument after + for RamParam
+/*! This function reads argument after + for RamParam
 *
 *   @return true if successfully readed
 *
@@ -560,7 +605,7 @@ bool ReadAfterPlusArg (char* Content, int* contentShift, char* code, int* counte
 
 }
 
-/* This Function reads ram argument from content and writes it ot code
+/*! This Function reads ram argument from content and writes it ot code
 *
 *   @return true if such argument exists
 *
@@ -606,7 +651,7 @@ bool RamArgRead  (char* Content, int* contentShift, char* code, int* counter, Cm
 
 }
 
-/*This function reads numOfArgs arguments from Content and records them to code\n
+/*! This function reads numOfArgs arguments from Content and records them to code\n
 *    If argument is a label then function records it to labalsArr and increases labelsCounter
 *
 *   @param Content
