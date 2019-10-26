@@ -490,6 +490,20 @@ bool ReadBeforePlusArg (char* Content, int* contentShift, char* code, int* count
     ASSERT (cmd);
     ASSERT (regBuf);
 
+    if (IntNumArgRead (Content, contentShift, code, counter, cmd));
+    else if (RegArgRead (Content, contentShift, code, counter, cmd)) {
+
+        --(*counter);
+        *regBuf = code[*counter];
+ 
+    }
+
+    else return false;
+
+    SkipSpace (Content, contentShift);
+
+    return true;
+
 }
 
 /* This function reads argument after + for RamParam
@@ -547,18 +561,9 @@ bool RamArgRead  (char* Content, int* contentShift, char* code, int* counter, Cm
 
         char regBuf = -1;
 
-        if (IntNumArgRead (Content, contentShift, code, counter, cmd));
-        else if (RegArgRead (Content, contentShift, code, counter, cmd)) {
-
-            --(*counter);
-            regBuf = code[*counter];
-
-        }
-
-        else return false;
-
-        SkipSpace (Content, contentShift);
-
+        if (!ReadBeforePlusArg (Content, contentShift, code, counter, cmd, &regBuf))
+            return false;     
+ 
         if (!ReadAfterPlusArg (Content, contentShift, code, counter, cmd, regBuf))
             return false;
 
@@ -588,8 +593,7 @@ bool RamArgRead  (char* Content, int* contentShift, char* code, int* counter, Cm
 *   @param numOfArgs - number of arguments
 *   @param code
 *   @param counter - code counter
-*   @param labelsArr - array of labels
-*   @param labelsCounter - counter of labels
+*   @param lblsArr - array of labels
 *   @param cmd - pointer to CmdStruct struct
 *
 *   @return contentShift - shift of content pointer
