@@ -47,7 +47,7 @@ bool LabelArgRead (char* Content, int* contentShift, char* code, int* counter, M
 
 bool RegArgRead (char* Content, int* contentShift, char* code, int* counter, CmdStruct* cmd);
 
-bool ReadBeforePlusArg (char* Content, int* contentShift, char* code, int* counter, CmdStruct cmd*, char* regBuf);
+bool ReadBeforePlusArg (char* Content, int* contentShift, char* code, int* counter, CmdStruct* cmd, char* regBuf);
 bool ReadAfterPlusArg (char* Content, int* contentShift, char* code, int* counter, CmdStruct* cmd, char regBuf);
 bool RamArgRead  (char* Content, int* contentShift, char* code, int* counter, CmdStruct* cmd);
 
