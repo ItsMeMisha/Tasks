@@ -31,7 +31,7 @@ struct BuffersInfo {
 
 void ReadCmdLineOptions (char* FileInName, char* FileOutName, int argc, const char* argv[]);
 char* ReadFile (const char* FileInName, int* fileSize, char* FileContent);
-void PrepareToDisasm (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int argc, char* argv[], char* FileOutName);
+void PrepareToDisasm (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int argc, char* argv[]);
  
 cmdStruct CharToCmdStruct (const char cmd);
 
@@ -51,56 +51,30 @@ bool PrintArgs (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int numOfArgs);
 
 int main (int argc, char* argv[]) {
 
-    char FileOutName[MaxStrLen] = "";
     BuffersInfo Buffers = {};
     ManyLabels lblArr = {};
 
-    PrepareToDisasm (&Buffers, &lblArr, argc, argc, FileOutName);    
-
-    FILE* FileOut = fopen (FileOutName, "w");
-
-    ASSERT (FileOut);
+    PrepareToDisasm (&Buffers, &lblArr, argc, argc);    
 
     #define DEF_CMD(name, cmdNum, numOfArgs, codeForCpu)    \
                                                             \
         case CMD_##name: {                                  \
                                                             \
-            fprintf (FileOut, "%s ", #name);                \
+            fprintf (BuffersPtr -> file, "%s ", #name);     \
                                                             \
             if (numOfArgs > 0)                              \
-                PrintArgs (FileOut, &content, numOfArgs, LabelsArr, &LabelsNum);   \
+                PrintArgs (BuffersPtr, lblArr, numOfArgs);  \
             else {                                          \
-                fprintf (FileOut, "\n");                    \
-                ++content;                                  \
+                fprintf (BuffersPtr -> file, "\n");         \
+                BuffersPtr -> code++;                       \
+                BuffersPtr -> codeShift++;                  \
            }                                                \
                                                             \
                                                             \
             break; }                                        
 
-    for (int i = 0; i < 2; ++i) {
-        
-       fseek (FileOut, 0, SEEK_SET);
-
-       while (content - FileBegin < FileInfoPtr -> st_size) {
-
-           for (int j = 0; j < LabelsNum; ++j)
-               if (LabelsArr[j].place == content - FileBegin)
-                   fprintf (FileOut, "%s\n", LabelsArr[j].name);
- 
-            switch (((*content & CmdNumMask) >> 3) & 0x1f) {
-
-                #include "commands.h"
-
-                default: printf ("unknown command (%x) (%x)", ((*content & CmdNumMask) >> 3) & 0x1f, content - FileBegin);
-                         return 1;
-
-            }
-
-        }
-
-        content = FileBegin + 3;
-
-    }
+    PrintAsmTxt (&Buffers, &lblArr);
+    PrintAsmTxt (&Buffers, &lblArr);
 
     #undef DEF_CMD
 
@@ -173,7 +147,7 @@ char* ReadFile (const char* FileInName, int* fileSize, char* FileContent) {
 
 }
 
-void PrepareToDisasm (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int argc, char* argv[], char* FileOutName) {
+void PrepareToDisasm (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int argc, char* argv[]) {
 
     ASSERT (BuffersPtr);
     ASSERT (lblArr);
@@ -181,6 +155,7 @@ void PrepareToDisasm (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int argc, cha
     ASSERT (FileOutName);
 
     char FileInName[MaxStrLen] = "";
+    char FileOutName[MaxStrLen] = "";
     void ReadCmdLineOptions (FileInName, FileOutName, argc, argv);
 
     char* code = nullptr;
@@ -189,10 +164,12 @@ void PrepareToDisasm (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int argc, cha
     BuffersPtr -> code = code;
     BuffersPtr -> contentSize = fileSize;
  
-    assert (fileSize > 3)
-
+    assert (fileSize > 3);
     BuffersPtr -> code += 3;
     BuffersPtr -> codeShift = 3;
+
+    BuffersPtr -> file = fopen (FileOutName, "w");
+    ASSERT (BuffersPtr -> file);
 
     lblArr -> num = 0;
 
@@ -229,6 +206,27 @@ int PrintAsmTxt (BuffersInfo* BuffersPtr, ManyLabels* lblArr) {
     ASSERT (BuffersPtr);
     ASSERT (lblArr);
 
+    fseek (BuffersPtr -> file, 0, SEEK_SET);
+
+       while (BuffersPtr -> codeShift < BuffersPtr -> codeSize) {
+
+            PrintLabel (BuffersPtr, lblArr);
+ 
+            switch (((*(BuffersPtr -> code) & CmdNumMask) >> 3) & 0x1f) {
+
+                #include "commands.h"
+
+                default: printf ("unknown command (%x) (%x)", ((*(BuffersPtr -> code) & CmdNumMask) >> 3) & 0x1f, BuffersPtr -> codeShift);
+                         return 1;
+
+            }
+
+        }
+
+        BuffersPtr -> code += 3 - BuffersPtr -> codeShift;
+        BuffersPtr -> codeShift = 3;
+
+        return 0;
 }
 
 bool PrintIntNumArg (BuffersInfo* BuffersPtr) {
