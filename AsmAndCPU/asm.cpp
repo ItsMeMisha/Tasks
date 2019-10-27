@@ -315,7 +315,7 @@ bool DefCmd (BuffersInfo* BuffersPtr, ManyLabels* lblArr, const char* name, cons
             int NewContentShift = ArgumentsRead (BuffersPtr, numOfArgs, lblArr);               
                                                                                                
             if (NewContentShift < 0) {                                                         
-                printf ("Invalid parameters near %10s\n", BuffersPtr -> Content + BuffersPtr -> contentShift);
+                printf ("Invalid parameters near %10.10s\n", BuffersPtr -> Content + BuffersPtr -> contentShift - 2);
                 return false; 
             }                                                                               
                                                                                                 
@@ -479,8 +479,8 @@ int LabelExist (ManyLabels lblArr, char* NewLabelName) {
     
     int index = 0;
 
-    for (index; index < lblArr.num; ++index)
-        if (strncmp (lblArr.array[index].name, NewLabelName, MaxStrLen))
+    for (index; index < lblArr.num; ++index) 
+        if (strncmp (lblArr.array[index].name, NewLabelName, MaxStrLen) == 0)
             break;
     
     return index;
@@ -572,7 +572,7 @@ bool RegArgRead (BuffersInfo* BuffersPtr) {
     if (isalpha (BuffersPtr -> Content[BuffersPtr -> contentShift]) && (BuffersPtr -> Content[BuffersPtr -> contentShift + 1] == 'x')) {
 
         BuffersPtr -> code[BuffersPtr -> counter] = BuffersPtr -> Content[BuffersPtr -> contentShift] - 'A';
-        ++(BuffersPtr -> counter);
+        ++(BuffersPtr -> counter); 
         BuffersPtr -> contentShift += BufLen;
             
         BuffersPtr -> cmd.registerparam = 1;
@@ -627,9 +627,10 @@ bool ReadAfterPlusArg (BuffersInfo* BuffersPtr, char regBuf) {
         ++(BuffersPtr -> contentShift);
         SkipSpace (BuffersPtr -> Content, &(BuffersPtr -> contentShift));
             
-        if (regBuf == -1)
+        if (regBuf == -1) {
             if (!RegArgRead (BuffersPtr))
                 return false;
+        }
 
         else if (!IntNumArgRead (BuffersPtr))
             return false;
@@ -675,6 +676,8 @@ bool RamArgRead  (BuffersInfo* BuffersPtr) {
         if (BuffersPtr -> Content[BuffersPtr -> contentShift] != ']')
             return false;
         else ++(BuffersPtr -> contentShift);
+
+        BuffersPtr -> cmd.ramparam = 1;
 
         return true;
 
