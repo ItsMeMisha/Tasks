@@ -23,11 +23,16 @@ struct BuffersInfo {
 
     FILE* file;
     char* code;
+    int codeShift;
     int codeSize;
     cmdStruct cmdBuf;
 
 };
 
+void ReadCmdLineOptions (char* FileInName, char* FileOutName, int argc, const char* argv[]);
+char* ReadFile (const char* FileInName, int* fileSize, char* FileContent);
+void PrepareToDisasm (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int argc, char* argv[], char* FileOutName);
+ 
 cmdStruct CharToCmdStruct (const char cmd);
 
 char ReadByteFromCode (BuffersInfo* BuffersPtr);
@@ -40,52 +45,17 @@ bool PrintDoubleNumArg (BuffersInfo* BuffersPtr);
 bool PrintRegArg (BuffersInfo* BuffersPtr);
 bool PrintRamArg (BuffersInfo* BuffersPtr);
 bool PrintLabelArg (BuffersInfo* BuffersPtr, ManyLabels* lblArr);
-bool PrintLabel (BuffersInfo* BuffersPtr, ManyLabels* lblArr);
+void PrintLabel (BuffersInfo* BuffersPtr, ManyLabels* lblArr);
 
-void PrintArgs (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int numOfArgs);
+bool PrintArgs (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int numOfArgs);
 
 int main (int argc, char* argv[]) {
 
-    char FileOutName[256] = "";
-    strcpy (FileOutName, FileOutDefault);
+    char FileOutName[MaxStrLen] = "";
+    BuffersInfo Buffers = {};
+    ManyLabels lblArr = {};
 
-    char FileInName[256] = "";
-    strcpy (FileInName, FileInDefault);
-
-    if (argc > 1)
-        strcpy (FileInName, argv[1]);
-
-    if (argc > 2)
-        strcpy (FileOutName, argv[2]);
-    
-    FILE* FileIn = fopen (FileInName, "rb");
-
-    ASSERT (FileIn);
-
-    struct stat FileInfo = {};
-
-    struct stat* FileInfoPtr = &FileInfo;
-
-    ASSERT (FileInfoPtr);
-
-    stat (FileInName, FileInfoPtr);
-
-    char* content = (char*) calloc (FileInfoPtr -> st_size, sizeof (char));
-
-    ASSERT (content);
-
-    fread (content, 1, FileInfoPtr -> st_size, FileIn);
-
-    if (FileInfoPtr -> st_size > 3)
-        content += 3;
-
-    label LabelsArr[256] = {};
-
-    int LabelsNum = 0;
-
-    char* FileBegin = content - 3;
-
-    fclose (FileIn);
+    PrepareToDisasm (&Buffers, &lblArr, argc, argc, FileOutName);    
 
     FILE* FileOut = fopen (FileOutName, "w");
 
@@ -141,12 +111,102 @@ int main (int argc, char* argv[]) {
 
 }
 
+/*! This function reads command line options
+*
+*   @param FileInName
+*   @param FileOutName
+*   @param argc
+*   @param argv
+*
+*/
+
+void ReadCmdLineOptions (char* FileInName, char* FileOutName, int argc, const char* argv[]) {
+
+    strncpy (FileInName, FileInDefault, MaxStrLen);
+
+    if (argc > 1)
+        strncpy (FileInName, argv[1], MaxStrLen);
+
+    strncpy (FileOutName, FileOutDefault, MaxStrLen);
+
+    if (argc > 2)
+        strncpy (FileOutName, argv[2], MaxStrLen);
+ 
+    return;
+
+}
+
+/*! This function reads content from file and records it to FileContent\n
+*       !!! NEED TO free (FileContent) !!!
+*
+*   @param FileInName
+*   @param fileSize - here recording information about size of file
+*   @param FileContent - !!! NEEDS TO FREE !!!
+*
+*   @return FileContent new address
+*
+*/
+
+char* ReadFile (const char* FileInName, int* fileSize, char* FileContent) {
+
+    ASSERT (FileInName);
+    ASSERT (fileSize);
+
+    FILE* FileIn = fopen (FileInName, "rb");
+    ASSERT (FileIn);
+
+    struct stat FileInfo = {};
+
+    stat (FileInName, &FileInfo);
+
+    *fileSize = FileInfo.st_size;
+
+    FileContent = (char*) calloc (*fileSize, sizeof (char));
+    
+    ASSERT (FileContent);
+    
+    fread (FileContent, sizeof (char), *fileSize, FileIn);
+
+    fclose (FileIn);
+
+    return FileContent;
+
+}
+
+void PrepareToDisasm (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int argc, char* argv[], char* FileOutName) {
+
+    ASSERT (BuffersPtr);
+    ASSERT (lblArr);
+    ASSERT (argv);
+    ASSERT (FileOutName);
+
+    char FileInName[MaxStrLen] = "";
+    void ReadCmdLineOptions (FileInName, FileOutName, argc, argv);
+
+    char* code = nullptr;
+    int fileSize = 0;
+    code = ReadFile (FileInName, &fileSize, code);
+    BuffersPtr -> code = code;
+    BuffersPtr -> contentSize = fileSize;
+ 
+    assert (fileSize > 3)
+
+    BuffersPtr -> code += 3;
+    BuffersPtr -> codeShift = 3;
+
+    lblArr -> num = 0;
+
+    return;
+
+}
+
 char ReadByteFromCode (BuffersInfo* BuffersPtr) {
 
     ASSERT (BuffersPtr);
 
     char Byte = *(BuffersPtr -> code);
     BuffersPtr -> code++;
+    BuffersPtr -> codeShift++;
 
     return Byte;
 
@@ -158,6 +218,7 @@ int ReadIntFromCode (Buffersinfo* BuffersPtr) {
 
     int Int = *((int*) (BuffersPtr -> code));
     BuffersPtr -> code += sizeof (int);
+    BuffersPtr -> codeShift += sizeof (int);
 
     return Int;
 
@@ -174,22 +235,73 @@ bool PrintIntNumArg (BuffersInfo* BuffersPtr) {
 
     ASSERT (BuffersPtr);
 
+    if ((BuffersPtr -> cmdBuf.ramparam) && (BuffersPtr -> cmdBuf.numberparam)) {
+
+        int Arg = ReadIntFormCode (BuffersPtr);
+        fprintf (BuffersPtr -> file, "%d ", Arg / Accuracy);
+
+        return true;
+
+    }
+
+    else return false;
+
 }
 
 bool PrintDoubleNumArg (BuffersInfo* BuffersPtr) {
     
     ASSERT (BuffersPtr);
 
+    if ((BuffersPtr -> cmdBuf.ramparam == 0) && (BuffersPtr -> cmdBuf.numberparam)) {
+
+        int Arg = ReadIntFormCode (BuffersPtr);
+        fprintf (BuffersPtr -> file, "%lg ", (double) Arg / Accuracy);
+
+        return true;
+
+    }
+
+    else return false;
+
 }
 bool PrintRegArg (BuffersInfo* BuffersPtr) {
 
     ASSERT (BuffersPtr);
+    
+    if (BuffersPtr -> cmdBuf.registerparam) {
+
+        char Arg = ReadByteFormCode (BuffersPtr);
+        fprintf (BuffersPtr -> file, "%cx ", Arg + 'A');
+
+        return true;
+
+    }
+
+    else return false;
 
 }
 
 bool PrintRamArg (BuffersInfo* BuffersPtr) {
 
     ASSERT (BuffersPtr);
+
+    if (BuffersPtr -> cmdBuf.ramparam) {
+
+        fprintf (BuffersPtr -> file, "[");
+        
+        if (PrintIntNumArg (BuffersPtr))
+            if (BuffersPtr -> cmdBuf.registerparam)
+                fprintf (BuffersPtr -> file, "+ ");
+
+        PrintRegArg (BuffersPtr);
+
+        fprintf (BuffersPtr -> file, "] ");
+
+        return true;
+
+    }
+
+    else return false;
 
 }
 
@@ -198,12 +310,43 @@ bool PrintLabelArg (BuffersInfo* BuffersPtr, ManyLabels* lblArr) {
     ASSERT (BuffersPtr);
     ASSERT (lblArr);
 
+    if ((BuffersPtr -> cmdBuf.numofcmd >= CMD_jmp) && (BuffersPtr -> cmdBuf.numofcmd <= CMD_call)) {
+
+        char StrBuf[MaxStrLen] = {};
+    
+        int address = ReadIntFromCode (BuffersPtr);
+        sprintf (StrBuf, ":LabelTo%d", address);
+
+        int index = LabelExist (*lblArr, StrBuf);
+
+        if (index == lblArr -> num)
+            if (!AddNewLabel (lblArr, StrBuf, address)
+                return false;
+    
+        fprintf (BuffersPtr -> file, "%s\n", StrBuf);
+
+        return true;
+
+    }
+
+    else return false;
+
 }
 
-bool PrintLabel (BuffersInfo* BuffersPtr, ManyLabels* lblArr) {
+void PrintLabel (BuffersInfo* BuffersPtr, ManyLabels* lblArr) {
 
     ASSERT (BuffersPtr);
     ASSERT (lblArr);
+
+    for (int i = 0; i < lblArr -> num; ++i)
+        if (BuffersPtr -> codeShift == lblArr -> array[i].place) {
+            
+            fprintf (BuffersPtr -> file, ":LabelTo%d\n", lblArray -> array[i].place);
+            break;
+
+        }
+
+    return;   
 
 }
 
@@ -218,92 +361,32 @@ bool PrintLabel (BuffersInfo* BuffersPtr, ManyLabels* lblArr) {
 *
 */
 
-void PrintArgs (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int numOfArgs) {
+bool PrintArgs (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int numOfArgs) {
 
     ASSERT (BuffersPtr);
     ASSERT (lblArr);
 
-    CmdStruct CmdBuf = CharToCmdStruct (**code);
+    BuffersPtr -> cmdBuf = CharToCmdStruct (*(BuffersPtr -> code));
 
-    if (CmdBuf.numofcmd >= CMD_jmp && CmdBuf.numofcmd <= CMD_call) {
+    BuffersPtr -> code++;
+    BuffersPtr -> codeShift++;
 
-        ++(*code);
-        fprintf (file, ":labelto%x ", *((int*) *code));
+    for (int i = 0: i < numOfArgs; ++i) {
 
-        char LblName[256] = "";
+        if (!PrintDoubleNumArg (BuffersPtr))
 
-        sprintf (LblName, ":labelto%x", *((int*) *code));
-        
-        bool labelExist = false;
+        if (!PrintRegArg (BuffetsPtr))
 
-        for (int i = 0; i < *labelsNum; ++i) {
+        if (!PrintRamArg (BuffersPtr))
 
-            if (strcmp (LblName, LabelsArr[i].name) == 0) {
+        if (!PrintLabelArg (BuffersPtr))
 
-                labelExist = true;
-                break;
+        return false;
 
-            }                
+    } 
 
-        }
+    return true;
 
-        if (!labelExist) {
-
-            strcpy(LabelsArr[*labelsNum].name, LblName);
-            LabelsArr[*labelsNum].place = **code;
-            ++(*labelsNum);
-
-        }
-
-        *code += sizeof (int);
-    }
-
-    else for (int i = 0; i < numOfArgs; ++i) { 
-
-        bool usesRam = false;
-
-        if (CmdBuf.ramparam) {
-
-            usesRam = true;
-            fprintf (file, "[");
-
-        }
-
-        ++(*code);
-
-        if (CmdBuf.numberparam) {
-
-            fprintf (file, "%lg ", ((double) *((int*) *code) / Accuracy));
-            *code += sizeof (int);
-
-            if (usesRam && CmdBuf.registerparam) {
-
-                fprintf (file, "+ ");
-                fprintf (file, "%cx] ", 'A' + **code);
-                ++(*code);                      
-
-            }
-
-            else if (usesRam)
-                fprintf (file, "] "); 
-
-        }
-
-        if (CmdBuf.registerparam && (CmdBuf.numberparam == 0)) {
-            
-            fprintf (file, "%cx ", 'A' + **code);
-            ++(*code);
-
-            if (usesRam)
-                fprintf (file, "]");
-
-        }
-
-    }
-   
-    fprintf (file, "\n"); 
-
-    return;
 }
 
 CmdStruct CharToCmdStruct (const char cmd) {
