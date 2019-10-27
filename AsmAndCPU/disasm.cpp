@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <malloc.h>
 #include <string.h>
+#include "Labels.h"
 
 #ifdef DEBUG 
 
@@ -18,15 +19,30 @@
 const char FileInDefault[] = "MyProg.myexe";
 const char FileOutDefault[] = "ProgText.out";
 
-struct label {
+struct BuffersInfo {
 
-    char name[256];
-    int place;
+    FILE* file;
+    char* code;
+    int codeSize;
+    cmdStruct cmdBuf;
 
-}; 
+};
 
-CmdStruct CharToCmdStruct (const char cmd);
-void PrintArgs (FILE* file, char** code, int numOfArgs, label* LabelsArr, int* labelsNum);
+cmdStruct CharToCmdStruct (const char cmd);
+
+char ReadByteFromCode (BuffersInfo* BuffersPtr);
+int ReadIntFromCode (Buffersinfo* BuffersPtr);
+
+int PrintAsmTxt (BuffersInfo* BuffersPtr, ManyLabels* lblArr);
+
+bool PrintIntNumArg (BuffersInfo* BuffersPtr);
+bool PrintDoubleNumArg (BuffersInfo* BuffersPtr);
+bool PrintRegArg (BuffersInfo* BuffersPtr);
+bool PrintRamArg (BuffersInfo* BuffersPtr);
+bool PrintLabelArg (BuffersInfo* BuffersPtr, ManyLabels* lblArr);
+bool PrintLabel (BuffersInfo* BuffersPtr, ManyLabels* lblArr);
+
+void PrintArgs (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int numOfArgs);
 
 int main (int argc, char* argv[]) {
 
@@ -125,6 +141,73 @@ int main (int argc, char* argv[]) {
 
 }
 
+char ReadByteFromCode (BuffersInfo* BuffersPtr) {
+
+    ASSERT (BuffersPtr);
+
+    char Byte = *(BuffersPtr -> code);
+    BuffersPtr -> code++;
+
+    return Byte;
+
+}
+
+int ReadIntFromCode (Buffersinfo* BuffersPtr) {
+
+    ASSERT (BuffersPtr);
+
+    int Int = *((int*) (BuffersPtr -> code));
+    BuffersPtr -> code += sizeof (int);
+
+    return Int;
+
+}
+
+int PrintAsmTxt (BuffersInfo* BuffersPtr, ManyLabels* lblArr) {
+
+    ASSERT (BuffersPtr);
+    ASSERT (lblArr);
+
+}
+
+bool PrintIntNumArg (BuffersInfo* BuffersPtr) {
+
+    ASSERT (BuffersPtr);
+
+}
+
+bool PrintDoubleNumArg (BuffersInfo* BuffersPtr) {
+    
+    ASSERT (BuffersPtr);
+
+}
+bool PrintRegArg (BuffersInfo* BuffersPtr) {
+
+    ASSERT (BuffersPtr);
+
+}
+
+bool PrintRamArg (BuffersInfo* BuffersPtr) {
+
+    ASSERT (BuffersPtr);
+
+}
+
+bool PrintLabelArg (BuffersInfo* BuffersPtr, ManyLabels* lblArr) {
+
+    ASSERT (BuffersPtr);
+    ASSERT (lblArr);
+
+}
+
+bool PrintLabel (BuffersInfo* BuffersPtr, ManyLabels* lblArr) {
+
+    ASSERT (BuffersPtr);
+    ASSERT (lblArr);
+
+}
+
+
 /* This function prints arguments of command in file
 *
 *   @param file
@@ -135,12 +218,10 @@ int main (int argc, char* argv[]) {
 *
 */
 
-void PrintArgs (FILE* file, char** code, int numOfArgs, label* LabelsArr, int* labelsNum) {
+void PrintArgs (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int numOfArgs) {
 
-    ASSERT (file);
-    ASSERT (code);
-    ASSERT (LabelsArr);
-    ASSERT (labelsNum);
+    ASSERT (BuffersPtr);
+    ASSERT (lblArr);
 
     CmdStruct CmdBuf = CharToCmdStruct (**code);
 
