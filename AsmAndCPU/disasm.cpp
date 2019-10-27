@@ -25,18 +25,18 @@ struct BuffersInfo {
     char* code;
     int codeShift;
     int codeSize;
-    cmdStruct cmdBuf;
+    CmdStruct cmdBuf;
 
 };
 
-void ReadCmdLineOptions (char* FileInName, char* FileOutName, int argc, const char* argv[]);
+void ReadCmdLineOptions (char* FileInName, char* FileOutName, int argc, char* argv[]);
 char* ReadFile (const char* FileInName, int* fileSize, char* FileContent);
 void PrepareToDisasm (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int argc, char* argv[]);
  
-cmdStruct CharToCmdStruct (const char cmd);
+CmdStruct CharToCmdStruct (const char cmd);
 
 char ReadByteFromCode (BuffersInfo* BuffersPtr);
-int ReadIntFromCode (Buffersinfo* BuffersPtr);
+int ReadIntFromCode (BuffersInfo* BuffersPtr);
 
 int PrintAsmTxt (BuffersInfo* BuffersPtr, ManyLabels* lblArr);
 
@@ -54,32 +54,13 @@ int main (int argc, char* argv[]) {
     BuffersInfo Buffers = {};
     ManyLabels lblArr = {};
 
-    PrepareToDisasm (&Buffers, &lblArr, argc, argc);    
-
-    #define DEF_CMD(name, cmdNum, numOfArgs, codeForCpu)    \
-                                                            \
-        case CMD_##name: {                                  \
-                                                            \
-            fprintf (BuffersPtr -> file, "%s ", #name);     \
-                                                            \
-            if (numOfArgs > 0)                              \
-                PrintArgs (BuffersPtr, lblArr, numOfArgs);  \
-            else {                                          \
-                fprintf (BuffersPtr -> file, "\n");         \
-                BuffersPtr -> code++;                       \
-                BuffersPtr -> codeShift++;                  \
-           }                                                \
-                                                            \
-                                                            \
-            break; }                                        
+    PrepareToDisasm (&Buffers, &lblArr, argc, argv);    
 
     PrintAsmTxt (&Buffers, &lblArr);
     PrintAsmTxt (&Buffers, &lblArr);
 
-    #undef DEF_CMD
-
-    fclose (FileOut);
-    free (FileBegin);
+    fclose (Buffers.file);
+    free (Buffers.code - Buffers.codeShift);
 
     return 0;
 
@@ -94,7 +75,7 @@ int main (int argc, char* argv[]) {
 *
 */
 
-void ReadCmdLineOptions (char* FileInName, char* FileOutName, int argc, const char* argv[]) {
+void ReadCmdLineOptions (char* FileInName, char* FileOutName, int argc, char* argv[]) {
 
     strncpy (FileInName, FileInDefault, MaxStrLen);
 
@@ -156,13 +137,13 @@ void PrepareToDisasm (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int argc, cha
 
     char FileInName[MaxStrLen] = "";
     char FileOutName[MaxStrLen] = "";
-    void ReadCmdLineOptions (FileInName, FileOutName, argc, argv);
+    ReadCmdLineOptions (FileInName, FileOutName, argc, argv);
 
     char* code = nullptr;
     int fileSize = 0;
     code = ReadFile (FileInName, &fileSize, code);
     BuffersPtr -> code = code;
-    BuffersPtr -> contentSize = fileSize;
+    BuffersPtr -> codeSize = fileSize;
  
     assert (fileSize > 3);
     BuffersPtr -> code += 3;
@@ -189,7 +170,7 @@ char ReadByteFromCode (BuffersInfo* BuffersPtr) {
 
 }
 
-int ReadIntFromCode (Buffersinfo* BuffersPtr) {
+int ReadIntFromCode (BuffersInfo* BuffersPtr) {
 
     ASSERT (BuffersPtr);
 
@@ -200,6 +181,25 @@ int ReadIntFromCode (Buffersinfo* BuffersPtr) {
     return Int;
 
 }
+
+
+#define DEF_CMD(name, cmdNum, numOfArgs, codeForCpu)    \
+                                                        \
+    case CMD_##name: {                                  \
+                                                        \
+        fprintf (BuffersPtr -> file, "%s ", #name);     \
+                                                        \
+        if (numOfArgs > 0)                              \
+            PrintArgs (BuffersPtr, lblArr, numOfArgs);  \
+        else {                                          \
+            BuffersPtr -> code++;                       \
+            BuffersPtr -> codeShift++;                  \
+        }                                               \
+        fprintf (BuffersPtr -> file, "\n");             \
+                                                        \
+                                                        \
+        break; }                                        
+
 
 int PrintAsmTxt (BuffersInfo* BuffersPtr, ManyLabels* lblArr) {
 
@@ -223,11 +223,13 @@ int PrintAsmTxt (BuffersInfo* BuffersPtr, ManyLabels* lblArr) {
 
         }
 
-        BuffersPtr -> code += 3 - BuffersPtr -> codeShift;
-        BuffersPtr -> codeShift = 3;
+    BuffersPtr -> code += 3 - BuffersPtr -> codeShift;
+    BuffersPtr -> codeShift = 3;
 
-        return 0;
+    return 0;
 }
+
+#undef DEF_CMD
 
 bool PrintIntNumArg (BuffersInfo* BuffersPtr) {
 
@@ -235,7 +237,7 @@ bool PrintIntNumArg (BuffersInfo* BuffersPtr) {
 
     if ((BuffersPtr -> cmdBuf.ramparam) && (BuffersPtr -> cmdBuf.numberparam)) {
 
-        int Arg = ReadIntFormCode (BuffersPtr);
+        int Arg = ReadIntFromCode (BuffersPtr);
         fprintf (BuffersPtr -> file, "%d ", Arg / Accuracy);
 
         return true;
@@ -252,7 +254,7 @@ bool PrintDoubleNumArg (BuffersInfo* BuffersPtr) {
 
     if ((BuffersPtr -> cmdBuf.ramparam == 0) && (BuffersPtr -> cmdBuf.numberparam)) {
 
-        int Arg = ReadIntFormCode (BuffersPtr);
+        int Arg = ReadIntFromCode (BuffersPtr);
         fprintf (BuffersPtr -> file, "%lg ", (double) Arg / Accuracy);
 
         return true;
@@ -268,7 +270,7 @@ bool PrintRegArg (BuffersInfo* BuffersPtr) {
     
     if (BuffersPtr -> cmdBuf.registerparam) {
 
-        char Arg = ReadByteFormCode (BuffersPtr);
+        char Arg = ReadByteFromCode (BuffersPtr);
         fprintf (BuffersPtr -> file, "%cx ", Arg + 'A');
 
         return true;
@@ -318,7 +320,7 @@ bool PrintLabelArg (BuffersInfo* BuffersPtr, ManyLabels* lblArr) {
         int index = LabelExist (*lblArr, StrBuf);
 
         if (index == lblArr -> num)
-            if (!AddNewLabel (lblArr, StrBuf, address)
+            if (!AddNewLabel (lblArr, StrBuf, address))
                 return false;
     
         fprintf (BuffersPtr -> file, "%s\n", StrBuf);
@@ -339,7 +341,7 @@ void PrintLabel (BuffersInfo* BuffersPtr, ManyLabels* lblArr) {
     for (int i = 0; i < lblArr -> num; ++i)
         if (BuffersPtr -> codeShift == lblArr -> array[i].place) {
             
-            fprintf (BuffersPtr -> file, ":LabelTo%d\n", lblArray -> array[i].place);
+            fprintf (BuffersPtr -> file, ":LabelTo%d\n", lblArr -> array[i].place);
             break;
 
         }
@@ -369,17 +371,20 @@ bool PrintArgs (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int numOfArgs) {
     BuffersPtr -> code++;
     BuffersPtr -> codeShift++;
 
-    for (int i = 0: i < numOfArgs; ++i) {
-
-        if (!PrintDoubleNumArg (BuffersPtr))
-
-        if (!PrintRegArg (BuffetsPtr))
+    for (int i = 0; i < numOfArgs; ++i) {
 
         if (!PrintRamArg (BuffersPtr))
 
-        if (!PrintLabelArg (BuffersPtr))
+        if (!PrintDoubleNumArg (BuffersPtr))
 
-        return false;
+        if (!PrintRegArg (BuffersPtr))
+
+        if (!PrintLabelArg (BuffersPtr, lblArr)) {        
+
+            printf ("Invalid Argument\n");
+            return false;
+
+        }
 
     } 
 
