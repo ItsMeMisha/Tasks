@@ -24,6 +24,7 @@ const char FileOutDefault[] = "MyProg.myexe";
 struct BuffersInfo {
 
     char* Content;
+    int contentSize;
     int contentShift;
     char* code;
     int counter;
@@ -45,12 +46,18 @@ struct ManyLabels {
 
 };
 
+void PrepareToAssemble (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int argc, const char* argv[], char* FileOutName);
+void DestroyBuffers (BuffersInfo* BuffersPtr);
 void ReadCmdLineOptions (char* FileInName, char* FileOutName, int argc, const char* argv[]);
 char* ReadFile (const char* FileInName, int* fileSize, char* FileContent);
 char* NewCode (const char* FileContent, const int FileSize, char* code);
 int Assembler (BuffersInfo* BuffersPtr, ManyLabels* lblArr);
+bool TryLabel (BuffersInfo* BuffersPtr, ManyLabels* lblArr, char* StrBuf);
+bool DefCmd (BuffersInfo* BuffersPtr, ManyLabels* lblArr, const char* name, const int cmdNum, const int numOfArgs, char* StrBuf);
 
 void AddIntToBinCode (char* code, int* counter, int value);
+char CmdStructToChar (CmdStruct cmd);
+int NumOfSymbols (const char* str, const char symbol, const int size);
 void SkipSpace (char* Content, int* contentShift);
 
 bool DoubleNumArgRead (BuffersInfo* BuffersPtr);
@@ -66,112 +73,69 @@ bool ReadBeforePlusArg (BuffersInfo* BuffersPtr, char* regBuf);
 bool ReadAfterPlusArg (BuffersInfo* BuffersPtr, char regBuf);
 bool RamArgRead  (BuffersInfo* BuffersPtr);
 
-char CmdStructToChar (CmdStruct cmd);
-int NumOfSymbols (const char* str, const char symbol, const int size);
 int ArgumentsRead (BuffersInfo* BuffersPtr, int numOfArgs, ManyLabels* lblArr);
 
 int main (int argc, const char* argv[]) {
 
-    char FileInName[MaxStrLen] = "";
     char FileOutName[MaxStrLen] = "";
+    BuffersInfo Buffers = {};
+    ManyLabels labelsArr = {};
+
+    PrepareToAssemble (&Buffers, &labelsArr, argc, argv, FileOutName);
+
+    Assembler (&Buffers, &labelsArr);
+    Assembler (&Buffers, &labelsArr);     
+    
+    FILE* FileOut = fopen (FileOutName, "wb");
+    
+    fwrite (Buffers.code, sizeof (char), Buffers.counter, FileOut);
+
+    fclose (FileOut); 
+
+    DestroyBuffers (&Buffers);
+
+    return 0;
+
+}
+
+void PrepareToAssemble (BuffersInfo* BuffersPtr, ManyLabels* lblArr, int argc, const char* argv[], char* FileOutName) {
+
+    ASSERT (BuffersPtr);
+    ASSERT (lblArr);
+    ASSERT (FileOutName);
+
+    char FileInName[MaxStrLen] = "";
 
     ReadCmdLineOptions (FileInName, FileOutName, argc, argv);
 
     int fileSize = 0;
     char* FileContent = nullptr; //!!!
-
     FileContent = ReadFile (FileInName, &fileSize, FileContent);
-    char* FileContentStartPtr = FileContent;
+    BuffersPtr -> Content = FileContent;
+    BuffersPtr -> contentShift = 0;
+    BuffersPtr -> contentSize = fileSize;
 
     char* code = nullptr; //!!!
     code = NewCode (FileContent, fileSize, code);
+    BuffersPtr -> code = code; 
+    BuffersPtr -> counter = 3;
+
+    BuffersPtr -> cmd = {};
     
-    ManyLabels labelsArr = {};
-    labelsArr.num = 0;
+    lblArr -> num = 0;
 
-    char StrBuf[MaxStrLen] = "";
-    CmdStruct CmdBuf = {};
+    return;
 
-    int ContentCount = 3;
+}
 
-    #define DEF_CMD(name, cmdNum, numOfArgs, codeForCpu)                                        \
-                                                                                                \
-        if (strcmp (StrBuf, #name) == 0) {                                                      \
-                                                                                                \
-            CmdBuf.numofcmd = CMD_##name;                                                       \
-            ++ContentCount;                                                                     \
-            FileContent += strlen (#name) + 1;                                                  \
-            char* CurCode = code + ContentCount - 1;                                            \
-                                                                                                \
-            if (numOfArgs > 0) {                                                                \
-                                                                                                \
-                int contentShift = ArgumentsRead (FileContent, numOfArgs, code, &ContentCount, &labelsArr, &CmdBuf);  \
-                                                                                                \
-                if (contentShift < 0) {                                                         \
-                    printf ("Invalid parameters near %10s\n", FileContent);                     \
-                    return 3;                                                                   \
-                }                                                                               \
-                                                                                                \
-                FileContent += contentShift;                                                    \
-                                                                                                \
-            }                                                                                   \
-                                                                                                \
-            *CurCode = CmdStructToChar (CmdBuf);                                                \
-            CmdBuf = {};                                                                        \
-                                                                                                \
-        } else                                                                             
-                                                                                        
-    for (int smth = 0; smth < 2; smth++ ) {
- 
-    ContentCount = 3;
-    FileContent = FileContentStartPtr;
+void DestroyBuffers (BuffersInfo* BuffersPtr) {
 
-    while (FileContent - FileContentStartPtr < fileSize) {
+    ASSERT (BuffersPtr);
+    free (BuffersPtr -> code);
+    free (BuffersPtr -> Content);
+    BuffersPtr = nullptr;
 
-        while (isspace (*FileContent) && FileContent - FileContentStartPtr < fileSize) 
-            ++FileContent;
-    
-        sscanf (FileContent, "%s", StrBuf);
-
-        #include "commands.h"
-
-        if (*(StrBuf) == ':') {
-
-            int index = LebelExist (labelsArr, StrBuf); 
-
-            if (index == labelsArr.num)
-                if (!AddNewLabel (&labelsArr, StrBuf, ContentCount)
-                    return -1;
-
-            labelsArr.array[index].place = ContentCount;
-
-            FileContent += strlen (StrBuf) + 1;
-
-        }
-
-        else {
-
-            printf ("Syntax error: unexpected syntax (%s) \n", StrBuf);
-            return 1;
-
-       }
-
-    }
-
-    }
-
-    #undef DEF_CMD
-    
-    FILE* FileOut = fopen (FileOutName, "wb");
-    
-    fwrite (code, sizeof (char), ContentCount, FileOut);
-
-    fclose (FileOut);
-
-    free (code);
-    free (FileContentStartPtr); 
-
-    return 0;
+    return;
 
 }
 
@@ -260,7 +224,6 @@ char* NewCode (const char* FileContent, const int FileSize, char* code) {
     code[1] = 'V';
     code[2] = CommandsVersion;
 
-
     return code;
 
 }
@@ -279,10 +242,93 @@ int Assembler (BuffersInfo* BuffersPtr, ManyLabels* lblArr) {
     ASSERT (BuffersPtr);
     ASSERT (lblArr);
 
+    BuffersPtr -> counter = 3;
+    BuffersPtr -> contentShift = 0;
+    char StrBuf[MaxStrLen] = "";
+
+    #define DEF_CMD(name, cmdNum, numOfArgs, codeForCpu)                                        \
+        if (!DefCmd (BuffersPtr, lblArr, #name, cmdNum, numOfArgs, StrBuf))                     \
+            return 3;
+ 
+    while (BuffersPtr -> contentShift < BuffersPtr -> contentSize) {
+
+        SkipSpace (BuffersPtr -> Content, &(BuffersPtr -> contentShift));
+    
+        sscanf (BuffersPtr -> Content + BuffersPtr -> contentShift, "%s", StrBuf);
+
+        #include "commands.h"
+
+        if (!TryLabel (BuffersPtr, lblArr, StrBuf)) {
+
+            printf ("Syntax error: unexpected syntax (%s) \n", StrBuf);
+            return 1;
+
+       }
+
+    }
+
+    #undef DEF_CMD
 
     return 0;
 
 }
+
+bool TryLabel (BuffersInfo* BuffersPtr, ManyLabels* lblArr, char* StrBuf) {
+
+    ASSERT (BuffersPtr);
+    ASSERT (lblArr);
+    ASSERT (StrBuf);
+ 
+    if (*(StrBuf) == ':') {
+
+        int index = LabelExist (*lblArr, StrBuf); 
+
+        if (index == lblArr -> num)
+            if (!AddNewLabel (lblArr, StrBuf, BuffersPtr -> counter))
+                return false;
+
+        lblArr -> array[index].place = BuffersPtr -> counter;
+
+        BuffersPtr -> contentShift += strlen (StrBuf);
+
+    }
+
+    return true;
+
+}
+
+bool DefCmd (BuffersInfo* BuffersPtr, ManyLabels* lblArr, const char* name, const int cmdNum, const int numOfArgs, char* StrBuf) {
+
+    ASSERT (BuffersPtr);
+    ASSERT (lblArr);
+    ASSERT (name);
+
+    if (strcmp (StrBuf, name) == 0) {                                                      
+                                                                                               
+        BuffersPtr -> cmd.numofcmd = cmdNum;                                                      
+        ++(BuffersPtr -> counter);
+        BuffersPtr -> contentShift += strlen (name) + 1;   
+        char* CurCode = BuffersPtr -> code + BuffersPtr -> counter - 1;
+
+        if (numOfArgs > 0) {                                                                
+                                                                                              
+            int NewContentShift = ArgumentsRead (BuffersPtr, numOfArgs, lblArr);               
+                                                                                               
+            if (NewContentShift < 0) {                                                         
+                printf ("Invalid parameters near %10s\n", BuffersPtr -> Content + BuffersPtr -> contentShift);
+                return false; 
+            }                                                                               
+                                                                                                
+        }                                                                                   
+                                                                                                
+        *CurCode = CmdStructToChar (BuffersPtr -> cmd); 
+        BuffersPtr -> cmd = {};
+                                                                                            
+    }    
+
+    return true;
+
+} 
 
 /*! This functions adds a value of int element to binary code
 *
@@ -315,10 +361,10 @@ void AddIntToBinCode (char* code, int* counter, int value) {
 char CmdStructToChar (CmdStruct cmd) {
 
     char NormalCommand = 0;
-    NormalCommand |= (cmd.numofcmd << 3);
     NormalCommand |= cmd.numberparam;
     NormalCommand |= (cmd.registerparam << 1);
     NormalCommand |= (cmd.ramparam << 2);  
+    NormalCommand |= (cmd.numofcmd << 3);
 
     return NormalCommand;
 
