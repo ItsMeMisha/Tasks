@@ -7,41 +7,90 @@
 #include "Stack_t.h"
 #include <unistd.h>
 
+#ifdef DEBUG
+
+    #define ASSERT( cond ) assert (cond)
+
+#else
+
+    #define ASSERT( cond )
+
+#endif
+
+const int MaxStrLen = 256;
 const int RAMSize = 4096;
 
 const char FileInDefault[] = "MyProg.myexe";
 
+void ReadCmdLineOptions (char* FileInName, int argc, char* argv[]);
+char* ReadFile (char* FileInName, char* code);
+bool Execution (char* cmd, Stack_t* Stack, int* RAM, int* regstr);
+
 int main (int argc, char* argv[]) {
 
+    Stack_t Stack = {};
+    StackConstruct (&Stack);
+ 
     int RAM[RAMSize] = {};
 
-    char FileInName[100] = "";
-    strcpy (FileInName, FileInDefault);
+    char FileInName[MaxStrLen] = "";
+    ReadCmdLineOptions (FileInName, argc, argv);
+ 
+    char* cmd = nullptr;
+    cmd = ReadFile (FileInName, cmd);  
+   
+    int regstr[64] = {};
+
+    if (!Execution (cmd, &Stack, RAM, regstr))  
+        return 1;
+ 
+    free (cmd);
+
+    return 0;
+
+}           
+
+void ReadCmdLineOptions (char* FileInName, int argc, char* argv[]) {
+
+    ASSERT (FileInName);
+    ASSERT (argv);
+
+    strncpy (FileInName, FileInDefault, MaxStrLen);
 
     if (argc > 1) 
-        strcpy (FileInName, argv[1]);
+        strncpy (FileInName, argv[1], MaxStrLen);
     
-    FILE* FileIn = fopen (FileInName, "rb");
+    return;
 
+}
+
+char* ReadFile (char* FileInName, char* code) {
+
+    ASSERT (FileInName);
+   
+    FILE* FileIn = fopen (FileInName, "rb");
     assert (FileIn);
 
     struct stat FileInfo = {};
-
     struct stat* FileInfoPtr = &FileInfo;
-
     stat (FileInName, FileInfoPtr);
 
-    char* cmd = (char*) calloc (FileInfoPtr -> st_size, 1);
+    code = (char*) calloc (FileInfoPtr -> st_size, 1);
 
-    fread (cmd, FileInfoPtr -> st_size, sizeof (char), FileIn);
+    fread (code, FileInfoPtr -> st_size, sizeof (char), FileIn);
 
     fclose (FileIn); 
-    
-    Stack_t Stack = {};
+     
+    return code;
 
-    StackConstruct (&Stack);
+}
 
-    int regstr[64] = {};
+bool Execution (char* cmd, Stack_t* Stack, int* RAM, int* regstr) {
+
+    ASSERT (cmd);
+    ASSERT (Stack);
+    ASSERT (RAM);
+    ASSERT (regstr);
 
     #define DEF_CMD(name, cmdNum, numOfArgs, codeForCpu) \
         case CMD_##name: { codeForCpu break; }              
@@ -59,7 +108,7 @@ int main (int argc, char* argv[]) {
             default: {
 
                 printf ("unknown command (%x, %x)\n", ((cmd[current] & CmdNumMask) >> 3) & 0x1f, current);
-                return 1;
+                return false;
                 break;
             }
 
@@ -67,10 +116,8 @@ int main (int argc, char* argv[]) {
 
     }
 
-    free (cmd);
+    return true;
+    
+    #undef DEF_CMD
 
-    return 0;
-
-}           
-
-
+}

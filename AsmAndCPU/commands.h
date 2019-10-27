@@ -1,6 +1,6 @@
-#define PUSH(element) StackPush(&Stack, element)
+#define PUSH(element) StackPush(Stack, element)
 
-#define POP StackPop(&Stack)
+#define POP StackPop(Stack)
 
 #define NEXT(shift) current += shift
 
@@ -126,7 +126,7 @@ DEF_CMD (pop, 2, 1, {
 
     }
 
-    }
+}
 )
 
 DEF_CMD (add, 3, 0, {
@@ -173,7 +173,7 @@ DEF_CMD (div, 6, 0, {
 
 DEF_CMD (end, 7, 0, {
 
-    StackDestruct (&Stack);
+    StackDestruct (Stack);
     EndOfProgram = true;
 
     }
