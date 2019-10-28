@@ -134,7 +134,6 @@ bool Execution (char* cmd, Stack_t* Stack, int* RAM, int* regstr, int* VidMem, C
 
     }
 
-
     return true;
     
     #undef DEF_CMD
