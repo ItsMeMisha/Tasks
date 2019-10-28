@@ -1,3 +1,4 @@
+#include "TXLin.h"
 #include <stdio.h>
 #include <math.h>
 #include "enum_commands.h"
@@ -19,19 +20,27 @@
 
 const int MaxStrLen = 256;
 const int RAMSize = 4096;
+const int VidMemSize = 1024;
+const int CellSize = 100;
+const int ClrNum = 11;
 
 const char FileInDefault[] = "MyProg.myexe";
 
 void ReadCmdLineOptions (char* FileInName, int argc, char* argv[]);
 char* ReadFile (char* FileInName, char* code);
-bool Execution (char* cmd, Stack_t* Stack, int* RAM, int* regstr);
+bool Execution (char* cmd, Stack_t* Stack, int* RAM, int* regstr, int* VidMem, COLORREF* color);
+void DrawCanv (int* VidMem,  COLORREF* color);
+void GenerateColors (COLORREF* color);
 
 int main (int argc, char* argv[]) {
 
     Stack_t Stack = {};
     StackConstruct (&Stack);
+
+    COLORREF color[ClrNum] = {};
  
     int RAM[RAMSize] = {};
+    int* VidMem = RAM + RAMSize - VidMemSize;
 
     char FileInName[MaxStrLen] = "";
     ReadCmdLineOptions (FileInName, argc, argv);
@@ -41,7 +50,7 @@ int main (int argc, char* argv[]) {
    
     int regstr[64] = {};
 
-    if (!Execution (cmd, &Stack, RAM, regstr))  
+    if (!Execution (cmd, &Stack, RAM, regstr, VidMem, color))  
         return 1;
  
     free (cmd);
@@ -85,12 +94,14 @@ char* ReadFile (char* FileInName, char* code) {
 
 }
 
-bool Execution (char* cmd, Stack_t* Stack, int* RAM, int* regstr) {
+bool Execution (char* cmd, Stack_t* Stack, int* RAM, int* regstr, int* VidMem, COLORREF* color) {
 
     ASSERT (cmd);
     ASSERT (Stack);
     ASSERT (RAM);
     ASSERT (regstr);
+
+    txCreateWindow (sqrt (VidMemSize), sqrt (VidMemSize));
 
     #define DEF_CMD(name, cmdNum, numOfArgs, codeForCpu) \
         case CMD_##name: { codeForCpu break; }              
@@ -110,14 +121,58 @@ bool Execution (char* cmd, Stack_t* Stack, int* RAM, int* regstr) {
                 printf ("unknown command (%x, %x)\n", ((cmd[current] & CmdNumMask) >> 3) & 0x1f, current);
                 return false;
                 break;
+                
+                DrawCanv (VidMem, color);
             }
 
         } 
 
     }
 
+
     return true;
     
     #undef DEF_CMD
 
+}
+
+void DrawCanv (int* VidMem, COLORREF* color) {
+
+    ASSERT (VidMem);
+
+    const int SqLen = (int) sqrt (VidMemSize);
+    
+    txSetFillColor (TX_WHITE);
+    txClear ();
+    int colorIndx = 0;
+
+    for (int i = 0; i < SqLen; ++i)
+        for (int j = 0; j < SqLen; ++j) {
+            
+            colorIndx = VidMem[i * SqLen + j] / Accuracy;
+            txSetColor (color[colorIndx]);
+            txSetFillColor (color[colorIndx]);
+
+            txRectangle (CellSize * j, CellSize * i, (CellSize + 1) * j, (CellSize + 1) * i);
+
+        }
+
+    return;
+}
+
+void GenerateColors (COLORREF* color) {
+
+    color[0] = TX_WHITE;
+    color[1] = TX_LIGHTRED;
+    color[2] = TX_RED;
+    color[3] = TX_ORANGE;
+    color[4] = TX_YELLOW;
+    color[5] = TX_GREEN;
+    color[6] = TX_CYAN;
+    color[7] = TX_LIGHTBLUE;
+    color[8] = TX_BLUE;
+    color[9] = TX_PINK;
+    color[10] = TX_BLACK;
+    
+    return;
 }
