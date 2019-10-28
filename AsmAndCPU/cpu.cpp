@@ -51,8 +51,12 @@ int main (int argc, char* argv[]) {
    
     int regstr[RegisterNum] = {};
 
-    if (!Execution (cmd, &Stack, RAM, regstr, VidMem, color))  
+    if (!Execution (cmd, &Stack, RAM, regstr, VidMem, color)) {
+
+        printf ("Execution error\n");
         return 1;
+
+    }
  
     free (cmd);
 
