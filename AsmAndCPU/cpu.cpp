@@ -23,6 +23,7 @@ const int RAMSize = 4096;
 const int VidMemSize = 1024;
 const int CellSize = 100;
 const int ClrNum = 11;
+const int RegistersNum = 64;
 
 const char FileInDefault[] = "MyProg.myexe";
 
@@ -48,7 +49,7 @@ int main (int argc, char* argv[]) {
     char* cmd = nullptr;
     cmd = ReadFile (FileInName, cmd);  
    
-    int regstr[64] = {};
+    int regstr[RegisterNum] = {};
 
     if (!Execution (cmd, &Stack, RAM, regstr, VidMem, color))  
         return 1;
