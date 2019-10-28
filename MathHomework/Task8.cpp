@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <malloc.h>
+#include <assert.h>
 
 int** MatrRead (FILE* file, const int size, int** Matr);
 void MatrPrint (FILE* file, const int size, int** Matr);
@@ -9,6 +10,7 @@ void FreeMatr (const int size, int** Matr);
 int** SumMatr (const int size, int** Matr1, int** Matr2, int** MatrRes);
 int** SubtrMatr (const int size, int** Matr1, int** Matr2, int** MatrRes);
 int** ShtrMulInNew (const int size, int** Matr1, int** Matr2);
+void MatrCpy (const int size, int** MatrTarget, int** MatrSource);
 
 int main () {
 
@@ -68,11 +70,11 @@ void MatrPrint (FILE* file, int size, int** Matr) {
 }
 
 int** SubMatrix (const int subsize, const int LineShift, const int ColShift, int** BigMatr) {
-//todo: FIX!!!! shitting in data
-    int** SubM = BigMatr + LineShift;
+
+    int** SubM = (int**) calloc (subsize, sizeof (int*));
     
     for (int i = 0; i < subsize; ++i)
-        SubM[i] += ColShift;
+        SubM[i] = &(BigMatr[LineShift + i][ColShift]);
 
     return SubM;
 
@@ -82,8 +84,8 @@ int** NewMatr (const int size) {
 
     int** Matr = (int**) calloc (size, sizeof (int*));
 
-    for (int i = 0; i < size; ++i) {
-        Matr[i] = (int*) calloc (size, sizeof (int)); printf ("\t%d\t%x\n", i, Matr[i]);}
+    for (int i = 0; i < size; ++i) 
+        Matr[i] = (int*) calloc (size, sizeof (int));
 
     return Matr;
 
@@ -91,8 +93,8 @@ int** NewMatr (const int size) {
 
 void FreeMatr (const int size, int** Matr) {
 
-    for (int i = 0; i < size; ++i) { printf ("\t%d\t%x\n", i, Matr[i]);
-        free (Matr[i]);}
+    for (int i = 0; i < size; ++i) 
+        free (Matr[i]);
     
     free (Matr);
 
@@ -120,6 +122,15 @@ int** SubtrMatr (const int size, int** Matr1, int** Matr2, int** MatrRes) {
 
 }
 
+void MatrCpy (const int size, int** MatrTarget, int** MatrSource) {
+
+    for (int i = 0; i < size; ++i)
+        for (int j = 0; j < size; ++j)
+            MatrTarget[i][j] = MatrSource[i][j];
+    return;
+
+}
+
 int** ShtrMulInNew (const int size, int** Matr1, int** Matr2) {
 
     int** MatrRes = NewMatr (size);
@@ -130,6 +141,7 @@ int** ShtrMulInNew (const int size, int** Matr1, int** Matr2) {
 
         int** HelpMatr1 = NewMatr (SmallSize);
         int** HelpMatr2 = NewMatr (SmallSize);
+        int** HelpMatr3 = NewMatr (SmallSize);
         
         int** A11 = SubMatrix (SmallSize, 0, 0, Matr1); 
         int** A12 = SubMatrix (SmallSize, 0, SmallSize, Matr1);
@@ -144,7 +156,7 @@ int** ShtrMulInNew (const int size, int** Matr1, int** Matr2) {
         int** C11 = SubMatrix (SmallSize, 0, 0, MatrRes);
         int** C12 = SubMatrix (SmallSize, 0, SmallSize, MatrRes);
         int** C21 = SubMatrix (SmallSize, SmallSize, 0, MatrRes);
-        int** C22 = SubMatrix (SmallSize, SmallSize, 0, MatrRes);
+        int** C22 = SubMatrix (SmallSize, SmallSize, SmallSize, MatrRes);
 
         int** P1 = ShtrMulInNew (SmallSize, SumMatr (SmallSize, A11, A22, HelpMatr1), SumMatr (SmallSize, B11, B22, HelpMatr2));
         int** P2 = ShtrMulInNew (SmallSize, SumMatr (SmallSize, A21, A22, HelpMatr1), B11);
@@ -154,20 +166,21 @@ int** ShtrMulInNew (const int size, int** Matr1, int** Matr2) {
         int** P6 = ShtrMulInNew (SmallSize, SubtrMatr (SmallSize, A21, A11, HelpMatr1), SumMatr (SmallSize, B11, B12, HelpMatr2));
         int** P7 = ShtrMulInNew (SmallSize, SubtrMatr (SmallSize, A12, A22, HelpMatr1), SumMatr (SmallSize, B21, B22, HelpMatr2));
 
-        C11 = SubtrMatr (SmallSize, SumMatr (SmallSize, P1, P4, HelpMatr1), SumMatr (SmallSize, P5, P7, HelpMatr2), C11);
-        C12 = SumMatr (SmallSize, P3, P5, C12);
-        C21 = SumMatr (SmallSize, P2, P4, C21);
-        C22 = SumMatr (SmallSize, SubtrMatr (SmallSize, P1, P2, HelpMatr1), SumMatr (SmallSize, P3, P6, HelpMatr2), C22);
+        MatrCpy (SmallSize, C11, SubtrMatr (SmallSize, SumMatr (SmallSize, P1, P4, HelpMatr1), SubtrMatr (SmallSize, P5, P7, HelpMatr2), HelpMatr3));
+        MatrCpy (SmallSize, C12, SumMatr (SmallSize, P3, P5, HelpMatr1));
+        MatrCpy (SmallSize, C21, SumMatr (SmallSize, P2, P4, HelpMatr1));
+        MatrCpy (SmallSize, C22, SumMatr (SmallSize, SubtrMatr (SmallSize, P1, P2, HelpMatr1), SumMatr (SmallSize, P3, P6, HelpMatr2), HelpMatr3));
 
         FreeMatr (SmallSize, P1); FreeMatr (SmallSize, P2); FreeMatr (SmallSize, P3); FreeMatr (SmallSize, P4);
         FreeMatr (SmallSize, P5); FreeMatr (SmallSize, P6); FreeMatr (SmallSize, P7);
 
-        FreeMatr (SmallSize, A11); FreeMatr (SmallSize, A12); FreeMatr (SmallSize, A21); FreeMatr (SmallSize, A22);
-        FreeMatr (SmallSize, B11); FreeMatr (SmallSize, B12); FreeMatr (SmallSize, B21); FreeMatr (SmallSize, B22);
-        FreeMatr (SmallSize, C11); FreeMatr (SmallSize, C12); FreeMatr (SmallSize, C21); FreeMatr (SmallSize, C22);
-        
+        free (A11); free (A12); free (A21); free (A22);
+        free (B11); free (B12); free (B21); free (B22);
+        free (C11); free (C12); free (C21); free (C22);
+
         FreeMatr (SmallSize, HelpMatr1);
         FreeMatr (SmallSize, HelpMatr2);
+        FreeMatr (SmallSize, HelpMatr3);
 
     }
 
