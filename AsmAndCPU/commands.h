@@ -284,6 +284,13 @@ DEF_CMD (sqrrt, 20, 0, {
     }
 )
 
+DEF_CMD (draw, 21, 0, {
+
+    DrawCanv (VidMem, color);
+    NEXT (1);
+
+    }
+)
 #undef PUSH
 #undef POP
 #undef NEXT

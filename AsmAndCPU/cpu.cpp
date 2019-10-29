@@ -23,7 +23,7 @@ const int RAMSize = 4096;
 const int VidMemSize = 1024;
 const int CellSize = 100;
 const int ClrNum = 11;
-const int RegistersNum = 64;
+const int RegisterNum = 64;
 
 const char FileInDefault[] = "MyProg.myexe";
 

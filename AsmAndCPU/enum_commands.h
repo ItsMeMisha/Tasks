@@ -16,7 +16,7 @@ struct CmdStruct {
 };
 
 const char CommandsVersion = 3;
-const int Accuracy = 10000;
+const int Accuracy = 100;
 
 #define DEF_CMD(name, cmdNum, numOfArg, codeForCpu) \
     CMD_##name = cmdNum,
