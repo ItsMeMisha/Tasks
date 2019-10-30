@@ -1,0 +1,372 @@
+push 3072
+pop sx
+push 32
+pop hx
+call :ears
+call :face
+call :eyes
+call :nose
+call :mouth
+push 0
+pop ax
+:repeat
+    push 9
+    pop cx
+    call :tongue
+    draw
+    push 3
+    pop cx
+    call :tongue
+    draw
+    push 1
+    push ax
+    add
+    pop ax
+    push 50
+    push ax 
+jb :repeat
+end
+
+:ears
+pop Fx
+push 3
+pop cx
+push 10
+pop bx
+push 0
+pop ix
+:repEars
+    push 0
+    pop ex
+    :wideEar
+        push ex
+        push bx
+        add
+        push sx
+        add
+        pop dx
+        push cx
+        pop [dx]
+        push cx
+        pop [dx + 11]
+        push bx
+        push ex
+        sub
+        push sx
+        add
+        pop dx
+        push cx
+        pop [dx]
+        push cx
+        pop [dx + 11]
+        push ex
+        push 1
+        add
+        pop ex
+        push ex
+        push ix
+    jae :wideEar
+    
+    push hx
+    push bx
+    add
+    pop bx
+    push 1
+    push ix
+    add
+    pop ix
+    push 11
+    push ix 
+jb :repEars
+push Fx
+ret
+
+:face
+pop Fx
+push 11
+pop ex
+push 3
+pop cx
+:halfFace
+    push 0
+    pop ix
+    :FullWide
+        push sx
+        push ix
+        push ex
+        push hx
+        mul
+        add
+        add
+        pop dx
+        push cx
+        pop [dx]
+        push 1
+        push ix
+        add
+        pop ix
+        push hx
+        push ix
+    jb :FullWide
+    push 1
+    push ex
+    add
+    pop ex
+    push 15
+    push ex
+jb :halfFace
+
+:repFace
+    push 0
+    pop ix
+    :wideFace
+        push ex
+        push 15
+        sub
+        push 2
+        mul
+        push ix
+        push sx
+        push ex
+        push hx
+        mul
+        add
+        add
+        add
+        pop dx
+        push 3
+        pop [dx]
+        push 1
+        push ix
+        add
+        pop ix
+        push 32
+        push 4
+        push ex
+        push 15
+        sub
+        mul
+        sub
+        push ix 
+    jb :wideFace
+    push 1
+    push ex
+    add
+    pop ex
+    push 23
+    push ex 
+jb :repFace
+push Fx
+ret
+
+:eyes
+pop Fx
+push 5
+pop cx
+push 7
+pop ex
+:repEyes
+    push 8
+    pop ix
+    :wideEyes
+        push sx
+        push ix
+        push ex
+        push hx
+        mul
+        add
+        add
+        pop dx
+        push cx
+        push cx
+        push cx 
+        pop [dx]
+        pop [dx + 10]
+        push 1
+        push ix
+        add
+        pop ix
+        push 14
+        push ix
+    jb :wideEyes
+    push 1
+    push ex
+    add
+    pop ex
+    push 14
+    push ex 
+jb :repEyes
+push Fx
+call :pupil
+ret
+
+:pupil
+pop Fx
+push 10
+pop cx
+push 8
+pop ex
+:repPupil
+    push 10
+    push sx
+    push ex
+    push hx
+    mul
+    add
+    add
+    pop dx
+    push cx
+    push cx
+    push cx
+    push cx
+    pop [dx]
+    pop [dx + 1]
+    pop [dx + 10]
+    pop [dx + 11]
+    push 1
+    push ex
+    add
+    pop ex
+    push 13
+    push ex
+jb :repPupil
+push Fx
+ret
+
+:nose
+pop Fx
+push 9
+pop cx
+push 0
+pop ex
+:repMouth
+    push cx
+    push 1
+    push ex
+    add
+    pop ex
+    push 10
+    push ex
+jb :repMouth
+push 14
+push sx
+push hx
+push 14
+mul
+add
+add
+pop dx
+pop [dx]
+pop [dx + 1]
+pop [dx + 2]
+pop [dx + 3]
+push dx
+push hx
+add
+pop dx
+pop [dx]
+pop [dx + 1]
+pop [dx + 2]
+pop [dx + 3]
+push hx
+push dx
+add
+pop dx
+pop [dx + 1]
+pop [dx + 2]
+push Fx
+ret
+
+:mouth
+pop Fx
+push 0
+pop ex
+push 11
+pop cx
+push 0
+pop ex
+:repMouth
+    push cx
+    push 1
+    push ex
+    add
+    pop ex
+    push 16
+    push ex
+jb :repMouth
+push sx
+push hx
+push 15
+mul
+add
+pop dx
+pop [dx + 9]
+pop [dx + 22]
+push hx
+push dx
+add
+pop dx
+pop [dx + 11]
+pop [dx + 20]
+push hx
+push dx
+add
+pop dx
+pop [dx + 15]
+pop [dx + 16]
+pop [dx + 11]
+pop [dx + 20]
+pop [dx + 9]
+pop [dx + 22]
+push hx
+push dx
+add
+pop dx
+pop [dx + 12]
+pop [dx + 13]
+pop [dx + 14]
+pop [dx + 17]
+pop [dx + 18]
+pop [dx + 19]
+push Fx
+ret
+
+:tongue
+pop Fx
+push 0
+pop ex
+:repTongue
+    push cx
+    push 1
+    push ex
+    add
+    pop ex
+    push 8
+    push ex
+jb :repTongue
+push 14
+push sx
+push hx
+push 18
+mul
+add
+add
+pop dx
+pop [dx + 1]
+pop [dx + 2]
+push dx
+push hx
+add
+pop dx
+pop [dx]
+pop [dx + 1]
+pop [dx + 2]
+pop [dx + 3]
+push dx
+push hx
+add
+pop dx
+pop [dx + 1]
+pop [dx + 2]
+push Fx
+ret

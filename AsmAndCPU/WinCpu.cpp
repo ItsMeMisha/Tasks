@@ -116,6 +116,8 @@ bool Execution (char* cmd, Stack_t* Stack, int* RAM, int* regstr, int* VidMem, C
 
     int current = 3;
 
+    txCreateWindow (sqrt (VidMemSize) * CellSize, sqrt (VidMemSize) * CellSize);
+
     while (!EndOfProgram) {
 
         switch (((cmd[current] & CmdNumMask) >> 3) & 0x1f) {
@@ -128,7 +130,7 @@ bool Execution (char* cmd, Stack_t* Stack, int* RAM, int* regstr, int* VidMem, C
                 return false;
                 break;
 
-                DrawCanv (VidMem, color);
+
             }
 
         }
@@ -143,25 +145,25 @@ bool Execution (char* cmd, Stack_t* Stack, int* RAM, int* regstr, int* VidMem, C
 
 void DrawCanv (int* VidMem, COLORREF* color) {
 
-
-    txCreateWindow (sqrt (VidMemSize) * CellSize, sqrt (VidMemSize) * CellSize);
-
     ASSERT (VidMem);
 
-    const int SqLen = (int) sqrt (VidMemSize);
+    int SqLen = (int) sqrt (VidMemSize);
+
 
     txSetFillColor (TX_WHITE);
     txClear ();
+
     int colorIndx = 0;
 
     for (int i = 0; i < SqLen; ++i)
         for (int j = 0; j < SqLen; ++j) {
 
             colorIndx = VidMem[i * SqLen + j] / Accuracy;
+
             txSetColor (color[colorIndx]);
             txSetFillColor (color[colorIndx]);
 
-            txRectangle (CellSize * j, CellSize * i, (CellSize + 1) * j, (CellSize + 1) * i);
+            txRectangle (CellSize * j, CellSize * i, CellSize * (j + 0.95), CellSize * (i + 0.95));
 
         }
 
@@ -181,6 +183,7 @@ void GenerateColors (COLORREF* color) {
     color[8] = TX_BLUE;
     color[9] = TX_PINK;
     color[10] = TX_BLACK;
+    color[11] = TX_GRAY;
 
     return;
 }

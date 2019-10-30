@@ -26,7 +26,7 @@
     if (IsRegisterParam){                   \
                                             \
         tmpValue += regstr[cmd[current]];   \
-        Sleep (100);                        \
+        /*Sleep (100); */                       \
         NEXT (1);                           \
                                             \
     }
@@ -72,7 +72,7 @@ DEF_CMD (push, 1, 1, {
 
     if ((IsRamParam) && (tmpValue >= 0) && (tmpValue < RAMSize * Accuracy)) {
 
-        Sleep (1000);
+        Sleep (50);
         PUSH (RAM[tmpValue / Accuracy]);
 
     }
@@ -112,7 +112,7 @@ DEF_CMD (pop, 2, 1, {
 
         if ((tmpValue >= 0) && (tmpValue < RAMSize * Accuracy)) {
 
-            Sleep (1000);
+            Sleep (50);
             RAM[tmpValue / Accuracy] = POP;
 
         }
