@@ -31,6 +31,7 @@ void ReadCmdLineOptions (char* FileInName, int argc, char* argv[]);
 char* ReadFile (char* FileInName, char* code);
 bool Execution (char* cmd, Stack_t* Stack, int* RAM, int* regstr, int* VidMem, COLORREF* color);
 void DrawCanv (int* VidMem,  COLORREF* color);
+void VidReflex (int* VidMem);
 void GenerateColors (COLORREF* color);
 
 int main (int argc, char* argv[]) {
@@ -145,6 +146,8 @@ void DrawCanv (int* VidMem, COLORREF* color) {
     ASSERT (VidMem);
 
     const int SqLen = (int) sqrt (VidMemSize);
+
+    txBegin ();
     
     txSetFillColor (TX_WHITE);
     txClear ();
@@ -161,7 +164,18 @@ void DrawCanv (int* VidMem, COLORREF* color) {
 
         }
 
+    txEnd ();
+
     return;
+}
+
+void VidReflex (int* VidMem) {
+
+    int SqLen = (int) sqrt (VidMemSize);
+    for (int i = 0; i < SqLen; ++i)
+        for (int j = 0; j < (SqLen / 2); ++j)
+            VidMem[i * SqLen + SqLen - j - 1] = VidMem[i * SqLen + j];
+
 }
 
 void GenerateColors (COLORREF* color) {

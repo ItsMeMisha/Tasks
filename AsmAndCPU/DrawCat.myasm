@@ -7,16 +7,19 @@ call :face
 call :eyes
 call :nose
 call :mouth
+reflex
 push 0
 pop ax
 :repeat
     push 9
     pop cx
     call :tongue
+    reflex
     draw
     push 3
     pop cx
     call :tongue
+    reflex
     draw
     push 1
     push ax
@@ -47,8 +50,6 @@ pop ix
         pop dx
         push cx
         pop [dx]
-        push cx
-        pop [dx + 11]
         push bx
         push ex
         sub
@@ -57,8 +58,6 @@ pop ix
         pop dx
         push cx
         pop [dx]
-        push cx
-        pop [dx + 11]
         push ex
         push 1
         add
@@ -106,6 +105,8 @@ pop cx
         add
         pop ix
         push hx
+        push 2
+        div
         push ix
     jb :FullWide
     push 1
@@ -140,8 +141,8 @@ jb :halfFace
         push ix
         add
         pop ix
-        push 32
-        push 4
+        push 16
+        push 2
         push ex
         push 15
         sub
@@ -178,10 +179,7 @@ pop ex
         add
         pop dx
         push cx
-        push cx
-        push cx 
         pop [dx]
-        pop [dx + 10]
         push 1
         push ix
         add
@@ -217,12 +215,8 @@ pop ex
     pop dx
     push cx
     push cx
-    push cx
-    push cx
     pop [dx]
     pop [dx + 1]
-    pop [dx + 10]
-    pop [dx + 11]
     push 1
     push ex
     add
@@ -245,7 +239,7 @@ pop ex
     push ex
     add
     pop ex
-    push 10
+    push 5
     push ex
 jb :repMouth
 push 14
@@ -258,22 +252,17 @@ add
 pop dx
 pop [dx]
 pop [dx + 1]
-pop [dx + 2]
-pop [dx + 3]
 push dx
 push hx
 add
 pop dx
 pop [dx]
 pop [dx + 1]
-pop [dx + 2]
-pop [dx + 3]
 push hx
 push dx
 add
 pop dx
 pop [dx + 1]
-pop [dx + 2]
 push Fx
 ret
 
@@ -291,7 +280,7 @@ pop ex
     push ex
     add
     pop ex
-    push 16
+    push 8
     push ex
 jb :repMouth
 push sx
@@ -301,23 +290,18 @@ mul
 add
 pop dx
 pop [dx + 9]
-pop [dx + 22]
 push hx
 push dx
 add
 pop dx
 pop [dx + 11]
-pop [dx + 20]
 push hx
 push dx
 add
 pop dx
 pop [dx + 15]
-pop [dx + 16]
 pop [dx + 11]
-pop [dx + 20]
 pop [dx + 9]
-pop [dx + 22]
 push hx
 push dx
 add
@@ -325,9 +309,6 @@ pop dx
 pop [dx + 12]
 pop [dx + 13]
 pop [dx + 14]
-pop [dx + 17]
-pop [dx + 18]
-pop [dx + 19]
 push Fx
 ret
 
@@ -341,7 +322,7 @@ pop ex
     push ex
     add
     pop ex
-    push 8
+    push 4
     push ex
 jb :repTongue
 push 14
@@ -353,20 +334,16 @@ add
 add
 pop dx
 pop [dx + 1]
-pop [dx + 2]
 push dx
 push hx
 add
 pop dx
 pop [dx]
 pop [dx + 1]
-pop [dx + 2]
-pop [dx + 3]
 push dx
 push hx
 add
 pop dx
 pop [dx + 1]
-pop [dx + 2]
 push Fx
 ret

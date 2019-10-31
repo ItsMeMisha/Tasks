@@ -292,6 +292,15 @@ DEF_CMD (draw, 21, 0, {
     }
 )
 
+DEF_CMD (reflex, 22, 0, {
+
+    VidReflex (VidMem);
+    Sleep (100);
+    NEXT (1);
+
+    }
+)
+
 #undef PUSH
 #undef POP
 #undef NEXT

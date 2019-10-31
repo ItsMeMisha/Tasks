@@ -33,6 +33,7 @@ void ReadCmdLineOptions (char* FileInName/*, int argc, char* argv[]*/);
 char* ReadFile (char* FileInName, char* code);
 bool Execution (char* cmd, Stack_t* Stack, int* RAM, int* regstr, int* VidMem, COLORREF* color);
 void DrawCanv (int* VidMem,  COLORREF* color);
+void VidReflex (int* VidMem);
 void GenerateColors (COLORREF* color);
 
 int main () {
@@ -149,6 +150,8 @@ void DrawCanv (int* VidMem, COLORREF* color) {
 
     int SqLen = (int) sqrt (VidMemSize);
 
+    txBegin ();
+
 
     txSetFillColor (TX_WHITE);
     txClear ();
@@ -163,11 +166,25 @@ void DrawCanv (int* VidMem, COLORREF* color) {
             txSetColor (color[colorIndx]);
             txSetFillColor (color[colorIndx]);
 
-            txRectangle (CellSize * j, CellSize * i, CellSize * (j + 0.95), CellSize * (i + 0.95));
+            txRectangle (CellSize * j, CellSize * i, CellSize * (j + 1), CellSize * (i + 1));
 
         }
 
+    txEnd ();
+
     return;
+}
+
+void VidReflex (int* VidMem) {
+
+    int SqLen = (int) sqrt (VidMemSize);
+
+    for (int i = 0; i < SqLen; ++i)
+        for (int j = 0; j < (SqLen / 2); ++j)
+                VidMem[i * SqLen + SqLen - j - 1] = VidMem[i * SqLen + j];
+
+    return;
+
 }
 
 void GenerateColors (COLORREF* color) {
