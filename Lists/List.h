@@ -48,7 +48,9 @@ void ListDestruct (List* lst);
 bool PosOk (int pos, List* lst);
 
 int GetFreePos (List* lst);
-bool Insert (Element_t elem, int pos, List* lst);
+
+bool InsertFirst (Element_t elem, List* lst);
+bool InsertLast (Element_t elem, List* lst);
 bool InsertAfter (Element_t elem, int pos, List* lst);
 bool InsertBefore (Element_t elem, int pos, List* lst);
 
@@ -124,12 +126,9 @@ int GetFreePos (List* lst) {
 
 }
 
-bool InsertAfter (Element_t elem, int pos, List* lst) {
+bool InsertFirst (Element_t elem, List* lst) {
 
     ASSERTLST (lst);
-
-    if (!PosOk (pos, lst))
-        return false;
 
     int NewElemPos = GetFreePos (lst);
     
@@ -137,15 +136,56 @@ bool InsertAfter (Element_t elem, int pos, List* lst) {
         return false;
 
     lst -> data[NewElemPos] = elem;
-    
-    if (pos != lst -> tail)
-        lst -> next[NewElemPos] = lst -> next[pos];
-    else //TODO;
+ 
+    lst -> prev[lst -> head] = NewElemPos;
+    lst -> next[NewElemPos] = lst -> head;
+    lst -> head = NewElemPos;
 
-    if (pos != lst -> head)
-        lst -> prev[NewElemPos] = pos;
-    else //TODO;
+    return true;
+
+}
+
+bool InsertLast (Element_t elem, List* lst) {
+
+    ASSERTLST (lst);
+
+    int NewElemPos = GetFreePos (lst);
     
+    if (NewElemPos == 0)
+        return false;
+
+    lst -> data[NewElemPos] = elem;
+
+    lst -> next[lst -> tail] = NewElemPos;
+    lst -> prev[NewElemPos] = lst -> tail;
+    lst -> tail = NewElemPos;
+
+    return true;
+ 
+}
+
+bool InsertAfter (Element_t elem, int pos, List* lst) {
+
+    ASSERTLST (lst);
+
+    if (!PosOk (pos, lst))
+        return false;
+   
+    if (pos == lst -> tail)
+        return InsertLast (elem, lst);
+
+    if (pos == 0)
+        return InsertFirst (elem, lst);
+
+//TODO maybe i should forbid to insert after 0?
+
+    int NewElemPos = GetFreePos (lst);
+    
+    if (NewElemPos == 0)
+        return false;
+
+    lst -> data[NewElemPos] = elem;
+ 
     if (pos != lst -> tail)
         lst -> prev[next[pos]] = NewElemPos;
 
@@ -161,6 +201,14 @@ bool InsertBefore (Element_t elem, int pos, List* lst) {
 
     if (!PosOk (pos, lst))
         return false;
+
+    if (pos == lst -> head)
+        return InsertFirst (elem, lst);
+
+    if (
+
+    int NewElemPos = GetFreePos (lst);
+
 //TODO!!!!!!!!!ADD MORE ERRORS FINDING!!!!!!!
   
 
