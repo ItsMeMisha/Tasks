@@ -27,17 +27,17 @@ enum Error {
 
 /*! This struct is realization of list data structure
 *
-*   data - an array of data which type is Element_t\n
-*   next - an array of 'pointers' to the next element 
-*   prev - an array of 'pointers' to the previous element
-*   freeHead - head of freePos
-*   freePos - kind of list of free positions of the data
-*   head - number of the element in data which is the head of list
-*   tail - number of the element in data which is the tail of list
-*   maxSize - max size of list
-*   curSize - current number of elements is list
-*   sorted - flag is true if list is sorted
-*   errcode - code of error
+*   data - an array of data which type is Element_t \n
+*   next - an array of 'pointers' to the next element \n 
+*   prev - an array of 'pointers' to the previous element \n
+*   freeHead - head of freePos \n
+*   freePos - kind of list of free positions of the data \n
+*   head - number of the element in data which is the head of list \n
+*   tail - number of the element in data which is the tail of list \n
+*   maxSize - max size of list \n
+*   curSize - current number of elements is list \n
+*   sorted - flag is true if list is sorted \n
+*   errcode - code of error \n
 *
 */
 
@@ -319,6 +319,9 @@ bool InsertAfter (Element_t elem, int pos, List* lst) {
 
 //TODO maybe i should forbid to insert after 0?
 
+    if (!PosIsFilled (pos, lst))
+        return false;
+
     int NewElemPos = GetFreePos (lst);
     
     if (NewElemPos == 0)
@@ -360,6 +363,9 @@ bool InsertBefore (Element_t elem, int pos, List* lst) {
 
     if (pos == lst -> head)
         return InsertFirst (elem, lst);
+
+    if (!PosIsFilled (pos, lst))
+        return false;
 
     int NewElemPos = GetFreePos (lst);
 
@@ -447,6 +453,9 @@ bool Delete (int pos, List* lst) {
     if (!PosOk (pos, lst))
         return false;
 
+    if (!PosIsFilled (pos, lst))
+        return false;
+
     if (pos == lst -> head)
         return DeleteFirst (lst);
 
@@ -478,6 +487,12 @@ bool DeleteAfter (int pos, List* lst) {
 
     ASSERTLST (lst);
 
+    if (!PosOk (pos, lst))
+        return false;
+
+    if (!PosIsFilled (pos, lst))
+        return false;
+
     return Delete (next[pos], lst);
 
 }
@@ -492,6 +507,12 @@ bool DeleteAfter (int pos, List* lst) {
 bool DeleteBefore (int pos, List* lst) {
 
     ASSERTLST (lst);
+
+    if (!PosOk (pos, lst))
+        return false;
+
+    if (!PosIsFilled (pos, lst))
+        return false;
 
     return Delete (prev[pos], lst);
 
