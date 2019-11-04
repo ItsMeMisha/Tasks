@@ -216,6 +216,13 @@ bool AddFreePos (int pos, List* lst) {
 
 }
 
+/*! This function add new element to the begin of the list
+*
+*   @param elem - inserting element
+*   @param lst - pointer to the list
+*
+*/
+
 bool InsertFirst (Element_t elem, List* lst) {
 
     ASSERTLST (lst);
@@ -241,6 +248,13 @@ bool InsertFirst (Element_t elem, List* lst) {
     return true;
 
 }
+
+/*! This function add new element to the end of the list
+*
+*   @param elem - inserting element
+*   @param lst - pointer to the list
+*
+*/
 
 bool InsertLast (Element_t elem, List* lst) {
 
@@ -268,6 +282,14 @@ bool InsertLast (Element_t elem, List* lst) {
     return true;
  
 }
+
+/*! This function add new element after the element on pos positon
+*
+*   @param elem - inserting element
+*   @param pos - position
+*   @param lst - pointer to the list
+*
+*/
 
 bool InsertAfter (Element_t elem, int pos, List* lst) {
 
@@ -308,6 +330,14 @@ bool InsertAfter (Element_t elem, int pos, List* lst) {
 
 }
 
+/*! This function add new element before the element on pos positon
+*
+*   @param elem - inserting element
+*   @param pos - position
+*   @param lst - pointer to the list
+*
+*/
+
 bool InsertBefore (Element_t elem, int pos, List* lst) {
 
     ASSERTLST (lst);
@@ -342,6 +372,12 @@ bool InsertBefore (Element_t elem, int pos, List* lst) {
 
 }
 
+/*! This function deletes the first element in the list
+*
+*   @param - lst - pointer to the list
+*
+*/
+
 bool DeleteFirst (List* lst) {
 
     ASSERTLST (lst);
@@ -360,6 +396,12 @@ bool DeleteFirst (List* lst) {
 
 }
 
+/*! This function deletes the last element in the list
+*
+*   @param lst - pointer to the list
+*
+*/
+
 bool DeleteLast (List* lst) {
 
     ASSERTLST (lst);
@@ -377,6 +419,13 @@ bool DeleteLast (List* lst) {
     return true;
 
 }
+
+/*! This function deletes the element on the pos position in the list
+*
+*   @param pos - position
+*   @param lst - pointer to the list
+*
+*/
 
 bool Delete (int pos, List* lst) {
 
@@ -404,6 +453,14 @@ bool Delete (int pos, List* lst) {
 
 }
 
+/*! This function deletes the element after the element on the pos position in the list
+*
+*   @param pos - position
+*   @param lst - pointer to the list
+*
+*/
+
+
 bool DeleteAfter (int pos, List* lst) {
 
     ASSERTLST (lst);
@@ -411,6 +468,13 @@ bool DeleteAfter (int pos, List* lst) {
     return Delete (next[pos], lst);
 
 }
+
+/*! This function deletes the element before the element on the pos position in the list
+*
+*   @param pos - position
+*   @param lst - pointer to the list
+*
+*/
 
 bool DeleteBefore (int pos, List* lst) {
 
