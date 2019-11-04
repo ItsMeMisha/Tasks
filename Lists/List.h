@@ -42,28 +42,31 @@ struct List {
 };
 
 
-bool ListOk (List* lst);
-void ListConstruct (List* lst);
-void ListDestruct (List* lst);
-bool PosOk (int pos, List* lst);
+bool ListOk                 (List* lst);
+void ListConstruct          (List* lst);
+void ListDestruct           (List* lst);
+bool PosOk         (int pos, List* lst);
 
-int GetFreePos (List* lst);
-bool DeleteOneFreePos (List* lst);
-bool AddFreePos (int pos, List* lst);
+int GetFreePos              (List* lst);
+bool DeleteOneFreePos       (List* lst);
+bool AddFreePos    (int pos, List* lst);
 
-bool InsertFirst (Element_t elem, List* lst);
-bool InsertLast (Element_t elem, List* lst);
-bool InsertAfter (Element_t elem, int pos, List* lst);
+bool InsertFirst           (Element_t elem, List* lst);
+bool InsertLast            (Element_t elem, List* lst);
+bool InsertAfter  (Element_t elem, int pos, List* lst);
 bool InsertBefore (Element_t elem, int pos, List* lst);
 
-bool Delete (int pos, List* lst);
-bool DeleteAfter (int pos, List* lst);
-bool DeleteBefore (int pos, List* lst);
+bool DeleteFirst            (List* lst);
+bool DeleteLast             (List* lst);
+bool Delete        (int pos, List* lst);
+bool DeleteAfter   (int pos, List* lst);
+bool DeleteBefore  (int pos, List* lst);
 
-void SortList (List* lst);
+void SortList               (List* lst);
+void ListDump               (List* lst);
+
 Element_t FindElementByPosition (int pos, List* lst);
 int FindPosOfElement (Element_t elem, List* lst, int* compare (Element_t, Element_t) = nullptr); 
-void ListDump (List* lst);
 
 bool ListOk (List* lst) {}
 
@@ -125,8 +128,6 @@ bool PosOk (int pos, List* lst) {
 }
 
 int GetFreePos (List* lst) {
-
-//TODO!!!!!!!!!
 
     ASSERTLST (lst);
 
@@ -248,7 +249,7 @@ bool InsertAfter (Element_t elem, int pos, List* lst) {
     lst -> next[NewElemPos] = next[pos];
     lst -> prev[NewElemPos] = pos;
  
-    lst -> prev[next[pos]] = NewElemPos;
+    lst -> prev[lst -> next[pos]] = NewElemPos;
     lst -> next[pos] = NewElemPos;
 
     lst -> sorted = false;
@@ -282,13 +283,49 @@ bool InsertBefore (Element_t elem, int pos, List* lst) {
     lst -> next[NewElemPos] = pos;
     lst -> prev[NewElemPos] = prev[pos];
 
-    lst -> next[prev[pos]] = NewElemPos;
+    lst -> next[lst -> prev[pos]] = NewElemPos;
     lst -> prev[pos] = NewElemPos;
 
     lst -> sorted = false;
 
     lst -> curSize++;
   
+    return true;
+
+}
+
+bool DeleteFirst (List* lst) {
+
+    ASSERTLST (lst);
+
+    if (!AddFreePos (lst -> head, lst))
+        return false;
+
+    lst -> data[lst -> head] = Poison;
+    
+    int nextElem = lst -> next[lst -> head];
+    lst -> prev[nextElem] = -1;
+    lst -> next[lst -> head] = -1;
+    lst -> head = nextElem;
+
+    return true;
+
+}
+
+bool DeleteLast (List* lst) {
+
+    ASSERTLST (lst);
+
+    if (!AddFreePos (lst -> tail, lst))
+        return false;
+
+    lst -> data[lst -> tail] = Poison;
+    
+    int prevElem = lst -> prev[lst -> tail];
+    lst -> next[prevElem] = -1;
+    lst -> prev[lst -> tail] = -1;
+    lst -> tail = prevElem;
+
     return true;
 
 }
