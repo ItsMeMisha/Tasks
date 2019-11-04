@@ -288,8 +288,6 @@ bool InsertBefore (Element_t elem, int pos, List* lst) {
     lst -> sorted = false;
 
     lst -> curSize++;
-
-//TODO!!!!!!!!!ADD MORE ERRORS FINDING!!!!!!!
   
     return true;
 
@@ -299,17 +297,41 @@ bool Delete (int pos, List* lst) {
 
     ASSERTLST (lst);
 
+    if (!PosOk (pos, lst))
+        return false;
+
+    if (pos == lst -> head)
+        return DeleteFirst (lst);
+
+    if (pos == lst -> tail)
+        return DeleteLast (lst);
+
+    lst -> next[prev[pos]] = next[pos];
+    lst -> prev[next[pos]] = prev[pos];
+    lst -> data[pos] = Poison;
+    next[pos] = 0;
+    prev[pos] = 0;
+
+    if (!AddFreePos (pos, lst))
+        return false;
+
+    return true;
+
 }
 
 bool DeleteAfter (int pos, List* lst) {
 
     ASSERTLST (lst);
 
+    return Delete (next[pos], lst);
+
 }
 
 bool DeleteBefore (int pos, List* lst) {
 
     ASSERTLST (lst);
+
+    return Delete (prev[pos], lst);
 
 }
 
