@@ -48,7 +48,7 @@ void ListDestruct (List* lst);
 bool PosOk (int pos, List* lst);
 
 int GetFreePos (List* lst);
-bool DeleteFreePos (int pos, List* lst);
+bool DeleteOneFreePos (List* lst);
 bool AddFreePos (int pos, List* lst);
 
 bool InsertFirst (Element_t elem, List* lst);
@@ -76,10 +76,10 @@ void ListConstruct (List* lst) {
     lst -> freeHead = 1;
     lst -> freePos = (int*) calloc (FirstMaxSize, sizeof (int));
     
-    for (int i = 1; i < FirstMaxSize; ++i)
+    for (int i = 1; i < FirstMaxSize - 1; ++i)
         freePos[i] = i + 1;
 
-    freePos[FirstMaxSize] = -1;
+    freePos[FirstMaxSize -1] = -1;
     lst -> head = 0;
     lst -> tail = 0;
     lst -> maxSize = FirstMaxSize;
@@ -113,6 +113,8 @@ void ListDestruct (List* lst) {
 
 bool PosOk (int pos, List* lst) {
 
+    ASSERTLST (lst);
+
     if ((pos < 0) && (pos > lst -> maxSize)) {
         lst -> errcode = WrongPositionReference;
         return false;
@@ -126,16 +128,42 @@ int GetFreePos (List* lst) {
 
 //TODO!!!!!!!!!
 
+    ASSERTLST (lst);
+
+    if (lst -> freeHead <= 0)
+        return 0;
+
+    return lst -> freeHead; 
+
 }
 
-bool DeleteFreePos (int pos, List* lst) {
+bool DeleteOneFreePos (List* lst) {
 
+    ASSERTLST (lst);
+
+    if (lst -> freeHead <= 0)
+        return false;
+
+    int nextFree = lst -> freePos[lst -> freeHead];
+
+    lst -> freePos[lst -> freeHead] = -1;
+    lst -> freeHead = nextFree;
+
+    return true;
 
 }
 
 bool AddFreePos (int pos, List* lst) {
 
-
+    ASSERTLST (lst);
+    
+    if (!PosOk (pos, lst))
+        return false;
+    
+    lst -> freePos[pos] = lst -> freeHead;
+    lst -> freeHead = pos;
+        
+    return true;
 
 }
 
@@ -147,13 +175,19 @@ bool InsertFirst (Element_t elem, List* lst) {
     
     if (NewElemPos == 0)
         return false;
-    DeleteFreePos (NewElemPos, lst);
+
+    if (!DeleteOneFreePos (lst))
+        return false;
 
     lst -> data[NewElemPos] = elem;
  
     lst -> prev[lst -> head] = NewElemPos;
     lst -> next[NewElemPos] = lst -> head;
     lst -> head = NewElemPos;
+
+    lst -> sorted = false;
+
+    lst -> curSize++;
 
     return true;
 
@@ -167,13 +201,20 @@ bool InsertLast (Element_t elem, List* lst) {
     
     if (NewElemPos == 0)
         return false;
-    DeleteFreePos (NewElemPos, lst);
+
+    if (!DeleteOneFreePos (lst))
+        return false;
 
     lst -> data[NewElemPos] = elem;
 
     lst -> next[lst -> tail] = NewElemPos;
     lst -> prev[NewElemPos] = lst -> tail;
     lst -> tail = NewElemPos;
+
+    if (NewElemPos != lst -> curSize - 1)
+        lsr -> sorted = false;
+
+    lst -> curSize++;
 
     return true;
  
@@ -198,7 +239,9 @@ bool InsertAfter (Element_t elem, int pos, List* lst) {
     
     if (NewElemPos == 0)
         return false;
-    DeleteFreePos (NewELemPos, lst);
+
+    if (!DeleteOneFreePos (lst))
+        return false;
 
     lst -> data[NewElemPos] = elem;
 
@@ -207,6 +250,10 @@ bool InsertAfter (Element_t elem, int pos, List* lst) {
  
     lst -> prev[next[pos]] = NewElemPos;
     lst -> next[pos] = NewElemPos;
+
+    lst -> sorted = false;
+
+    lst -> curSize++;
 
     return true;
 
@@ -226,7 +273,9 @@ bool InsertBefore (Element_t elem, int pos, List* lst) {
 
     if (NewElemPos == 0)
         return false;
-    DeleteFreePos (NewElemPos, lst);
+
+    if (!DeleteOneFreePos (lst))
+        return false;
 
     lst -> data[NewElemPos] = elem;
 
@@ -236,10 +285,31 @@ bool InsertBefore (Element_t elem, int pos, List* lst) {
     lst -> next[prev[pos]] = NewElemPos;
     lst -> prev[pos] = NewElemPos;
 
-    
+    lst -> sorted = false;
+
+    lst -> curSize++;
 
 //TODO!!!!!!!!!ADD MORE ERRORS FINDING!!!!!!!
   
+    return true;
+
+}
+
+bool Delete (int pos, List* lst) {
+
+    ASSERTLST (lst);
+
+}
+
+bool DeleteAfter (int pos, List* lst) {
+
+    ASSERTLST (lst);
+
+}
+
+bool DeleteBefore (int pos, List* lst) {
+
+    ASSERTLST (lst);
 
 }
 
