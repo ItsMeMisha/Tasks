@@ -62,6 +62,7 @@ bool ListOk                 (List* lst);
 void ListConstruct          (List* lst);
 void ListDestruct           (List* lst);
 bool PosOk         (int pos, List* lst);
+bool PosIsFilled   (int pos, List* lst);
 
 int  GetFreePos             (List* lst);
 bool DeleteOneFreePos       (List* lst);
@@ -104,7 +105,7 @@ void ListConstruct (List* lst) {
     for (int i = 1; i < FirstMaxSize - 1; ++i)
         freePos[i] = i + 1;
 
-    freePos[FirstMaxSize -1] = -1;
+    freePos[FirstMaxSize -1] = 0;
     lst -> head = 0;
     lst -> tail = 0;
     lst -> maxSize = FirstMaxSize;
@@ -154,6 +155,18 @@ bool PosOk (int pos, List* lst) {
     return true;    
 
 }
+
+bool PosIsFilled (int pos, List* lst) {
+
+    ASSERTLST (lst);
+
+    if (lst -> freePos[pos] >= 0)
+        return false;
+
+    return true;
+
+}
+
 /*! This function returns next free position in the list and DOES NOT delete it
 *
 *   @param lst - pointer to the list
