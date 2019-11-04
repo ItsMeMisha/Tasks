@@ -25,6 +25,22 @@ enum Error {
 
 };
 
+/*! This struct is realization of list data structure
+*
+*   data - an array of data which type is Element_t\n
+*   next - an array of 'pointers' to the next element 
+*   prev - an array of 'pointers' to the previous element
+*   freeHead - head of freePos
+*   freePos - kind of list of free positions of the data
+*   head - number of the element in data which is the head of list
+*   tail - number of the element in data which is the tail of list
+*   maxSize - max size of list
+*   curSize - current number of elements is list
+*   sorted - flag is true if list is sorted
+*   errcode - code of error
+*
+*/
+
 struct List {
 
     Element_t* data;
@@ -47,7 +63,7 @@ void ListConstruct          (List* lst);
 void ListDestruct           (List* lst);
 bool PosOk         (int pos, List* lst);
 
-int GetFreePos              (List* lst);
+int  GetFreePos             (List* lst);
 bool DeleteOneFreePos       (List* lst);
 bool AddFreePos    (int pos, List* lst);
 
@@ -69,6 +85,12 @@ Element_t FindElementByPosition (int pos, List* lst);
 int FindPosOfElement (Element_t elem, List* lst, int* compare (Element_t, Element_t) = nullptr); 
 
 bool ListOk (List* lst) {}
+
+/*! This is a constructor for List-type lists
+*
+*   @param lst - pointer to the list
+*
+*/
 
 void ListConstruct (List* lst) {
 
@@ -93,6 +115,12 @@ void ListConstruct (List* lst) {
     return;
 
 }
+
+/*! This is a destructor for the List-type lists
+*
+*   @param lst - pointer to the list
+*
+*/
 
 void ListDestruct (List* lst) {
 
@@ -126,6 +154,13 @@ bool PosOk (int pos, List* lst) {
     return true;    
 
 }
+/*! This function returns next free position in the list and DOES NOT delete it
+*
+*   @param lst - pointer to the list
+*
+*   @return next free position
+*
+*/
 
 int GetFreePos (List* lst) {
 
@@ -137,6 +172,12 @@ int GetFreePos (List* lst) {
     return lst -> freeHead; 
 
 }
+
+/*! This function deletes next free position from the list of free positions
+*
+*   @param lst - pointer to the list
+*
+*/
 
 bool DeleteOneFreePos (List* lst) {
 
@@ -153,6 +194,13 @@ bool DeleteOneFreePos (List* lst) {
     return true;
 
 }
+
+/*! This function adds new free position from to list of free positions
+*
+*   @param pos - position that should be added
+*   @param lst - pointer to the list
+*
+*/
 
 bool AddFreePos (int pos, List* lst) {
 
