@@ -20,9 +20,14 @@ const int FirstMaxSize = 101;
 
 enum Error {
 
-    Allright = 0,
-    WrongPositionReference = 1
-
+    Allright               = 0,
+    WrongPositionReference = 1,
+    NoFreePosLeft          = 2,
+    NullDataPtr            = 3,
+    NullNextPtr            = 4,
+    NullPrevPtr            = 5,
+    NullFreePosPtr         = 6
+    
 };
 
 /*! This struct is realization of list data structure
@@ -85,7 +90,49 @@ void ListDump               (List* lst);
 Element_t FindElementByPosition (int pos, List* lst);
 int FindPosOfElement (Element_t elem, List* lst, int* compare (Element_t, Element_t) = nullptr); 
 
-bool ListOk (List* lst) {}
+bool ListOk (List* lst) {
+
+    if (lst == nullptr) {
+        
+        printf ("Error! lst is nullptr\n");
+        return false;
+
+    }
+
+    if (lst -> errcode != Allright)
+        return false;
+
+    if (lst -> data == nullptr) {
+
+        lst -> errcode = NullDataPtr;
+        return false;
+
+    }
+
+    if (lst -> next == nullptr) {
+
+        lst -> errcode = NullNextPtr;
+        return false;
+
+    {
+
+    if (lst -> prev == nullptr) {
+
+        lst -> errcode = NullPrevPtr;
+        return false;
+
+    }
+
+    if (lst -> freePos == nullptr) {
+
+        lst -> errcode = NullFreePosPtr;
+        return false;
+
+    }
+
+    return true;
+
+}
 
 /*! This is a constructor for List-type lists
 *
@@ -151,7 +198,7 @@ bool PosOk (int pos, List* lst) {
         lst -> errcode = WrongPositionReference;
         return false;
     }
-//TODO!!!!IT IS THE WRONG PosOK!!!!!!!!!!!!!!!
+
     return true;    
 
 }
@@ -179,8 +226,12 @@ int GetFreePos (List* lst) {
 
     ASSERTLST (lst);
 
-    if (lst -> freeHead <= 0)
+    if (lst -> freeHead <= 0) {
+
+        lst -> errcode = NoFreePosLeft;
         return 0;
+
+    }
 
     return lst -> freeHead; 
 
@@ -196,7 +247,7 @@ bool DeleteOneFreePos (List* lst) {
 
     ASSERTLST (lst);
 
-    if (lst -> freeHead <= 0)
+    if (lst -> freeHead <= 0) 
         return false;
 
     int nextFree = lst -> freePos[lst -> freeHead];
