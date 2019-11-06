@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 
-#ifdef __DEBUG
+#ifdef _DEBUG
 
 #define ASSERTLST( lst )    \
     if (!ListOk (lst)){     \
@@ -69,31 +69,32 @@ struct List {
 };
 
 
-bool ListOk                 (List* lst);
-void ListConstruct          (List* lst);
-void ListDestruct           (List* lst);
-bool PosOk         (int pos, List* lst);
-bool PosIsFilled   (int pos, List* lst);
+bool ListOk                                 (List* lst);
+void ListConstruct                          (List* lst);
+void ListDestruct                           (List* lst);
+bool PosOk                         (int pos, List* lst);
+bool PosIsFilled                   (int pos, List* lst);
 
-int  GetFreePos             (List* lst);
-bool DeleteOneFreePos       (List* lst);
-bool AddFreePos    (int pos, List* lst);
+int  GetFreePos                             (List* lst);
+bool DeleteOneFreePos                       (List* lst);
+bool AddFreePos                    (int pos, List* lst);
 
-bool InsertFirst           (Element_t elem, List* lst);
-bool InsertLast            (Element_t elem, List* lst);
-bool InsertAfter  (Element_t elem, int pos, List* lst);
-bool InsertBefore (Element_t elem, int pos, List* lst);
+bool InsertFirst   (Element_t elem,          List* lst);
+bool InsertLast    (Element_t elem,          List* lst);
+bool InsertAfter   (Element_t elem, int pos, List* lst);
+bool InsertBefore  (Element_t elem, int pos, List* lst);
 
-bool DeleteFirst            (List* lst);
-bool DeleteLast             (List* lst);
-bool Delete        (int pos, List* lst);
-bool DeleteAfter   (int pos, List* lst);
-bool DeleteBefore  (int pos, List* lst);
+bool DeleteFirst                            (List* lst);
+bool DeleteLast                             (List* lst);
+bool Delete                        (int pos, List* lst);
+bool DeleteAfter                   (int pos, List* lst);
+bool DeleteBefore                  (int pos, List* lst);
 
-void SortList               (List* lst);
-void ListDump               (List* lst);
+void SortList                               (List* lst);
+void ListDump                               (List* lst);
+void DrawGraph     (FILE* file,              List* lst);
 
-Element_t FindElementByPosition (int pos, List* lst);
+Element_t FindElementByPosition    (int pos, List* lst);
 int FindPosOfElement (Element_t elem, List* lst, int* compare (Element_t, Element_t) = nullptr); 
 
 bool ListOk (List* lst) {
@@ -573,11 +574,56 @@ bool DeleteBefore (int pos, List* lst) {
 
 void SortList (List* lst) {
 
+    ASSERTLST (lst);
 
+    if (lst -> curSize = 0) {
+
+        lst -> sorted = true;
+        return;
+
+    }
+
+    int* PosBuf = (int*) calloc (lst -> curSize, sizeof (int));    
+    PosBuf[1] = lst -> head;
+
+    int curNext = lst -> nodes[lst -> head].next;
+//TODO Need to be carefull with tail elem
+    for (int i = 2; i <= lst -> curSize; ++i) {
+
+        PosBuf[i] = curNext;
+        curNext = lst -> nodes[curNext].next;
+
+    }
+
+    PosBuf[lst -> curSize] = lst -> tail;
+
+    ListElem elemBuf = {};
+
+    for (int i = 1; i <= lst -> curSize; ++i) {
+
+        elemBuf = lst -> nodes[i];
+        lst -> nodes[i] = lst -> nodes[PosBuf[i]];
+        lst -> nodes[PosBuf[i]] = elemBuf;
+
+    }
+
+    lst -> head = 1;
+    lst -> tail = lst -> curSize;
+
+    lst -> sorted = true;
+
+    free (PosBuf);
+
+    return;
 
 }
 
 void ListDump (List* lst);
+void DrawGraph (FILE* file, List* lst) {
+
+
+
+}
 
 Element_t FindElementByPosition (int pos, List* lst);
 int FindPosOfElement (Element_t elem, List* lst, int* compare (Element_t, Element_t) = nullptr); 
