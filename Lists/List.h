@@ -92,7 +92,7 @@ bool DeleteBefore                  (int pos, List* lst);
 
 void SortList                               (List* lst);
 void ListDump                               (List* lst);
-void DrawGraph     (FILE* file,              List* lst);
+void DrawList      (FILE* file,              List* lst);
 
 Element_t FindElementByPosition    (int pos, List* lst);
 int FindPosOfElement (Element_t elem, List* lst, int* compare (Element_t, Element_t) = nullptr); 
@@ -619,9 +619,39 @@ void SortList (List* lst) {
 }
 
 void ListDump (List* lst);
-void DrawGraph (FILE* file, List* lst) {
+void DrawList (FILE* file, List* lst) {
 
+    fprintf (file, "digraph\n{\n"); 
 
+    for (int i = 1; i <= lst -> maxSize; ++i) 
+        fprintf (file, "\t%p[label = %d]\n", lst -> nodes + i, lst -> nodes[i].data);
+
+    int cur = lst -> head; 
+
+    for (int i = 1; i < lst -> curSize; ++i) {
+
+        fprintf (file, "%p -> ", lst -> nodes + cur);
+        cur = lst -> nodes[cur].next;
+
+    }
+
+    fprintf (file, "%p\n", lst -> nodes + cur);
+
+    int cur = lst -> freeHead; 
+
+    for (int i = 1; i < lst -> maxSize - lst -> curSize; ++i) {
+
+        fprintf (file, "%p -> ", lst -> nodes + cur);
+        cur = lst -> nodes[cur].freePos;
+
+    }
+
+    fprintf (file, "%p\n", lst -> nodes + cur);
+
+  
+    fprintf (file, "}\n");
+
+    return; 
 
 }
 
