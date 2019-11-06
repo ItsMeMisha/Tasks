@@ -30,6 +30,15 @@ enum Error {
     
 };
 
+struct ListElem {
+
+    Element_t data;
+    int next;
+    int prev;
+    int freePos;
+ 
+}
+
 /*! This struct is realization of list data structure
 *
 *   data - an array of data which type is Element_t \n
@@ -48,11 +57,8 @@ enum Error {
 
 struct List {
 
-    Element_t* data;
-    int* next;
-    int* prev;
+    ListElem* nodes;
     int freeHead;
-    int* freePos;
     int head;
     int tail;
     int maxSize;
@@ -143,16 +149,13 @@ bool ListOk (List* lst) {
 void ListConstruct (List* lst) {
 
     assert (lst);
-    lst -> data = (Element_t*) calloc (FirstMaxSize, sizeof (Element_t*));
-    lst -> next = (int*) calloc (FirstMaxSize, sizeof (int));
-    lst -> prev = (int*) calloc (FirstMaxSize, sizeof (int));
+    lst -> nodes = (ListElem*) calloc (FirstMaxSize, sizeof (ListElem));
     lst -> freeHead = 1;
-    lst -> freePos = (int*) calloc (FirstMaxSize, sizeof (int));
     
     for (int i = 1; i < FirstMaxSize - 1; ++i)
-        freePos[i] = i + 1;
+        lst -> nodes[i].freePos= i + 1;
 
-    freePos[FirstMaxSize -1] = 0;
+    lst -> nodes[FirstMaxSize - 1].freePos = 0;
     lst -> head = 0;
     lst -> tail = 0;
     lst -> maxSize = FirstMaxSize;
@@ -174,10 +177,7 @@ void ListDestruct (List* lst) {
 
     ASSERTLST (lst);
 
-    free (lst -> data);
-    free (lst -> next);
-    free (lst -> prev); 
-    free (lst -> freePos);
+    free (lst -> nodes);
 
     lst -> freeHead = 0;
     lst -> head = 0;
@@ -207,7 +207,7 @@ bool PosIsFilled (int pos, List* lst) {
 
     ASSERTLST (lst);
 
-    if (lst -> freePos[pos] >= 0)
+    if (lst -> nodes[pos].freePos >= 0)
         return false;
 
     return true;
@@ -250,9 +250,9 @@ bool DeleteOneFreePos (List* lst) {
     if (lst -> freeHead <= 0) 
         return false;
 
-    int nextFree = lst -> freePos[lst -> freeHead];
+    int nextFree = lst -> nodes[lst -> freeHead].freePos;
 
-    lst -> freePos[lst -> freeHead] = -1;
+    lst -> nodes[lst -> freeHead].freePos = -1;
     lst -> freeHead = nextFree;
 
     return true;
@@ -273,7 +273,7 @@ bool AddFreePos (int pos, List* lst) {
     if (!PosOk (pos, lst))
         return false;
     
-    lst -> freePos[pos] = lst -> freeHead;
+    lst -> nodes[pos].freePos = lst -> freeHead;
     lst -> freeHead = pos;
         
     return true;
@@ -301,8 +301,8 @@ bool InsertFirst (Element_t elem, List* lst) {
 
     lst -> data[NewElemPos] = elem;
  
-    lst -> prev[lst -> head] = NewElemPos;
-    lst -> next[NewElemPos] = lst -> head;
+    lst -> nodes[lst -> head].prev = NewElemPos;
+    lst -> nodes[NewElemPos].next = lst -> head;
     lst -> head = NewElemPos;
 
     lst -> sorted = false;
@@ -332,13 +332,13 @@ bool InsertLast (Element_t elem, List* lst) {
     if (!DeleteOneFreePos (lst))
         return false;
 
-    lst -> data[NewElemPos] = elem;
+    lst -> nodes[NewElemPos].data = elem;
 
-    lst -> next[lst -> tail] = NewElemPos;
-    lst -> prev[NewElemPos] = lst -> tail;
+    lst -> nodes[lst -> tail].next = NewElemPos;
+    lst -> nodes[NewElemPos].prev = lst -> tail;
     lst -> tail = NewElemPos;
 
-    if (NewElemPos != lst -> curSize - 1)
+    if (NewElemPos != lst -> curSize)
         lsr -> sorted = false;
 
     lst -> curSize++;
@@ -381,13 +381,13 @@ bool InsertAfter (Element_t elem, int pos, List* lst) {
     if (!DeleteOneFreePos (lst))
         return false;
 
-    lst -> data[NewElemPos] = elem;
+    lst -> nodes[NewElemPos].data = elem;
 
-    lst -> next[NewElemPos] = next[pos];
-    lst -> prev[NewElemPos] = pos;
+    lst -> nodes[NewElemPos].next = lst -> nodes[pos].next;
+    lst -> nodes[NewElemPos].prev = pos;
  
-    lst -> prev[lst -> next[pos]] = NewElemPos;
-    lst -> next[pos] = NewElemPos;
+    lst -> nodes[lst -> nodes[pos].next].prev = NewElemPos;
+    lst -> nodes[pos].next = NewElemPos;
 
     lst -> sorted = false;
 
@@ -428,11 +428,11 @@ bool InsertBefore (Element_t elem, int pos, List* lst) {
 
     lst -> data[NewElemPos] = elem;
 
-    lst -> next[NewElemPos] = pos;
-    lst -> prev[NewElemPos] = prev[pos];
+    lst -> nodes[NewElemPos].next = pos;
+    lst -> nodes[NewElemPos].prev = lst -> nodes[pos].prev;
 
-    lst -> next[lst -> prev[pos]] = NewElemPos;
-    lst -> prev[pos] = NewElemPos;
+    lst -> nodes[lst -> nodes[pos].prev].next = NewElemPos;
+    lst -> nodes[pos].prev = NewElemPos;
 
     lst -> sorted = false;
 
@@ -455,12 +455,14 @@ bool DeleteFirst (List* lst) {
     if (!AddFreePos (lst -> head, lst))
         return false;
 
-    lst -> data[lst -> head] = Poison;
+    lst -> nodes[lst -> head].data = Poison;
     
-    int nextElem = lst -> next[lst -> head];
-    lst -> prev[nextElem] = -1;
-    lst -> next[lst -> head] = -1;
+    int nextElem = lst -> nodes[lst -> head].next;
+    lst -> nodes[nextElem].prev = -1;
+    lst -> nodes[lst -> head].next = -1;
     lst -> head = nextElem;
+
+    lst -> sorted = false;
 
     return true;
 
@@ -479,11 +481,11 @@ bool DeleteLast (List* lst) {
     if (!AddFreePos (lst -> tail, lst))
         return false;
 
-    lst -> data[lst -> tail] = Poison;
+    lst -> nodes[lst -> tail].data = Poison;
     
-    int prevElem = lst -> prev[lst -> tail];
-    lst -> next[prevElem] = -1;
-    lst -> prev[lst -> tail] = -1;
+    int prevElem = lst -> nodes[lst -> tail].prev;
+    lst -> nodes[prevElem].next = -1;
+    lst -> nodes[lst -> tail].prev = -1;
     lst -> tail = prevElem;
 
     return true;
@@ -513,11 +515,11 @@ bool Delete (int pos, List* lst) {
     if (pos == lst -> tail)
         return DeleteLast (lst);
 
-    lst -> next[prev[pos]] = next[pos];
-    lst -> prev[next[pos]] = prev[pos];
-    lst -> data[pos] = Poison;
-    next[pos] = 0;
-    prev[pos] = 0;
+    lst -> nodes[lst -> nodes[pos].prev].next = lst -> nodes[pos].next;
+    lst -> nodes[lst -> nodes[pos].next].prev = lst -> nodes[pos].prev;
+    lst -> nodes[pos].data = Poison;
+    lst -> nodes[pos].next = 0;
+    lst -> nodes[pos].prev = 0;
 
     if (!AddFreePos (pos, lst))
         return false;
@@ -544,7 +546,7 @@ bool DeleteAfter (int pos, List* lst) {
     if (!PosIsFilled (pos, lst))
         return false;
 
-    return Delete (next[pos], lst);
+    return Delete (lst -> nodes[pos].next, lst);
 
 }
 
@@ -565,8 +567,20 @@ bool DeleteBefore (int pos, List* lst) {
     if (!PosIsFilled (pos, lst))
         return false;
 
-    return Delete (prev[pos], lst);
+    return Delete (lst -> nodes[pos].prev, lst);
 
 }
+
+void SortList (List* lst) {
+
+
+
+}
+
+void ListDump (List* lst);
+
+Element_t FindElementByPosition (int pos, List* lst);
+int FindPosOfElement (Element_t elem, List* lst, int* compare (Element_t, Element_t) = nullptr); 
+
 
 #endif
