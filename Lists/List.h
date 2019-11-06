@@ -23,10 +23,7 @@ enum Error {
     Allright               = 0,
     WrongPositionReference = 1,
     NoFreePosLeft          = 2,
-    NullDataPtr            = 3,
-    NullNextPtr            = 4,
-    NullPrevPtr            = 5,
-    NullFreePosPtr         = 6
+    NullNodesPtr            = 3,
     
 };
 
@@ -93,6 +90,7 @@ bool DeleteBefore                  (int pos, List* lst);
 void SortList                               (List* lst);
 void ListDump                               (List* lst);
 void DrawList      (FILE* file,              List* lst);
+void ErrDecode                              (List* lst);
 
 Element_t FindElementByPosition    (int pos, List* lst);
 int FindPosOfElement (Element_t elem, List* lst, int* compare (Element_t, Element_t) = nullptr); 
@@ -109,30 +107,9 @@ bool ListOk (List* lst) {
     if (lst -> errcode != Allright)
         return false;
 
-    if (lst -> data == nullptr) {
+    if (lst -> nodes == nullptr) {
 
-        lst -> errcode = NullDataPtr;
-        return false;
-
-    }
-
-    if (lst -> next == nullptr) {
-
-        lst -> errcode = NullNextPtr;
-        return false;
-
-    {
-
-    if (lst -> prev == nullptr) {
-
-        lst -> errcode = NullPrevPtr;
-        return false;
-
-    }
-
-    if (lst -> freePos == nullptr) {
-
-        lst -> errcode = NullFreePosPtr;
+        lst -> errcode = NullNodesPtr;
         return false;
 
     }
@@ -618,7 +595,34 @@ void SortList (List* lst) {
 
 }
 
-void ListDump (List* lst);
+void ListDump (List* lst) {
+
+//...
+
+    if (lst == nullptr) {
+
+        printf ("List is nullptr\n");
+        return;
+
+    }
+    
+    if (lst -> nodes == nullptr) {
+
+        printf ("lst -> nodes is nullptr\n");
+        return;
+
+    }
+
+    ErrDecode (lst);         
+    
+    FILE* fileout = fopen ("list.dot", "w");
+    DrawList (fileout, lst);
+    fclose (fileout);
+
+    return;
+
+}
+
 void DrawList (FILE* file, List* lst) {
 
     fprintf (file, "digraph\n{\n"); 
@@ -652,6 +656,21 @@ void DrawList (FILE* file, List* lst) {
     fprintf (file, "}\n");
 
     return; 
+
+}
+
+void ErrDecode (List* lst) {
+
+    switch (lst -> errcode) {    
+
+    case Allright: printf ("Allright\n"); break;
+    case WrongPositionReference: printf ("Wrong Position Reference\n"); break;
+    case NoFreePosLeft: printf ("No free positions left\n"); break;
+    case NullNodesPtr: printf ("lst -> nodes is nullptr\n"); break;
+
+    default: printf ("Unexpected error\n"); break;
+
+    }
 
 }
 
