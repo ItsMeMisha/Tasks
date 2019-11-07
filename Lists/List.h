@@ -3,18 +3,26 @@
     #define __LIST__
 
 #include <stdio.h>
+#include <assert.h>
+#include <malloc.h>
+
+#define _DEBUG //!!!!!!
 
 #ifdef _DEBUG
 
-#define ASSERTLST( lst )    \
-    if (!ListOk (lst)){     \
-        ListDump (lst);     \
-        abort ();           \
+#define ASSERTLST( lst )                  \
+    if (!ListOk (lst)){                   \
+        ListDump (lst, __FUNCTION__);     \
+        assert (0);                       \
     }
     
+#else
+
+#define ASSERTLST( lst ) 
+
 #endif
 
-typedef Element_t int;
+typedef int Element_t;
 const Element_t Poison = {};
 const int FirstMaxSize = 101;
 
@@ -34,7 +42,7 @@ struct ListElem {
     int prev;
     int freePos;
  
-}
+};
 
 /*! This struct is realization of list data structure
 *
@@ -61,7 +69,7 @@ struct List {
     int maxSize;
     int curSize;
     bool sorted;
-    Error errcode
+    Error errcode;
 
 };
 
@@ -81,6 +89,7 @@ bool InsertLast    (Element_t elem,          List* lst);
 bool InsertAfter   (Element_t elem, int pos, List* lst);
 bool InsertBefore  (Element_t elem, int pos, List* lst);
 
+bool CheckDeleteLast                        (List* lst);
 bool DeleteFirst                            (List* lst);
 bool DeleteLast                             (List* lst);
 bool Delete                        (int pos, List* lst);
@@ -88,12 +97,12 @@ bool DeleteAfter                   (int pos, List* lst);
 bool DeleteBefore                  (int pos, List* lst);
 
 void SortList                               (List* lst);
-void ListDump                               (List* lst);
+void ListDump                               (List* lst, const char* funcName);
 void DrawList      (FILE* file,              List* lst);
 void ErrDecode                              (List* lst);
 
-Element_t FindElementByPosition    (int pos, List* lst);
-int FindPosOfElement (Element_t elem, List* lst, int* compare (Element_t, Element_t) = nullptr); 
+//Element_t FindElementByPosition    (int pos, List* lst);
+//int FindPosOfElement (Element_t elem, List* lst, int* compare (Element_t, Element_t) = nullptr); 
 
 bool ListOk (List* lst) {
 
@@ -161,7 +170,7 @@ void ListDestruct (List* lst) {
     lst -> head = 0;
     lst -> tail = 0;
     lst -> maxSize = 0;
-    lsr -> curSize = 0;
+    lst -> curSize = 0;
     lst -> errcode = Allright;
 
     return;
@@ -277,11 +286,14 @@ bool InsertFirst (Element_t elem, List* lst) {
     if (!DeleteOneFreePos (lst))
         return false;
 
-    lst -> data[NewElemPos] = elem;
+    lst -> nodes[NewElemPos].data = elem;
  
     lst -> nodes[lst -> head].prev = NewElemPos;
     lst -> nodes[NewElemPos].next = lst -> head;
     lst -> head = NewElemPos;
+
+    if (lst -> tail <= 0)
+        lst -> tail = lst -> head;
 
     lst -> sorted = false;
 
@@ -316,8 +328,11 @@ bool InsertLast (Element_t elem, List* lst) {
     lst -> nodes[NewElemPos].prev = lst -> tail;
     lst -> tail = NewElemPos;
 
+    if (lst -> head <= 0)
+        lst -> head = lst -> tail;
+
     if (NewElemPos != lst -> curSize)
-        lsr -> sorted = false;
+        lst -> sorted = false;
 
     lst -> curSize++;
 
@@ -404,7 +419,7 @@ bool InsertBefore (Element_t elem, int pos, List* lst) {
     if (!DeleteOneFreePos (lst))
         return false;
 
-    lst -> data[NewElemPos] = elem;
+    lst -> nodes[NewElemPos].data = elem;
 
     lst -> nodes[NewElemPos].next = pos;
     lst -> nodes[NewElemPos].prev = lst -> nodes[pos].prev;
@@ -418,6 +433,24 @@ bool InsertBefore (Element_t elem, int pos, List* lst) {
   
     return true;
 
+}
+
+bool CheckDeleteLast (List* lst) {
+
+    ASSERTLST (lst);
+
+    if (lst -> tail == lst -> head) {
+
+        lst -> tail = 0;
+        lst -> head = 0;
+
+        lst -> sorted = true;
+        return true;
+
+    }   
+
+    return false;
+ 
 }
 
 /*! This function deletes the first element in the list
@@ -434,10 +467,15 @@ bool DeleteFirst (List* lst) {
         return false;
 
     lst -> nodes[lst -> head].data = Poison;
+    lst -> curSize--;
     
+    if (CheckDeleteLast (lst))
+        return true
+   
     int nextElem = lst -> nodes[lst -> head].next;
     lst -> nodes[nextElem].prev = -1;
     lst -> nodes[lst -> head].next = -1;
+
     lst -> head = nextElem;
 
     lst -> sorted = false;
@@ -460,6 +498,10 @@ bool DeleteLast (List* lst) {
         return false;
 
     lst -> nodes[lst -> tail].data = Poison;
+    lst -> curSize--;
+
+    if (CheckDeleteLast (lst))
+        return true;
     
     int prevElem = lst -> nodes[lst -> tail].prev;
     lst -> nodes[prevElem].next = -1;
@@ -501,6 +543,8 @@ bool Delete (int pos, List* lst) {
 
     if (!AddFreePos (pos, lst))
         return false;
+
+    lst -> curSize--;
 
     return true;
 
@@ -553,7 +597,7 @@ void SortList (List* lst) {
 
     ASSERTLST (lst);
 
-    if (lst -> curSize = 0) {
+    if (lst -> curSize == 0) {
 
         lst -> sorted = true;
         return;
@@ -581,6 +625,8 @@ void SortList (List* lst) {
         elemBuf = lst -> nodes[i];
         lst -> nodes[i] = lst -> nodes[PosBuf[i]];
         lst -> nodes[PosBuf[i]] = elemBuf;
+        lst -> nodes[i].next = i + 1;
+        lst -> nodes[i].prev = i - 1;
 
     }
 
@@ -595,9 +641,11 @@ void SortList (List* lst) {
 
 }
 
-void ListDump (List* lst) {
+void ListDump (List* lst, const char* funcName) {
 
 //...
+
+    printf ("In function %s\n", funcName);
 
     if (lst == nullptr) {
 
@@ -628,29 +676,29 @@ void DrawList (FILE* file, List* lst) {
     fprintf (file, "digraph\n{\n"); 
 
     for (int i = 1; i <= lst -> maxSize; ++i) 
-        fprintf (file, "\t%p[label = %d]\n", lst -> nodes + i, lst -> nodes[i].data);
+        fprintf (file, "\t%x[label = %d]\n", lst -> nodes + i, lst -> nodes[i].data);
 
     int cur = lst -> head; 
 
     for (int i = 1; i < lst -> curSize; ++i) {
 
-        fprintf (file, "%p -> ", lst -> nodes + cur);
+        fprintf (file, "%x -> ", lst -> nodes + cur);
         cur = lst -> nodes[cur].next;
 
     }
 
-    fprintf (file, "%p\n", lst -> nodes + cur);
+    fprintf (file, "%x\n", lst -> nodes + lst -> curSize);
 
-    int cur = lst -> freeHead; 
+    cur = lst -> freeHead; 
 
     for (int i = 1; i < lst -> maxSize - lst -> curSize; ++i) {
 
-        fprintf (file, "%p -> ", lst -> nodes + cur);
+        fprintf (file, "%x -> ", lst -> nodes + cur);
         cur = lst -> nodes[cur].freePos;
 
     }
 
-    fprintf (file, "%p\n", lst -> nodes + cur);
+    fprintf (file, "%x\n", lst -> nodes + cur);
 
   
     fprintf (file, "}\n");
@@ -674,8 +722,8 @@ void ErrDecode (List* lst) {
 
 }
 
-Element_t FindElementByPosition (int pos, List* lst);
-int FindPosOfElement (Element_t elem, List* lst, int* compare (Element_t, Element_t) = nullptr); 
+//Element_t FindElementByPosition (int pos, List* lst);
+//int FindPosOfElement (Element_t elem, List* lst, int* compare (Element_t, Element_t) = nullptr); 
 
 
 #endif
