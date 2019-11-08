@@ -107,12 +107,8 @@ int FindLogPosOfElement     (const Element_t elem, List* lst, int compare (Eleme
 
 bool ListOk (List* lst) {
 
-    if (lst == nullptr) {
-        
-        printf ("Error! lst is nullptr\n");
+    if (lst == nullptr) 
         return false;
-
-    }
 
     if (lst -> errcode != Allright)
         return false;
@@ -658,7 +654,7 @@ void DrawList (FILE* file, List* lst) {
     for (int i = 1; i < lst -> maxSize; ++i) 
         fprintf (file, "\t%x[shape = record, label = \"{%d | {%d | %d} | %d }\"]\n", lst -> nodes + i, lst -> nodes[i].prev, i, lst -> nodes[i].data, lst -> nodes[i].next);
 
-    int cur = lst -> head; 
+    int cur = lst -> head;
 
     for (int i = 1; i < lst -> curSize; ++i) {
 
@@ -668,7 +664,7 @@ void DrawList (FILE* file, List* lst) {
     }
 
     fprintf (file, "%x\n", lst -> nodes + lst -> tail);
-
+ 
     cur = lst -> freeHead; 
 
     for (int i = 1; i < lst -> maxSize - lst -> curSize; ++i) {
@@ -718,9 +714,7 @@ int FindLogPosOfElement (Element_t elem, List* lst, int compare (Element_t, Elem
 
     ASSERTLST (lst);
 
-    SortList (lst);
-
-    for (int i = 1; i <= lst -> curSize; ++i)
+    for (int i = 1; i > 0; i = lst -> nodes[i].next)
         if (compare (elem, lst -> nodes[i].data) == 0)
             return i;
 
