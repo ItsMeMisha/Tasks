@@ -643,6 +643,8 @@ void ListDump (List* lst, const char* funcName) {
     DrawList (fileout, lst);
     fclose (fileout);
 
+    printf ("More information in list.dot\n");
+
     return;
 
 }
