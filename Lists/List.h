@@ -79,6 +79,7 @@ void ListConstruct                          (List* lst);
 void ListDestruct                           (List* lst);
 bool PosOk                   (const int pos, List* lst);
 bool PosIsFilled             (const int pos, List* lst);
+bool NewNodePossible         (const int pos, List* lst);
 
 int  GetFreePos                             (List* lst);
 bool DeleteOneFreePos                       (List* lst);
@@ -194,9 +195,24 @@ bool PosIsFilled (const int pos, List* lst) {
 
     ASSERTLST (lst);
 
+    if (!PosOk (pos, lst))
+        return false;
+
     if (lst -> nodes[pos].freePos >= 0)
         return false;
 
+    return true;
+
+}
+
+bool NewNodePossible (const int pos, List* lst) {
+
+    if (pos == 0)
+        return false;
+
+    if (!DeleteOneFreePos (lst))
+        return false;
+    
     return true;
 
 }
@@ -280,10 +296,7 @@ bool InsertFirst (const Element_t elem, List* lst) {
 
     int NewElemPos = GetFreePos (lst);
     
-    if (NewElemPos == 0)
-        return false;
-
-    if (!DeleteOneFreePos (lst))
+    if (!NewNodePossible (NewElemPos, lst))
         return false;
 
     lst -> nodes[NewElemPos].data = elem;
@@ -315,13 +328,10 @@ bool InsertLast (const Element_t elem, List* lst) {
     ASSERTLST (lst);
 
     int NewElemPos = GetFreePos (lst);
-    
-    if (NewElemPos == 0)
+ 
+    if (!NewNodePossible (NewElemPos, lst))
         return false;
-
-    if (!DeleteOneFreePos (lst))
-        return false;
-
+ 
     lst -> nodes[NewElemPos].data = elem;
 
     lst -> nodes[lst -> tail].next = NewElemPos;
@@ -352,7 +362,7 @@ bool InsertAfter (const Element_t elem, const int pos, List* lst) {
 
     ASSERTLST (lst);
 
-    if (!PosOk (pos, lst))
+    if (!PosIsFilled (pos, lst))
         return false;
    
     if (pos == lst -> tail)
@@ -367,13 +377,10 @@ bool InsertAfter (const Element_t elem, const int pos, List* lst) {
         return false;
 
     int NewElemPos = GetFreePos (lst);
-    
-    if (NewElemPos == 0)
+ 
+    if (!NewNodePossible (NewElemPos, lst))
         return false;
-
-    if (!DeleteOneFreePos (lst))
-        return false;
-
+   
     lst -> nodes[NewElemPos].data = elem;
 
     lst -> nodes[NewElemPos].next = lst -> nodes[pos].next;
@@ -402,7 +409,7 @@ bool InsertBefore (const Element_t elem, const int pos, List* lst) {
 
     ASSERTLST (lst);
 
-    if (!PosOk (pos, lst))
+    if (!PosIsFilled (pos, lst))
         return false;
 
     if (pos == lst -> head)
@@ -500,9 +507,6 @@ bool Delete (const int pos, List* lst) {
 
     ASSERTLST (lst);
 
-    if (!PosOk (pos, lst))
-        return false;
-
     if (!PosIsFilled (pos, lst))
         return false;
 
@@ -539,9 +543,6 @@ bool DeleteAfter (const int pos, List* lst) {
 
     ASSERTLST (lst);
 
-    if (!PosOk (pos, lst))
-        return false;
-
     if (!PosIsFilled (pos, lst))
         return false;
 
@@ -559,9 +560,6 @@ bool DeleteAfter (const int pos, List* lst) {
 bool DeleteBefore (const int pos, List* lst) {
 
     ASSERTLST (lst);
-
-    if (!PosOk (pos, lst))
-        return false;
 
     if (!PosIsFilled (pos, lst))
         return false;
