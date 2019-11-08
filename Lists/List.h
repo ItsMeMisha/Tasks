@@ -77,32 +77,32 @@ struct List {
 bool ListOk                                 (List* lst);
 void ListConstruct                          (List* lst);
 void ListDestruct                           (List* lst);
-bool PosOk                         (int pos, List* lst);
-bool PosIsFilled                   (int pos, List* lst);
+bool PosOk                   (const int pos, List* lst);
+bool PosIsFilled             (const int pos, List* lst);
 
 int  GetFreePos                             (List* lst);
 bool DeleteOneFreePos                       (List* lst);
-bool AddFreePos                    (int pos, List* lst);
+bool AddFreePos              (const int pos, List* lst);
 
-bool InsertFirst   (Element_t elem,          List* lst);
-bool InsertLast    (Element_t elem,          List* lst);
-bool InsertAfter   (Element_t elem, int pos, List* lst);
-bool InsertBefore  (Element_t elem, int pos, List* lst);
+bool InsertFirst   (const Element_t elem,                List* lst);
+bool InsertLast    (const Element_t elem,                List* lst);
+bool InsertAfter   (const Element_t elem, const int pos, List* lst);
+bool InsertBefore  (const Element_t elem, const int pos, List* lst);
 
 bool CheckDeleteLast                        (List* lst);
 bool DeleteFirst                            (List* lst);
 bool DeleteLast                             (List* lst);
-bool Delete                        (int pos, List* lst);
-bool DeleteAfter                   (int pos, List* lst);
-bool DeleteBefore                  (int pos, List* lst);
+bool Delete                  (const int pos, List* lst);
+bool DeleteAfter             (const int pos, List* lst);
+bool DeleteBefore            (const int pos, List* lst);
 
 void SortList                               (List* lst);
 void ListDump                               (List* lst, const char* funcName);
 void DrawList      (FILE* file,              List* lst);
 void ErrDecode                              (List* lst);
 
-int IntCompare (int numBigger, int numLess);
-int FindLogPosOfElement     (Element_t elem, List* lst, int* compare (Element_t, Element_t) = IntCompare); 
+int IntCompare (const int numBigger, const int numLess);
+int FindLogPosOfElement     (const Element_t elem, List* lst, int compare (Element_t, Element_t) = IntCompare); 
 
 bool ListOk (List* lst) {
 
@@ -177,7 +177,7 @@ void ListDestruct (List* lst) {
 
 }
 
-bool PosOk (int pos, List* lst) {
+bool PosOk (const int pos, List* lst) {
 
     ASSERTLST (lst);
 
@@ -190,7 +190,7 @@ bool PosOk (int pos, List* lst) {
 
 }
 
-bool PosIsFilled (int pos, List* lst) {
+bool PosIsFilled (const int pos, List* lst) {
 
     ASSERTLST (lst);
 
@@ -253,7 +253,7 @@ bool DeleteOneFreePos (List* lst) {
 *
 */
 
-bool AddFreePos (int pos, List* lst) {
+bool AddFreePos (const int pos, List* lst) {
 
     ASSERTLST (lst);
     
@@ -274,7 +274,7 @@ bool AddFreePos (int pos, List* lst) {
 *
 */
 
-bool InsertFirst (Element_t elem, List* lst) {
+bool InsertFirst (const Element_t elem, List* lst) {
 
     ASSERTLST (lst);
 
@@ -310,7 +310,7 @@ bool InsertFirst (Element_t elem, List* lst) {
 *
 */
 
-bool InsertLast (Element_t elem, List* lst) {
+bool InsertLast (const Element_t elem, List* lst) {
 
     ASSERTLST (lst);
 
@@ -348,7 +348,7 @@ bool InsertLast (Element_t elem, List* lst) {
 *
 */
 
-bool InsertAfter (Element_t elem, int pos, List* lst) {
+bool InsertAfter (const Element_t elem, const int pos, List* lst) {
 
     ASSERTLST (lst);
 
@@ -398,7 +398,7 @@ bool InsertAfter (Element_t elem, int pos, List* lst) {
 *
 */
 
-bool InsertBefore (Element_t elem, int pos, List* lst) {
+bool InsertBefore (const Element_t elem, const int pos, List* lst) {
 
     ASSERTLST (lst);
 
@@ -407,6 +407,8 @@ bool InsertBefore (Element_t elem, int pos, List* lst) {
 
     if (pos == lst -> head)
         return InsertFirst (elem, lst);
+
+    return InsertAfter (elem, lst -> nodes[pos].prev, lst);
 
     if (!PosIsFilled (pos, lst))
         return false;
@@ -519,7 +521,7 @@ bool DeleteLast (List* lst) {
 *
 */
 
-bool Delete (int pos, List* lst) {
+bool Delete (const int pos, List* lst) {
 
     ASSERTLST (lst);
 
@@ -558,7 +560,7 @@ bool Delete (int pos, List* lst) {
 */
 
 
-bool DeleteAfter (int pos, List* lst) {
+bool DeleteAfter (const int pos, List* lst) {
 
     ASSERTLST (lst);
 
@@ -579,7 +581,7 @@ bool DeleteAfter (int pos, List* lst) {
 *
 */
 
-bool DeleteBefore (int pos, List* lst) {
+bool DeleteBefore (const int pos, List* lst) {
 
     ASSERTLST (lst);
 
@@ -680,8 +682,8 @@ void DrawList (FILE* file, List* lst) {
 
     fprintf (file, "digraph\n{\n"); 
 
-    for (int i = 1; i <= lst -> maxSize; ++i) 
-        fprintf (file, "\t%x[label = \"%d | %d | %d\"]\n", lst -> nodes + i, lst -> nodes[i].prev, lst -> nodes[i].data, lst -> nodes[i].next);
+    for (int i = 1; i < lst -> maxSize; ++i) 
+        fprintf (file, "\t%x[shape = record, label = \"{%d | {%d | %d} | %d }\"]\n", lst -> nodes + i, lst -> nodes[i].prev, i, lst -> nodes[i].data, lst -> nodes[i].next);
 
     int cur = lst -> head; 
 
@@ -716,18 +718,18 @@ void ErrDecode (List* lst) {
 
     switch (lst -> errcode) {    
 
-    case Allright: printf ("Allright\n"); break;
-    case WrongPositionReference: printf ("Wrong Position Reference\n"); break;
-    case NoFreePosLeft: printf ("No free positions left\n"); break;
-    case NullNodesPtr: printf ("lst -> nodes is nullptr\n"); break;
+    case Allright: printf ("Allright \n"); break;
+    case WrongPositionReference: printf ("Wrong Position Reference \n"); break;
+    case NoFreePosLeft: printf ("No free positions left \n"); break;
+    case NullNodesPtr: printf ("lst -> nodes is nullptr \n"); break;
 
-    default: printf ("Unexpected error\n"); break;
+    default: printf ("Unexpected error \n"); break;
 
     }
 
 }
 
-int IntCompare (int numBigger, int numLess) {
+int IntCompare (const int numBigger, const int numLess) {
 
     if (numBigger > numLess)
         return 10;
@@ -739,13 +741,13 @@ int IntCompare (int numBigger, int numLess) {
 
 }
 
-int FindLogPosOfElement (Element_t elem, List* lst, int* compare (Element_t, Element_t) = IntCompare) {
+int FindLogPosOfElement (Element_t elem, List* lst, int compare (Element_t, Element_t)) {
 
     ASSERTLST (lst);
 
     SortList (lst);
 
-    for (int i = 1, i <= lst -> curSize; +=i)
+    for (int i = 1; i <= lst -> curSize; ++i)
         if (compare (elem, lst -> nodes[i].data) == 0)
             return i;
 
