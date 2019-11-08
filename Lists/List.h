@@ -101,8 +101,8 @@ void ListDump                               (List* lst, const char* funcName);
 void DrawList      (FILE* file,              List* lst);
 void ErrDecode                              (List* lst);
 
-//Element_t FindElementByPosition    (int pos, List* lst);
-//int FindPosOfElement (Element_t elem, List* lst, int* compare (Element_t, Element_t) = nullptr); 
+int IntCompare (int numBigger, int numLess);
+int FindLogPosOfElement     (Element_t elem, List* lst, int* compare (Element_t, Element_t) = IntCompare); 
 
 bool ListOk (List* lst) {
 
@@ -470,7 +470,7 @@ bool DeleteFirst (List* lst) {
     lst -> curSize--;
     
     if (CheckDeleteLast (lst))
-        return true
+        return true;
    
     int nextElem = lst -> nodes[lst -> head].next;
     lst -> nodes[nextElem].prev = -1;
@@ -604,31 +604,29 @@ void SortList (List* lst) {
 
     }
 
-    int* PosBuf = (int*) calloc (lst -> curSize, sizeof (int));    
-    PosBuf[1] = lst -> head;
+    Element_t* PosBuf = (Element_t*) calloc (lst -> curSize + 1, sizeof (Element_t*));    
+    PosBuf[1] = lst -> nodes[lst -> head].data;
 
     int curNext = lst -> nodes[lst -> head].next;
-//TODO Need to be carefull with tail elem
+
     for (int i = 2; i <= lst -> curSize; ++i) {
 
-        PosBuf[i] = curNext;
+        PosBuf[i] = lst -> nodes[curNext].data;
         curNext = lst -> nodes[curNext].next;
 
     }
 
-    PosBuf[lst -> curSize] = lst -> tail;
-
-    ListElem elemBuf = {};
+    PosBuf[lst -> curSize] = lst -> nodes[lst -> tail].data;
 
     for (int i = 1; i <= lst -> curSize; ++i) {
 
-        elemBuf = lst -> nodes[i];
-        lst -> nodes[i] = lst -> nodes[PosBuf[i]];
-        lst -> nodes[PosBuf[i]] = elemBuf;
+        lst -> nodes[i].data = PosBuf[i];
         lst -> nodes[i].next = i + 1;
         lst -> nodes[i].prev = i - 1;
 
     }
+
+    lst -> nodes[lst -> curSize].next = -1;
 
     lst -> head = 1;
     lst -> tail = lst -> curSize;
@@ -653,6 +651,8 @@ void ListDump (List* lst, const char* funcName) {
         return;
 
     }
+
+    printf ("List [%p]\n", lst);
     
     if (lst -> nodes == nullptr) {
 
@@ -660,6 +660,11 @@ void ListDump (List* lst, const char* funcName) {
         return;
 
     }
+
+    if (lst -> errcode == Allright)
+        printf ("OK\n");
+    else 
+        printf ("ERROR\n");
 
     ErrDecode (lst);         
     
@@ -676,7 +681,7 @@ void DrawList (FILE* file, List* lst) {
     fprintf (file, "digraph\n{\n"); 
 
     for (int i = 1; i <= lst -> maxSize; ++i) 
-        fprintf (file, "\t%x[label = %d]\n", lst -> nodes + i, lst -> nodes[i].data);
+        fprintf (file, "\t%x[label = \"%d | %d | %d\"]\n", lst -> nodes + i, lst -> nodes[i].prev, lst -> nodes[i].data, lst -> nodes[i].next);
 
     int cur = lst -> head; 
 
@@ -687,7 +692,7 @@ void DrawList (FILE* file, List* lst) {
 
     }
 
-    fprintf (file, "%x\n", lst -> nodes + lst -> curSize);
+    fprintf (file, "%x\n", lst -> nodes + lst -> tail);
 
     cur = lst -> freeHead; 
 
@@ -722,8 +727,30 @@ void ErrDecode (List* lst) {
 
 }
 
-//Element_t FindElementByPosition (int pos, List* lst);
-//int FindPosOfElement (Element_t elem, List* lst, int* compare (Element_t, Element_t) = nullptr); 
+int IntCompare (int numBigger, int numLess) {
 
+    if (numBigger > numLess)
+        return 10;
+
+    if (numBigger < numLess)
+        return -10;
+
+    return 0;
+
+}
+
+int FindLogPosOfElement (Element_t elem, List* lst, int* compare (Element_t, Element_t) = IntCompare) {
+
+    ASSERTLST (lst);
+
+    SortList (lst);
+
+    for (int i = 1, i <= lst -> curSize; +=i)
+        if (compare (elem, lst -> nodes[i].data) == 0)
+            return i;
+
+    return 0;    
+
+}
 
 #endif
