@@ -410,31 +410,6 @@ bool InsertBefore (const Element_t elem, const int pos, List* lst) {
 
     return InsertAfter (elem, lst -> nodes[pos].prev, lst);
 
-    if (!PosIsFilled (pos, lst))
-        return false;
-
-    int NewElemPos = GetFreePos (lst);
-
-    if (NewElemPos == 0)
-        return false;
-
-    if (!DeleteOneFreePos (lst))
-        return false;
-
-    lst -> nodes[NewElemPos].data = elem;
-
-    lst -> nodes[NewElemPos].next = pos;
-    lst -> nodes[NewElemPos].prev = lst -> nodes[pos].prev;
-
-    lst -> nodes[lst -> nodes[pos].prev].next = NewElemPos;
-    lst -> nodes[pos].prev = NewElemPos;
-
-    lst -> sorted = false;
-
-    lst -> curSize++;
-  
-    return true;
-
 }
 
 bool CheckDeleteLast (List* lst) {
