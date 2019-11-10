@@ -48,7 +48,7 @@ struct Tree {
 void TreeConstruct                                                      (const Tree* tree);
 void TreeDestruct                                                       (const Tree* tree);
 
-bool NodeCheck                                 (const Tree_node* branch, const Tree* tree);
+bool ParentsCheck                              (const Tree_node* branch, const Tree* tree, const int deep = 0);
 
 Tree_node* NewNode       (const Element_t elem);
 bool Add_Unlinked_Leaf_Very_Very_Dangerous_Only_For_Developer_Of_This_Tree (const Element_t elem, const Tree_node* branch, const Tree* tree);
@@ -86,8 +86,18 @@ void TreeDestruct (const Tree* tree) {
 
 }
 
-bool NodeCheck (const Tree_node* branch, const Tree* tree) {
-//TODO
+bool ParentsCheck (const Tree_node* branch, const Tree* tree, const int deep) {
+
+    if (deep > tree -> size) {
+        return false;
+
+    if (branch == tree -> root)
+        return true;
+
+    if (branch -> parent == nullptr)
+        return false;
+
+    return ParentsCheck (branch -> parent, tree, deep + 1);
 
 }
 
@@ -111,7 +121,7 @@ bool Add_Unlinked_Leaf_Very_Very_Dangerous_Only_For_Developer_Of_This_Tree (cons
 
     ASSERTTREE (tree);
 
-    if (!NodeCheck (branch, tree))
+    if (!ParentsCheck (branch, tree))
         return false;
 
     Tree_node* NewLeaf = NewNode (elem);
@@ -158,7 +168,7 @@ bool DeleteBranch (Tree_node* branch, const Tree* tree) {
 
     ASSERTTREE (tree);
     
-    if (!NodeCheck (branch, tree))
+    if (!ParentsCheck (branch, tree))
         return false;
 
     if (branch -> left != nullptr)
@@ -182,6 +192,8 @@ bool DeleteBranch (Tree_node* branch, const Tree* tree) {
     else tree -> root = nullptr;
 
     free (branch);
+
+    tree -> size--;
 
     return true;
 
