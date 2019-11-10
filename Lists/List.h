@@ -34,12 +34,18 @@ enum Error {
     Allright               = 0,
     WrongPositionReference = 1,
     NoFreePosLeft          = 2,
-    NullDataPtr            = 3,
-    NullNextPtr            = 4,
-    NullPrevPtr            = 5,
-    NullFreePosPtr         = 6
+    NullNodePtr            = 3,
+    NullFreePosPtr         = 4
     
 };
+
+struct List_node {
+
+    Element_t data;
+    int next;
+    int prev;
+
+}
 
 /*! This struct is realization of list data structure
 *
@@ -59,10 +65,8 @@ enum Error {
 
 struct List {
 
-    Element_t* data;
-    int* next;
-    int* prev;
-    int* freePos;
+    List_node* node;
+    List_node* freePos;
     int freeHead;
     int head;
     int tail;
@@ -102,7 +106,7 @@ void ListDump                               (List* lst, const char* funcName);
 void DrawList      (FILE* file,              List* lst);
 void ErrDecode                              (List* lst);
 
-int IntCompare (const void* numBigger, const void* numLess);
+int PrevCompare (const void* node1, const void* node2);
 int FindLogPosOfElement   (const Element_t elem, List* lst, int compare (const void*, const void*) = IntCompare); 
 
 bool ListOk (List* lst) {
@@ -113,23 +117,9 @@ bool ListOk (List* lst) {
     if (lst -> errcode != Allright)
         return false;
 
-    if (lst -> data == nullptr) {
+    if (lst -> node == nullptr) {
 
-        lst -> errcode = NullDataPtr;
-        return false;
-
-    }
-
-     if (lst -> next == nullptr) {
-
-        lst -> errcode = NullNextPtr;
-        return false;
-
-    }
-
-    if (lst -> prev == nullptr) {
-
-        lst -> errcode = NullPrevPtr;
+        lst -> errcode = NullNodePtr;
         return false;
 
     }
@@ -154,20 +144,18 @@ bool ListOk (List* lst) {
 void ListConstruct (List* lst) {
 
     assert (lst);
-    lst -> data = (Element_t*) calloc (FirstMaxSize, sizeof (Element_t));
-    lst -> next = (int*) calloc (FirstMaxSize, sizeof (int));
-    lst -> freePos = lst -> next;
-    lst -> prev = (int*) calloc (FirstMaxSize, sizeof (int));
+    lst -> node = (Element_t*) calloc (FirstMaxSize, sizeof (Element_t));
+    lst -> freePos = lst -> node;
     lst -> freeHead = 1;
  
     for (int i = 1; i < FirstMaxSize - 1; ++i) {
 
-        lst -> freePos[i] = i + 1;
-        lst -> prev[i] = -1;
+        lst -> freePos[i].next = i + 1;
+        lst -> freePos[i].prev = -1;
 
     }
 
-    lst -> freePos[FirstMaxSize - 1] = 0;
+    lst -> freePos[FirstMaxSize - 1].next = 0;
     lst -> head = 0;
     lst -> tail = 0;
     lst -> maxSize = FirstMaxSize;
@@ -189,9 +177,7 @@ void ListDestruct (List* lst) {
 
     ASSERTLST (lst);
 
-    free (lst -> data);
-    free (lst -> next);
-    free (lst -> prev);
+    free (lst -> node);
 
     lst -> freeHead = 0;
     lst -> head = 0;
@@ -224,7 +210,7 @@ bool PosIsFilled (const int pos, List* lst) {
     if (!PosOk (pos, lst))
         return false;
 
-    if (lst -> prev[pos] <= PosIsFree)
+    if (lst -> node[pos].prev <= PosIsFree)
         return false;
 
     return true;
@@ -281,8 +267,8 @@ bool DeleteOneFreePos (List* lst) {
 
     int nextFree = lst -> freePos[lst -> freeHead];
 
-    lst -> freePos[lst -> freeHead] = -1;
-    lst -> prev[lst -> freeHead] = 0;
+    lst -> freePos[lst -> freeHead].next = -1;
+    lst -> node[lst -> freeHead].prev = 0;
     lst -> freeHead = nextFree;
 
     return true;
@@ -303,8 +289,8 @@ bool AddFreePos (const int pos, List* lst) {
     if (!PosOk (pos, lst))
         return false;
     
-    lst -> freePos[pos] = lst -> freeHead;
-    lst -> prev[pos] = PosIsFree;
+    lst -> freePos[pos].next = lst -> freeHead;
+    lst -> node[pos].prev = PosIsFree;
     lst -> freeHead = pos;
         
     return true;
@@ -327,10 +313,10 @@ bool InsertFirst (const Element_t elem, List* lst) {
     if (!NewNodePossible (NewElemPos, lst))
         return false;
 
-    lst -> data[NewElemPos] = elem;
+    lst -> node[NewElemPos].data = elem;
  
-    lst -> prev[lst -> head] = NewElemPos;
-    lst -> next[NewElemPos] = lst -> head;
+    lst -> node[lst -> head].prev = NewElemPos;
+    lst -> node[NewElemPos].next = lst -> head;
     lst -> head = NewElemPos;
 
     if (lst -> tail <= 0)
@@ -360,10 +346,10 @@ bool InsertLast (const Element_t elem, List* lst) {
     if (!NewNodePossible (NewElemPos, lst))
         return false;
  
-    lst -> data[NewElemPos] = elem;
+    lst -> node[NewElemPos].data = elem;
 
-    lst -> next[lst -> tail] = NewElemPos;
-    lst -> prev[NewElemPos] = lst -> tail;
+    lst -> node[lst -> tail].next = NewElemPos;
+    lst -> node[NewElemPos].prev = lst -> tail;
     lst -> tail = NewElemPos;
 
     if (lst -> head <= 0)
@@ -409,13 +395,13 @@ bool InsertAfter (const Element_t elem, const int pos, List* lst) {
     if (!NewNodePossible (NewElemPos, lst))
         return false;
    
-    lst -> data[NewElemPos] = elem;
+    lst -> node[NewElemPos].data = elem;
 
-    lst -> next[NewElemPos] = lst -> next[pos];
-    lst -> prev[NewElemPos] = pos;
+    lst -> node[NewElemPos].next = lst -> node[pos].next;
+    lst -> node[NewElemPos].prev = pos;
  
-    lst -> prev[lst -> next[pos]] = NewElemPos;
-    lst -> next[pos] = NewElemPos;
+    lst -> node[lst -> node[pos].next].prev = NewElemPos;
+    lst -> node[pos].next = NewElemPos;
 
     lst -> sorted = false;
 
@@ -443,7 +429,7 @@ bool InsertBefore (const Element_t elem, const int pos, List* lst) {
     if (pos == lst -> head)
         return InsertFirst (elem, lst);
 
-    return InsertAfter (elem, lst -> prev[pos], lst);
+    return InsertAfter (elem, lst -> node[pos].prev, lst);
 
 }
 
@@ -478,15 +464,15 @@ bool DeleteFirst (List* lst) {
     if (!AddFreePos (lst -> head, lst))
         return false;
 
-    lst -> data[lst -> head] = Poison;
+    lst -> node[lst -> head].data = Poison;
     lst -> curSize--;
     
     if (CheckDeleteLast (lst))
         return true;
    
-    int nextElem = lst -> next[lst -> head];
-    lst -> prev[nextElem] = -1;
-    lst -> next[lst -> head] = -1;
+    int nextElem = lst -> node[lst -> head].next;
+    lst -> node[nextElem].prev = -1;
+    lst -> node[lst -> head].next = -1;
 
     lst -> head = nextElem;
 
@@ -509,15 +495,15 @@ bool DeleteLast (List* lst) {
     if (!AddFreePos (lst -> tail, lst))
         return false;
 
-    lst -> data[lst -> tail] = Poison;
+    lst -> node[lst -> tail].data = Poison;
     lst -> curSize--;
 
     if (CheckDeleteLast (lst))
         return true;
     
-    int prevElem = lst -> prev[lst -> tail];
-    lst -> next[prevElem] = -1;
-    lst -> prev[lst -> tail] = -1;
+    int prevElem = lst -> node[lst -> tail].prev;
+    lst -> node[prevElem].next = -1;
+    lst -> node[lst -> tail].prev = -1;
     lst -> tail = prevElem;
 
     return true;
@@ -544,11 +530,11 @@ bool Delete (const int pos, List* lst) {
     if (pos == lst -> tail)
         return DeleteLast (lst);
 
-    lst -> next[lst -> prev[pos]] = lst -> next[pos];
-    lst -> prev[lst -> next[pos]] = lst -> prev[pos];
-    lst -> data[pos] = Poison;
-    lst -> next[pos] = 0;
-    lst -> prev[pos] = PosIsFree;
+    lst -> node[lst -> node[pos].prev].next = lst -> node[pos].next;
+    lst -> node[lst -> node[pos].next].prev = lst -> node[pos].prev;
+    lst -> node[pos].data = Poison;
+    lst -> node[pos].next = 0;
+    lst -> node[pos].prev = PosIsFree;
 
     if (!AddFreePos (pos, lst))
         return false;
@@ -574,7 +560,7 @@ bool DeleteAfter (const int pos, List* lst) {
     if (!PosIsFilled (pos, lst))
         return false;
 
-    return Delete (lst -> next[pos], lst);
+    return Delete (lst -> node[pos].next, lst);
 
 }
 
@@ -592,7 +578,7 @@ bool DeleteBefore (const int pos, List* lst) {
     if (!PosIsFilled (pos, lst))
         return false;
 
-    return Delete (lst -> prev[pos], lst);
+    return Delete (lst -> node[pos].prev, lst);
 
 }
 
@@ -607,36 +593,38 @@ void SortList (List* lst) {
 
     }
 
-    memset (lst -> prev, lst -> maxSize + 1, lst -> maxSize * sizeof (int));
+    for (int i = 0; i < lst -> maxSize; ++i)
+        lst -> node[i].prev = lst -> maxSize + 1;
 
-    lst -> prev[lst -> head] = 1;
+    lst -> node[lst -> head].prev = 1;
 
-    int curNext = lst -> next[lst -> head];
+    int curNext = lst -> node[lst -> head].next;
 
     for (int i = 2; i <= lst -> curSize; ++i) {
 
-        lst -> prev[curNext] = i;
-        curNext = lst -> next[curNext];
+        lst -> node[curNext].prev = i;
+        curNext = lst -> node[curNext].next;
 
     }
 
-    qsort (lst -> prev + 1, lst -> maxSize, sizeof (int), IntCompare); 
+    qsort (lst -> node + 1, lst -> maxSize - 1, sizeof (int), PrevCompare); 
 
     for (int i = 1; i < lst -> maxSize; ++i) {
 
-        lst -> next[i] = i + 1;
-        lst -> prev[i] = i - 1;
+        lst -> node[i].next = i + 1;
+        lst -> node[i].prev = i - 1;
 
     }
 
-    lst -> next[lst -> curSize] = -1;
+    lst -> node[lst -> curSize].next = -1;
 
     lst -> head = 1;
     lst -> tail = lst -> curSize;
     lst -> freeHead = lst -> tail + 1;
-    lst -> freePos[lst -> maxSize - 1] = -1;
+    lst -> freePos[lst -> maxSize - 1].next = -1;
 
-    memset (lst -> prev + lst -> curSize + 1, -1, (lst -> maxSize - lst -> curSize) * sizeof (int));
+    for (int i = lst -> curSize + 1; i < lst -> maxSize; ++i)
+        lst -> freePos[i].prev = -1;
 
     lst -> sorted = true;
 
@@ -683,20 +671,20 @@ void DrawList (FILE* file, List* lst) {
 
     for (int i = 1; i < lst -> maxSize; ++i) {
 
-        fprintf (file, "\t%x[color =", lst -> data + i);
-        if (lst -> prev[i] == PosIsFree)
+        fprintf (file, "\t%x[color =", lst -> node + i);
+        if (lst -> node[i].prev == PosIsFree)
             fprintf (file, "green, ");
         else
             fprintf (file, "red, ");
 
-        fprintf (file, "shape = record, label = \"{%d | {%d | %d} | %d }\"]\n", lst -> prev[i], i, lst -> data[i], lst -> next[i]);
+        fprintf (file, "shape = record, label = \"{%d | {%d | %d} | %d }\"]\n", lst -> node[i].prev, i, lst -> node[i].data, lst -> node[i].next);
 
     }
 
     for (int i = 1; i < lst -> maxSize; ++i) 
-        fprintf (file, "%x -> ", lst -> data + i);
+        fprintf (file, "%x -> ", lst -> node + i);
 
-    fprintf (file, "%x\n", lst -> data + lst -> maxSize);
+    fprintf (file, "%x\n", lst -> node + lst -> maxSize);
 
     fprintf (file, "edge[color=black];");
 
@@ -704,23 +692,23 @@ void DrawList (FILE* file, List* lst) {
 
     for (int i = 1; i < lst -> curSize; ++i) {
 
-        fprintf (file, "%x -> ", lst -> data + cur);
-        cur = lst -> next[cur];
+        fprintf (file, "%x -> ", lst -> node + cur);
+        cur = lst -> node[cur].next;
 
     }
 
-    fprintf (file, "%x\n", lst -> data + lst -> tail);
+    fprintf (file, "%x\n", lst -> node + lst -> tail);
  
     cur = lst -> freeHead; 
 
     for (int i = 1; i < lst -> maxSize - lst -> curSize; ++i) {
 
-        fprintf (file, "%x -> ", lst -> data + cur);
-        cur = lst -> freePos[cur];
+        fprintf (file, "%x -> ", lst -> node + cur);
+        cur = lst -> freePos[cur].next;
 
     }
 
-    fprintf (file, "%x\n", lst -> data + cur);
+    fprintf (file, "%x\n", lst -> node + cur);
 
   
     fprintf (file, "}\n");
@@ -747,25 +735,25 @@ void ErrDecode (List* lst) {
 
 }
 
-int IntCompare (const void* numBigger, const void* numLess) {
+int PrevCompare (const void* node1, const void* node2) {
 
-    assert (numBigger);
-    assert (numLess);
+    assert (node1);
+    assert (node2);
 
-    return (*((int*) numBigger) - *((int*) numLess));
+    return (((List_node*) node1) -> next - ((List_node*) node2) -> next);
 
 }
 
-int FindLogPosOfElement (Element_t elem, List* lst, int compare (const void*, const void*)) {
+/*int FindLogPosOfElement (Element_t elem, List* lst, int compare (const void*, const void*)) {
 
     ASSERTLST (lst);
 
     for (int i = 1; i > 0; i = lst -> next[i])
-        if (compare (&elem, lst -> data + i) == 0)
+        if (compare (&elem, lst -> node + i) == 0)
             return i;
 
     return 0;    
 
-}
+}*/
 
 #endif
