@@ -5,8 +5,11 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <assert.h>
+#include <string.h>
 
 #ifdef _DEBUG
+
+    #define assert( cond ) assert (cond)
 
     #define ASSERTTREE( cond )  \
         if (!TreeOk (cond)) {   \
@@ -14,6 +17,8 @@
             assert (0); }       
 
 #else
+
+    #define assert( cond )
 
     #define ASSERTTREE( cond )
 
@@ -32,7 +37,7 @@ enum Error {
 
 struct Tree_node {
 
-    Element_t  data;
+    Element_t* data;
     Tree_node* parent;
     Tree_node* left;
     Tree_node* right;
@@ -112,14 +117,15 @@ bool ParentsCheck (const Tree_node* branch, const Tree* tree, const int deep) {
 
 }
 
-Tree_node* NewNode (const Element_t elem) {
+Tree_node* NewNode (const Element_t* elem) {
 
     Tree_node* NewLeaf = (Tree_node*) calloc (1, sizeof (Tree_node));
 
     if (NewLeaf == nullptr)
         return NewLeaf;
     
-    NewLeaf -> data   = elem;
+    NewLeaf -> data = (Element_t*) calloc (1, sizeof (*elem));
+    memncpy (NewLeaf -> data, elem, sizeof (*elem));
     NewLeaf -> parent = nullptr;
     NewLeaf -> left   = nullptr;
     NewLead -> right  = nullptr;
@@ -135,7 +141,7 @@ bool Add_Unlinked_Leaf_Very_Very_Dangerous_Only_For_Developer_Of_This_Tree (cons
     if (!ParentsCheck (branch, tree))
         return false;
 
-    Tree_node* NewLeaf = NewNode (elem);
+    Tree_node* NewLeaf = NewNode (&elem);
 
     if (NewLeaf == nullptr) {
         tree -> errcode = NoMemoryForNewNode;
