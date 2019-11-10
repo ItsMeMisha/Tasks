@@ -19,7 +19,9 @@
 
 #endif
 
-typedef int Element_t;
+typedef char* Element_t;
+
+const int MaxStrBufSize = 512;
 
 enum Error {
 
@@ -57,11 +59,20 @@ bool AddRightLeaf        (const Elemetn_t elem, const Tree_node* branch, const T
 
 bool DeleteBranch                                    (Tree_node* branch, const Tree* tree);
 
-Tree_node* SearchElement (const Element_t elem,                          const Tree* tree);
+//Tree_node* SearchElement (const Element_t elem,                          const Tree* tree);
 
-void PrintPreTree                                                       (const Tree* tree);
+void PrintPreNode                                           (FILE* file, const Tree* tree);
+void PrintPreTree                                           (FILE* file, const Tree* tree);
+void ReadPreNode                                    (const char* StrBuf, const Tree* tree);
+void ReadPreTree                                            (FILE* file, const Tree* tree);
+void Print (FILE* file, const char* item);
+void Print (FILE* file, const int item);
+void Print (FILE* file, const char item);
+void Print (FILE* file, const double item);
+
 bool TreeOk                                                             (const Tree* tree);
 void TreeDump                                                           (const Tree* tree);
+void DrawTree                                               (FILE* file, const Tree* tree);
 
 void TreeConstruct (const Tree* tree) {
 
@@ -198,5 +209,85 @@ bool DeleteBranch (Tree_node* branch, const Tree* tree) {
     return true;
 
 }
+
+void PrintPreNode (FILE* file, const Tree_node* node) {
+
+    fprintf (file, "{");
+    Print (file, node -> data);
+    
+    if (node -> left != nullptr || node -> right != nullptr) {
+
+        if (node -> left != nullptr)
+            PrintPreNode (file, node -> left);
+        else 
+            fprintf (file, "@");
+
+        if (node -> right != nullptr)
+            PrintPreNode (file, node -> right);
+        else 
+            fprintf (file, "@");
+
+    }
+
+    fprintf (file, "}");
+    
+    return;
+
+}
+
+void PrintPreTree (FILE* file, const Tree* tree) {
+
+    PrintPreNode (file, tree -> root);
+
+    return;
+
+}
+
+void ReadPreNode (const char* StrBuf, const Tree_node* node) {
+
+    return;
+
+}
+
+void ReadPreTree (FILE* file, const Tree* tree) {
+
+    char StrBuf[MaxStrBufSize] = "";
+
+    fscanf (file, "%512s", StrBuf);
+
+    ReadPreNode (const char* StrBuf, tree -> root);
+
+    return;
+
+}
+
+void Print (FILE* file, const char* item) {
+
+    fprintf (file, "%s", item);
+
+}
+
+void Print (FILE* file, const int item) {
+
+    fprintf (file, "%d", item);
+
+}
+
+void Print (FILE* file, const char item) {
+
+    fprintf (file, "%c", item);
+
+}
+
+void Print (FILE* file, const double item) {
+
+    fprintf (file, "%lg", item);
+
+}
+
+
+bool TreeOk                                                             (const Tree* tree);
+void TreeDump                                                           (const Tree* tree);
+void DrawTree                                               (FILE* file, const Tree* tree);
 
 #endif
