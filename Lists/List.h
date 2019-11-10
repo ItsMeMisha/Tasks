@@ -45,7 +45,7 @@ struct List_node {
     int next;
     int prev;
 
-}
+};
 
 /*! This struct is realization of list data structure
 *
@@ -107,7 +107,7 @@ void DrawList      (FILE* file,              List* lst);
 void ErrDecode                              (List* lst);
 
 int PrevCompare (const void* node1, const void* node2);
-int FindLogPosOfElement   (const Element_t elem, List* lst, int compare (const void*, const void*) = IntCompare); 
+//int FindLogPosOfElement   (const Element_t elem, List* lst, int compare (const void*, const void*) = IntCompare); 
 
 bool ListOk (List* lst) {
 
@@ -144,7 +144,7 @@ bool ListOk (List* lst) {
 void ListConstruct (List* lst) {
 
     assert (lst);
-    lst -> node = (Element_t*) calloc (FirstMaxSize, sizeof (Element_t));
+    lst -> node = (List_node*) calloc (FirstMaxSize, sizeof (List_node));
     lst -> freePos = lst -> node;
     lst -> freeHead = 1;
  
@@ -265,7 +265,7 @@ bool DeleteOneFreePos (List* lst) {
     if (lst -> freeHead <= 0) 
         return false;
 
-    int nextFree = lst -> freePos[lst -> freeHead];
+    int nextFree = lst -> freePos[lst -> freeHead].next;
 
     lst -> freePos[lst -> freeHead].next = -1;
     lst -> node[lst -> freeHead].prev = 0;
@@ -724,9 +724,7 @@ void ErrDecode (List* lst) {
     case Allright: printf ("Allright \n"); break;
     case WrongPositionReference: printf ("Wrong Position Reference \n"); break;
     case NoFreePosLeft: printf ("No free positions left \n"); break;
-    case NullDataPtr: printf ("lst -> data is nullptr \n"); break;
-    case NullNextPtr: printf ("lst -> next is nullptr \n"); break;
-    case NullPrevPtr: printf ("lst -> prev is nullptr \n"); break;
+    case NullNodePtr: printf ("lst -> node is nullptr \n"); break;
     case NullFreePosPtr: printf ("lst -> freePos is nullptr \n"); break;
 
     default: printf ("Unexpected error \n"); break;
