@@ -31,6 +31,7 @@ enum Error {
 struct Tree_node {
 
     Element_t  data;
+    Tree_node* parent;
     Tree_node* left;
     Tree_node* right;
 
@@ -58,6 +59,7 @@ bool DeleteBranch                                    (Tree_node* branch, const T
 
 Tree_node* SearchElement (const Element_t elem,                          const Tree* tree);
 
+void PrintPreTree                                                       (const Tree* tree);
 bool TreeOk                                                             (const Tree* tree);
 void TreeDump                                                           (const Tree* tree);
 
@@ -96,9 +98,10 @@ Tree_node* NewNode (const Element_t elem) {
     if (NewLeaf == nullptr)
         return NewLeaf;
     
-    NewLeaf -> data  = elem;
-    NewLeaf -> left  = nullptr;
-    NewLead -> right = nullptr;
+    NewLeaf -> data   = elem;
+    NewLeaf -> parent = nullptr;
+    NewLeaf -> left   = nullptr;
+    NewLead -> right  = nullptr;
 
     return NewLeaf;
 
@@ -131,6 +134,7 @@ bool AddLeftLeaf (const Element_t elem, const Tree_node* branch, const Tree* tre
         return false;
     
     branch -> left = NewLeaf;
+    NewLeaf -> parent = branch;
 
     return true;
 
@@ -144,6 +148,40 @@ bool AddRightLeaf (const Element_t data, const Tree_node* branch, const Tree* tr
         return false;
     
     branch -> right = NewLeaf;
+    NewLeaf -> parent = branch;
+
+    return true;
+
+}
+
+bool DeleteBranch (Tree_node* branch, const Tree* tree) {
+
+    ASSERTTREE (tree);
+    
+    if (!NodeCheck (branch, tree))
+        return false;
+
+    if (branch -> left != nullptr)
+        DeleteBranch (branch -> left, tree);
+
+    if (branch -> right != nullptr)
+        DeleteBranch (branch -> right, tree);
+
+    if (branch != tree -> root) {
+
+        if (branch -> parent -> left == branch)
+            branch -> parent -> left = nullptr;
+
+        else
+
+        if (branch -> parent -> right == branch)
+            branch -> parent -> right = nullptr;
+
+    }
+
+    else tree -> root = nullptr;
+
+    free (branch);
 
     return true;
 
