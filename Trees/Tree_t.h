@@ -30,8 +30,8 @@ const int MaxStrBufSize = 512;
 
 enum Error {
 
-    Allright           = 0;
-    NoMemoryForNewNode = 1;
+    Allright           = 0,
+    NoMemoryForNewNode = 1
 
 };
 
@@ -52,24 +52,24 @@ struct Tree {
 
 };
 
-void TreeConstruct                                                      (const Tree* tree);
-void TreeDestruct                                                       (const Tree* tree);
+void TreeConstruct                                                      (Tree* tree);
+void TreeDestruct                                                       (Tree* tree);
 
-bool ParentsCheck                              (const Tree_node* branch, const Tree* tree, const int deep = 0);
+bool ParentsCheck                        (const Tree_node* branch, const Tree* tree, const int deep = 0);
 
 Tree_node* NewNode       (const Element_t elem);
-bool Add_Unlinked_Leaf_Very_Very_Dangerous_Only_For_Developer_Of_This_Tree (const Element_t elem, const Tree_node* branch, const Tree* tree);
-bool AddLeftLeaf         (const Element_t elem, const Tree_node* branch, const Tree* tree);
-bool AddRightLeaf        (const Elemetn_t elem, const Tree_node* branch, const Tree* tree);
+Tree_node* Add_Unlinked_Leaf_Very_Very_Dangerous_Only_For_Developer_Of_This_Tree (const Element_t elem, Tree_node* branch, Tree* tree);
+bool AddLeftLeaf         (const Element_t elem, Tree_node* branch, Tree* tree);
+bool AddRightLeaf        (const Element_t elem, Tree_node* branch, Tree* tree);
 
-bool DeleteBranch                                    (Tree_node* branch, const Tree* tree);
+bool DeleteBranch                                    (Tree_node* branch, Tree* tree);
 
 //Tree_node* SearchElement (const Element_t elem,                          const Tree* tree);
 
 void PrintPreNode                                           (FILE* file, const Tree* tree);
 void PrintPreTree                                           (FILE* file, const Tree* tree);
-void ReadPreNode                                    (const char* StrBuf, const Tree* tree);
-void ReadPreTree                                            (FILE* file, const Tree* tree);
+void ReadPreNode                                    (const char* StrBuf,       Tree* tree);
+void ReadPreTree                                            (FILE* file,       Tree* tree);
 void Print (FILE* file, const char* item);
 void Print (FILE* file, const int item);
 void Print (FILE* file, const char item);
@@ -79,24 +79,24 @@ bool TreeOk                                                             (const T
 void TreeDump                                                           (const Tree* tree);
 void DrawTree                                               (FILE* file, const Tree* tree);
 
-void TreeConstruct (const Tree* tree) {
+void TreeConstruct (Tree* tree) {
 
     tree -> root    = nullptr;
     tree -> size    = 0;
-    tree -> errcode = Allrigth;
+    tree -> errcode = Allright;
 
     return;
 
 }
 
-void TreeDestruct (const Tree* tree) {
+void TreeDestruct (Tree* tree) {
 
     ASSERTTREE (tree);
 
     DeleteBranch (tree -> root, tree);
 
     tree -> size    = 0;
-    tree -> errcode = 0;
+    tree -> errcode = Allright;
 
     return;
 
@@ -104,7 +104,7 @@ void TreeDestruct (const Tree* tree) {
 
 bool ParentsCheck (const Tree_node* branch, const Tree* tree, const int deep) {
 
-    if (deep > tree -> size) {
+    if (deep > tree -> size)
         return false;
 
     if (branch == tree -> root)
@@ -125,39 +125,43 @@ Tree_node* NewNode (const Element_t* elem) {
         return NewLeaf;
     
     NewLeaf -> data = (Element_t*) calloc (1, sizeof (*elem));
-    memncpy (NewLeaf -> data, elem, sizeof (*elem));
+    memcpy (NewLeaf -> data, elem, sizeof (*elem));
     NewLeaf -> parent = nullptr;
     NewLeaf -> left   = nullptr;
-    NewLead -> right  = nullptr;
+    NewLeaf -> right  = nullptr;
 
     return NewLeaf;
 
 }
 
-bool Add_Unlinked_Leaf_Very_Very_Dangerous_Only_For_Developer_Of_This_Tree (const Element_t elem, const Tree_node* branch, const Tree* tree) {
+Tree_node* Add_Unlinked_Leaf_Very_Very_Dangerous_Only_For_Developer_Of_This_Tree (const Element_t elem, Tree_node* branch, Tree* tree) {
 
     ASSERTTREE (tree);
 
     if (!ParentsCheck (branch, tree))
-        return false;
+        return nullptr;
 
     Tree_node* NewLeaf = NewNode (&elem);
 
     if (NewLeaf == nullptr) {
         tree -> errcode = NoMemoryForNewNode;
-        return false;
+        return nullptr;
+
+    }
     
     tree -> size++;
 
-    return true;
+    return NewLeaf;
 
 }
 
-bool AddLeftLeaf (const Element_t elem, const Tree_node* branch, const Tree* tree) {
+bool AddLeftLeaf (const Element_t elem, Tree_node* branch, Tree* tree) {
 
     ASSERTTREE (tree);
 
-    if (!Add_Unlinked_Leaf_Very_Very_Dangerous_Only_For_Developer_Of_This_Tree (elem, branch, tree))
+    Tree_node* NewLeaf = nullptr;
+
+    if ((NewLeaf = Add_Unlinked_Leaf_Very_Very_Dangerous_Only_For_Developer_Of_This_Tree (elem, branch, tree)) == nullptr)
         return false;
     
     branch -> left = NewLeaf;
@@ -167,11 +171,13 @@ bool AddLeftLeaf (const Element_t elem, const Tree_node* branch, const Tree* tre
 
 }
 
-bool AddRightLeaf (const Element_t data, const Tree_node* branch, const Tree* tree) {
+bool AddRightLeaf (const Element_t elem, Tree_node* branch, Tree* tree) {
 
     ASSERTTREE (tree);
 
-    if (!Add_Unlinked_Leaf_Very_Very_Dangerous_Only_For_Developer_Of_This_Tree (elem, branch, tree))
+    Tree_node* NewLeaf = nullptr;
+
+    if ((NewLeaf = Add_Unlinked_Leaf_Very_Very_Dangerous_Only_For_Developer_Of_This_Tree (elem, branch, tree)) == nullptr)
         return false;
     
     branch -> right = NewLeaf;
@@ -181,7 +187,7 @@ bool AddRightLeaf (const Element_t data, const Tree_node* branch, const Tree* tr
 
 }
 
-bool DeleteBranch (Tree_node* branch, const Tree* tree) {
+bool DeleteBranch (Tree_node* branch, Tree* tree) {
 
     ASSERTTREE (tree);
     
@@ -207,7 +213,8 @@ bool DeleteBranch (Tree_node* branch, const Tree* tree) {
     }
 
     else tree -> root = nullptr;
-
+    
+    free (branch -> data);
     free (branch);
 
     tree -> size--;
@@ -219,7 +226,7 @@ bool DeleteBranch (Tree_node* branch, const Tree* tree) {
 void PrintPreNode (FILE* file, const Tree_node* node) {
 
     fprintf (file, "{");
-    Print (file, node -> data);
+    Print (file, *(node -> data));
     
     if (node -> left != nullptr || node -> right != nullptr) {
 
@@ -261,7 +268,7 @@ void ReadPreTree (FILE* file, const Tree* tree) {
 
     fscanf (file, "%512s", StrBuf);
 
-    ReadPreNode (const char* StrBuf, tree -> root);
+    ReadPreNode (StrBuf, tree -> root);
 
     return;
 
