@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <assert.h>
 #include <malloc.h>
+#include <string.h>
+#include <stdlib.h>
 
 #define _DEBUG //!!!!!!
 
@@ -57,7 +59,7 @@ enum Error {
 
 struct List {
 
-    Element_t data;
+    Element_t* data;
     int* next;
     int* prev;
     int* freePos;
@@ -101,7 +103,7 @@ void DrawList      (FILE* file,              List* lst);
 void ErrDecode                              (List* lst);
 
 int IntCompare (const void* numBigger, const void* numLess);
-int FindLogPosOfElement     (const Element_t elem, List* lst, int compare (Element_t, Element_t) = IntCompare); 
+int FindLogPosOfElement   (const Element_t elem, List* lst, int compare (const void*, const void*) = IntCompare); 
 
 bool ListOk (List* lst) {
 
@@ -157,9 +159,13 @@ void ListConstruct (List* lst) {
     lst -> freePos = lst -> next;
     lst -> prev = (int*) calloc (FirstMaxSize, sizeof (int));
     lst -> freeHead = 1;
-    
-    for (int i = 1; i < FirstMaxSize - 1; ++i)
+ 
+    for (int i = 1; i < FirstMaxSize - 1; ++i) {
+
         lst -> freePos[i] = i + 1;
+        lst -> prev[i] = -1;
+
+    }
 
     lst -> freePos[FirstMaxSize - 1] = 0;
     lst -> head = 0;
@@ -276,6 +282,7 @@ bool DeleteOneFreePos (List* lst) {
     int nextFree = lst -> freePos[lst -> freeHead];
 
     lst -> freePos[lst -> freeHead] = -1;
+    lst -> prev[lst -> freeHead] = 0;
     lst -> freeHead = nextFree;
 
     return true;
@@ -353,7 +360,7 @@ bool InsertLast (const Element_t elem, List* lst) {
     if (!NewNodePossible (NewElemPos, lst))
         return false;
  
-    lst -> nodes[NewElemPos].data = elem;
+    lst -> data[NewElemPos] = elem;
 
     lst -> next[lst -> tail] = NewElemPos;
     lst -> prev[NewElemPos] = lst -> tail;
@@ -541,7 +548,7 @@ bool Delete (const int pos, List* lst) {
     lst -> prev[lst -> next[pos]] = lst -> prev[pos];
     lst -> data[pos] = Poison;
     lst -> next[pos] = 0;
-    lst -> prev[pos] = 0;
+    lst -> prev[pos] = PosIsFree;
 
     if (!AddFreePos (pos, lst))
         return false;
@@ -615,7 +622,7 @@ void SortList (List* lst) {
 
     qsort (lst -> prev + 1, lst -> maxSize, sizeof (int), IntCompare); 
 
-    for (int i = 1, i < lst -> maxSize, ++i) {
+    for (int i = 1; i < lst -> maxSize; ++i) {
 
         lst -> next[i] = i + 1;
         lst -> prev[i] = i - 1;
@@ -629,11 +636,9 @@ void SortList (List* lst) {
     lst -> freeHead = lst -> tail + 1;
     lst -> freePos[lst -> maxSize - 1] = -1;
 
-    memset (lst -> prev + lst -> curSize + 1, -1, (lst -> maxSize - lst -> curSize - 1) * sizeof (int));
+    memset (lst -> prev + lst -> curSize + 1, -1, (lst -> maxSize - lst -> curSize) * sizeof (int));
 
     lst -> sorted = true;
-
-    free (PosBuf);
 
     return;
 
@@ -648,24 +653,18 @@ void ListDump (List* lst, const char* funcName) {
 
     if (lst == nullptr) {
 
-        printf (fileout, "List is nullptr\n");
+        printf ("List is nullptr\n");
         return;
 
     }
 
     printf ("List [%p]\n", lst);
     
-    if (lst -> nodes == nullptr) {
-
-        printf (fileout, "lst -> nodes is nullptr\n");
-        return;
-
-    }
 
     if (lst -> errcode == Allright)
-        printf (fileout, "OK\n");
+        printf ("OK\n");
     else 
-        printf (fileout, "ERROR\n");
+        printf ("ERROR\n");
 
     ErrDecode (lst);         
     
@@ -679,15 +678,27 @@ void ListDump (List* lst, const char* funcName) {
 void DrawList (FILE* file, List* lst) {
 
     fprintf (file, "digraph\n{\n"); 
+    fprintf (file, "rankdir=LR;\n");
+    fprintf (file, "edge[color=white];\n");
 
-    for (int i = 1; i < lst -> maxSize; ++i) 
-        fprintf (file, "\t%x[shape = record, label = \"{%d | {%d | %d} | %d }\"]\n", lst -> data + i, lst -> prev[i], i, lst -> data[i], lst -> next[i]);
+    for (int i = 1; i < lst -> maxSize; ++i) {
+
+        fprintf (file, "\t%x[color =", lst -> data + i);
+        if (lst -> prev[i] == PosIsFree)
+            fprintf (file, "green, ");
+        else
+            fprintf (file, "red, ");
+
+        fprintf (file, "shape = record, label = \"{%d | {%d | %d} | %d }\"]\n", lst -> prev[i], i, lst -> data[i], lst -> next[i]);
+
+    }
 
     for (int i = 1; i < lst -> maxSize; ++i) 
         fprintf (file, "%x -> ", lst -> data + i);
 
     fprintf (file, "%x\n", lst -> data + lst -> maxSize);
 
+    fprintf (file, "edge[color=black];");
 
     int cur = lst -> head;
 
@@ -725,7 +736,10 @@ void ErrDecode (List* lst) {
     case Allright: printf ("Allright \n"); break;
     case WrongPositionReference: printf ("Wrong Position Reference \n"); break;
     case NoFreePosLeft: printf ("No free positions left \n"); break;
-    case NullNodesPtr: printf ("lst -> nodes is nullptr \n"); break;
+    case NullDataPtr: printf ("lst -> data is nullptr \n"); break;
+    case NullNextPtr: printf ("lst -> next is nullptr \n"); break;
+    case NullPrevPtr: printf ("lst -> prev is nullptr \n"); break;
+    case NullFreePosPtr: printf ("lst -> freePos is nullptr \n"); break;
 
     default: printf ("Unexpected error \n"); break;
 
@@ -735,14 +749,14 @@ void ErrDecode (List* lst) {
 
 int IntCompare (const void* numBigger, const void* numLess) {
 
-    const int* numB = numBigger;
-    const int* numL = numLess;
+    assert (numBigger);
+    assert (numLess);
 
-    return (*numB - *numL);
+    return (*((int*) numBigger) - *((int*) numLess));
 
 }
 
-int FindLogPosOfElement (Element_t elem, List* lst, int compare (Element_t*, Element_t*)) {
+int FindLogPosOfElement (Element_t elem, List* lst, int compare (const void*, const void*)) {
 
     ASSERTLST (lst);
 
