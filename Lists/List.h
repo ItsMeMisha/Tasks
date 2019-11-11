@@ -107,7 +107,7 @@ void DrawList      (FILE* file,              List* lst);
 void ErrDecode                              (List* lst);
 
 int PrevCompare (const void* node1, const void* node2);
-//int FindLogPosOfElement   (const Element_t elem, List* lst, int compare (const void*, const void*) = IntCompare); 
+int FindPhysPosByLogPos   (const int logPos, List* lst); 
 
 bool ListOk (List* lst) {
 
@@ -757,16 +757,20 @@ int PrevCompare (const void* node1, const void* node2) {
 
 }
 
-/*int FindLogPosOfElement (Element_t elem, List* lst, int compare (const void*, const void*)) {
+int FindPhysPosByLogPos (const int logPos, List* lst) {
 
     ASSERTLST (lst);
 
-    for (int i = 1; i > 0; i = lst -> next[i])
-        if (compare (&elem, lst -> node + i) == 0)
-            return i;
+    if (logPos > lst -> curSize)
+        return 0;
 
-    return 0;    
+    int cur = lst -> head;
 
-}*/
+    for (int i = 1; i <= lst -> curSize; ++i)
+        cur = lst -> node[cur].next;
+
+    return cur;    
+
+}
 
 #endif
