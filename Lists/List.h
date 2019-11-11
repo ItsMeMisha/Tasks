@@ -156,6 +156,7 @@ void ListConstruct (List* lst) {
     }
 
     lst -> freePos[FirstMaxSize - 1].next = 0;
+    lst -> freePos[FirstMaxSize - 1].prev = -1;
     lst -> head = 0;
     lst -> tail = 0;
     lst -> maxSize = FirstMaxSize;
@@ -210,7 +211,7 @@ bool PosIsFilled (const int pos, List* lst) {
     if (!PosOk (pos, lst))
         return false;
 
-    if (lst -> node[pos].prev <= PosIsFree) {
+    if (lst -> node[pos].prev == PosIsFree) {
 
         lst -> errcode = RefPosNotFilled;
         return false;
@@ -266,13 +267,17 @@ bool DeleteOneFreePos (List* lst) {
 
     ASSERTLST (lst);
 
-    if (lst -> freeHead <= 0) 
+    if (lst -> freeHead <= 0) {
+
+        lst -> errcode = NoFreePosLeft; 
         return false;
+
+    }
 
     int nextFree = lst -> freePos[lst -> freeHead].next;
 
     lst -> freePos[lst -> freeHead].next = -1;
-    lst -> node[lst -> freeHead].prev = 0;
+    lst -> node[lst -> freeHead].prev = -1;
     lst -> freeHead = nextFree;
 
     return true;
@@ -318,9 +323,10 @@ bool InsertFirst (const Element_t elem, List* lst) {
         return false;
 
     lst -> node[NewElemPos].data = elem;
- 
+
     lst -> node[lst -> head].prev = NewElemPos;
     lst -> node[NewElemPos].next = lst -> head;
+    lst -> node[NewElemPos].prev = 0;
     lst -> head = NewElemPos;
 
     if (lst -> tail <= 0)
