@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <assert.h>
 #include <malloc.h>
-#include <string.h>
 #include <stdlib.h>
 
 #define _DEBUG //!!!!!!
@@ -35,7 +34,8 @@ enum Error {
     WrongPositionReference = 1,
     NoFreePosLeft          = 2,
     NullNodePtr            = 3,
-    NullFreePosPtr         = 4
+    NullFreePosPtr         = 4,
+    RefPosNotFilled        = 5
     
 };
 
@@ -210,8 +210,12 @@ bool PosIsFilled (const int pos, List* lst) {
     if (!PosOk (pos, lst))
         return false;
 
-    if (lst -> node[pos].prev <= PosIsFree)
+    if (lst -> node[pos].prev <= PosIsFree) {
+
+        lst -> errcode = RefPosNotFilled;
         return false;
+
+    }
 
     return true;
 
@@ -288,7 +292,7 @@ bool AddFreePos (const int pos, List* lst) {
     
     if (!PosOk (pos, lst))
         return false;
-    
+ 
     lst -> freePos[pos].next = lst -> freeHead;
     lst -> node[pos].prev = PosIsFree;
     lst -> freeHead = pos;
@@ -461,21 +465,22 @@ bool DeleteFirst (List* lst) {
 
     ASSERTLST (lst);
 
-    if (!AddFreePos (lst -> head, lst))
-        return false;
-
     lst -> node[lst -> head].data = Poison;
     lst -> curSize--;
+    int head = lst -> head;
     
-    if (CheckDeleteLast (lst))
-        return true;
-   
-    int nextElem = lst -> node[lst -> head].next;
-    lst -> node[nextElem].prev = -1;
-    lst -> node[lst -> head].next = -1;
+    if (!CheckDeleteLast (lst)) {
+        
+        int nextElem = lst -> node[lst -> head].next;
+        lst -> node[nextElem].prev = -1;
+        lst -> node[head].next = -1;
+        lst -> head = nextElem;
 
-    lst -> head = nextElem;
+    }
 
+    if (!AddFreePos (head, lst))
+        return false;
+ 
     lst -> sorted = false;
 
     return true;
@@ -492,19 +497,22 @@ bool DeleteLast (List* lst) {
 
     ASSERTLST (lst);
 
-    if (!AddFreePos (lst -> tail, lst))
-        return false;
-
     lst -> node[lst -> tail].data = Poison;
     lst -> curSize--;
+    int tail = lst -> tail;
 
-    if (CheckDeleteLast (lst))
-        return true;
+    if (!CheckDeleteLast (lst)) {
     
-    int prevElem = lst -> node[lst -> tail].prev;
-    lst -> node[prevElem].next = -1;
-    lst -> node[lst -> tail].prev = -1;
-    lst -> tail = prevElem;
+        int prevElem = lst -> node[lst -> tail].prev;
+
+        lst -> node[prevElem].next = -1;
+        lst -> node[tail].prev = -1;
+        lst -> tail = prevElem;
+
+    }
+
+    if (!AddFreePos (tail, lst))
+        return false;
 
     return true;
 
@@ -607,7 +615,7 @@ void SortList (List* lst) {
 
     }
 
-    qsort (lst -> node + 1, lst -> maxSize - 1, sizeof (int), PrevCompare); 
+    qsort (lst -> node + 1, lst -> maxSize - 1, sizeof (List_node), PrevCompare); 
 
     for (int i = 1; i < lst -> maxSize; ++i) {
 
@@ -726,6 +734,7 @@ void ErrDecode (List* lst) {
     case NoFreePosLeft: printf ("No free positions left \n"); break;
     case NullNodePtr: printf ("lst -> node is nullptr \n"); break;
     case NullFreePosPtr: printf ("lst -> freePos is nullptr \n"); break;
+    case RefPosNotFilled: printf ("Referenced position is not filled \n"); break;
 
     default: printf ("Unexpected error \n"); break;
 
@@ -738,7 +747,7 @@ int PrevCompare (const void* node1, const void* node2) {
     assert (node1);
     assert (node2);
 
-    return (((List_node*) node1) -> next - ((List_node*) node2) -> next);
+    return (((List_node*) node1) -> prev - ((List_node*) node2) -> prev);
 
 }
 
