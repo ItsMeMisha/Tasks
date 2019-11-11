@@ -2,9 +2,12 @@
     
     #define __LIST__
 
+    #define ListConstruct( lst ) ListConstructor (lst, #lst)
+
 #include <stdio.h>
 #include <assert.h>
 #include <malloc.h>
+#include <string.h>
 #include <stdlib.h>
 
 #define _DEBUG //!!!!!!
@@ -24,6 +27,8 @@
 #endif
 
 typedef int Element_t;
+
+const int StrSize = 256;
 const Element_t Poison = {};
 const int FirstMaxSize = 101;
 const int PosIsFree = -1;
@@ -35,7 +40,8 @@ enum Error {
     NoFreePosLeft          = 2,
     NullNodePtr            = 3,
     NullFreePosPtr         = 4,
-    RefPosNotFilled        = 5
+    RefPosNotFilled        = 5,
+    LostConnection         = 6
     
 };
 
@@ -64,7 +70,8 @@ struct List_node {
 */
 
 struct List {
-
+    
+    char name[StrSize];
     List_node* node;
     List_node* freePos;
     int freeHead;
@@ -79,7 +86,9 @@ struct List {
 
 
 bool ListOk                                 (List* lst);
-void ListConstruct                          (List* lst);
+bool ConnectionOk                           (List* lst);
+
+void ListConstructor                        (List* lst);
 void ListDestruct                           (List* lst);
 bool PosOk                   (const int pos, List* lst);
 bool PosIsFilled             (const int pos, List* lst);
@@ -103,8 +112,11 @@ bool DeleteBefore            (const int pos, List* lst);
 
 void SortList                               (List* lst);
 void ListDump                               (List* lst, const char* funcName);
-void DrawList      (FILE* file,              List* lst);
-void ErrDecode                              (List* lst);
+bool ListInfoDraw  (FILE* file,              List* lst, const char* funcName);
+void DrawNext      (FILE* file,              List* lst);
+void DrawPrev      (FILE* file,              List* lst);
+void DrawList      (FILE* file,              List* lst, const char* funcName);
+void ErrDecode     (FILE* file,              List* lst);
 
 int PrevCompare (const void* node1, const void* node2);
 int FindPhysPosByLogPos   (const int logPos, List* lst); 
@@ -131,6 +143,31 @@ bool ListOk (List* lst) {
 
     }
 
+    if (!ConnectionOk (lst)) {
+        
+        lst -> errcode = LostConnection;
+        return false;
+
+    }
+
+    return true;
+
+}
+
+bool ConnectionOk (List* lst) {
+
+    if (lst -> curSize > 1) {
+
+        for (int cur = lst -> head; cur != lst -> node[lst -> tail].prev; cur = lst -> node[cur].next)
+            if (cur != lst -> node[lst -> node[cur].next].prev)
+                return false;
+
+         for (int cur = lst -> tail; cur != lst -> node[lst -> head].next; cur = lst -> node[cur].prev)
+            if (cur != lst -> node[lst -> node[cur].prev].next)
+                return false;   
+
+    }
+
     return true;
 
 }
@@ -141,9 +178,11 @@ bool ListOk (List* lst) {
 *
 */
 
-void ListConstruct (List* lst) {
+void ListConstructor (List* lst, char Name[StrSize]) {
 
     assert (lst);
+    
+    strncpy (lst -> name, Name, StrSize);
     lst -> node = (List_node*) calloc (FirstMaxSize, sizeof (List_node));
     lst -> freePos = lst -> node;
     lst -> freeHead = 1;
@@ -650,101 +689,173 @@ void ListDump (List* lst, const char* funcName) {
 
 //...
     FILE* fileout = fopen ("list.dot", "w");
-
-    printf ("In function %s\n", funcName);
-
-    if (lst == nullptr) {
-
-        printf ("List is nullptr\n");
-        return;
-
-    }
-
-    printf ("List [%p]\n", lst);
-    
-
-    if (lst -> errcode == Allright)
-        printf ("OK\n");
-    else 
-        printf ("ERROR\n");
-
-    ErrDecode (lst);         
-    
-    DrawList (fileout, lst);
+        assert (fileout);
+   
+    DrawList (fileout, lst, funcName);
     fclose (fileout);
 
     return;
 
 }
 
-void DrawList (FILE* file, List* lst) {
+bool ListInfoDraw  (FILE* file, List* lst, const char* funcName) {
 
-    fprintf (file, "digraph\n{\n"); 
-    fprintf (file, "rankdir=LR;\n");
-    fprintf (file, "edge[color=white];\n");
+    fprintf (file, "\t function [label = \"In function %s\"]\n", funcName);
 
-    for (int i = 1; i < lst -> maxSize; ++i) {
+    if (lst == nullptr) {
 
-        fprintf (file, "\t%x[color =", lst -> node + i);
-        if (lst -> node[i].prev == PosIsFree)
-            fprintf (file, "green, ");
-        else
-            fprintf (file, "red, ");
-
-        fprintf (file, "shape = record, label = \"{%d | {%d | %d} | %d }\"]\n", lst -> node[i].prev, i, lst -> node[i].data, lst -> node[i].next);
+        fprintf (file, "\t LstNull [label=\"List is nullptr\"]\n");
+        fprintf (file, "function -> LstNull\n");
+        return false;
 
     }
 
-    for (int i = 1; i < lst -> maxSize; ++i) 
-        fprintf (file, "%x -> ", lst -> node + i);
+    if (lst -> name == nullptr) {
+        
+        fprintf (file, "\t NoName [label=\"List has no name\"]\n");
+        fprintf (file, "function -> NoName\n");
+        return false;
 
-    fprintf (file, "%x\n", lst -> node + lst -> maxSize);
+    }
+    
+    if (*(lst -> name) == '&')    
+        fprintf (file, "\t List [label=\"{List %s | %p}\"]\n", lst -> name + 1, lst);
+    else
+        fprintf (file, "\t List [label=\"{List %s | %p}\"]\n", lst -> name, lst);  
 
-    fprintf (file, "edge[color=black];");
+    if (lst -> errcode == Allright) 
+        fprintf (file, "\t error [label =\"OK\"]\n");
+
+    else 
+        fprintf (file, "\t error [label=\"ERROR\"]\n");
+
+    ErrDecode (file, lst);         
+
+    fprintf (file, "function -> List -> error -> code\n");
+
+    return true;
+    
+}
+
+void DrawNext (FILE* file, List* lst) {
+
+    fprintf (file, "edge[color=red] \n");
 
     int cur = lst -> head;
 
     for (int i = 1; i < lst -> curSize; ++i) {
 
-        fprintf (file, "%x -> ", lst -> node + cur);
+        fprintf (file, "%x:<n> -> ", lst -> node + cur);
         cur = lst -> node[cur].next;
 
     }
 
-    fprintf (file, "%x\n", lst -> node + lst -> tail);
+    fprintf (file, "%x:<n>\n", lst -> node + lst -> tail);
+
+    fprintf (file, "edge[color=green] \n");
  
     cur = lst -> freeHead; 
 
-    for (int i = 1; i < lst -> maxSize - lst -> curSize; ++i) {
+    for (int i = 1; i < lst -> maxSize - lst -> curSize - 1; ++i) {
 
-        fprintf (file, "%x -> ", lst -> node + cur);
+        fprintf (file, "%x:<n> -> ", lst -> node + cur);
         cur = lst -> freePos[cur].next;
 
     }
 
-    fprintf (file, "%x\n", lst -> node + cur);
+    fprintf (file, "%x:<n>\n", lst -> node + cur);
 
-  
+    return;
+ 
+}
+
+void DrawPrev (FILE* file, List* lst) {
+
+    fprintf (file, "edge[color=blue] \n");
+
+    int cur = lst -> tail;
+
+    for (int i = 1; i < lst -> curSize; ++i) {
+
+        fprintf (file, "%x:<p> -> ", lst -> node + cur);
+        cur = lst -> node[cur].prev;
+
+    }
+
+    fprintf (file, "%x:<p>\n", lst -> node + lst -> head);
+
+    return;
+
+}
+
+void DrawList (FILE* file, List* lst, const char* funcName) {
+
+    fprintf (file, "digraph\n{\n"); 
+    fprintf (file, "rankdir=LR;\n");
+    fprintf (file, "edge[color=white];\n");
+    fprintf (file, "node[shape=record];\n");
+
+    if (!ListInfoDraw (file, lst, funcName)) {
+
+        fprintf (file, "}");
+        return;
+
+    }
+
+    for (int i = 1; i < lst -> maxSize; ++i) {
+
+        fprintf (file, "\t%x[color =", lst -> node + i);
+
+        if (lst -> head == i)
+            fprintf (file, "orange, fillcolor=orange, ");
+
+        else if (lst -> tail == i)
+            fprintf (file, "orange, fillcolor=orange, ");
+
+        else if (lst -> node[i].prev == PosIsFree)
+            fprintf (file, "green, fillcolor=green, ");
+        else
+            fprintf (file, "red, ");
+
+        fprintf (file, "label = \"{<p> %d | {%d | %d} |<n> %d }\"]\n", lst -> node[i].prev, i, lst -> node[i].data, lst -> node[i].next);
+
+    }
+
+    for (int i = 1; i < lst -> maxSize - 1; ++i) 
+        fprintf (file, "%x -> ", lst -> node + i);
+
+    fprintf (file, "%x\n", lst -> node + lst -> maxSize - 1);
+
+    DrawNext (file, lst);
+    DrawPrev (file, lst);
+ 
     fprintf (file, "}\n");
 
     return; 
 
 }
 
-void ErrDecode (List* lst) {
+void ErrDecode (FILE* file, List* lst) {
+
+    fprintf (file, "code [label=\"");
 
     switch (lst -> errcode) {    
 
-    case Allright: printf ("Allright \n"); break;
-    case WrongPositionReference: printf ("Wrong Position Reference \n"); break;
-    case NoFreePosLeft: printf ("No free positions left \n"); break;
-    case NullNodePtr: printf ("lst -> node is nullptr \n"); break;
-    case NullFreePosPtr: printf ("lst -> freePos is nullptr \n"); break;
-    case RefPosNotFilled: printf ("Referenced position is not filled \n"); break;
+    case Allright: fprintf (file, "Allright");                                 break;
+    case WrongPositionReference: fprintf (file, "Wrong Position Reference");   break;
+    case NoFreePosLeft: fprintf (file, "No free positions left");              break;
+    case NullNodePtr: fprintf (file, "lst -> node is nullptr");                break;
+    case NullFreePosPtr: fprintf (file, "lst -> freePos is nullptr");          break;
+    case RefPosNotFilled: fprintf (file, "Referenced position is not filled"); break;
+    case LostConnection: fprintf (file, "Lost Connection");                    break;
 
-    default: printf ("Unexpected error \n"); break;
+    default: printf ("Unexpected error"); break;
 
     }
+
+    fprintf (file, "\"]\n");
+
+    return;
 
 }
 
