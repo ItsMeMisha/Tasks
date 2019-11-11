@@ -804,20 +804,20 @@ void DrawList (FILE* file, List* lst, const char* funcName) {
 
     for (int i = 1; i < lst -> maxSize; ++i) {
 
-        fprintf (file, "\t%x[color =", lst -> node + i);
+        fprintf (file, "\t%x[style=filled, color =", lst -> node + i);
 
         if (lst -> head == i)
-            fprintf (file, "orange, fillcolor=orange, ");
+            fprintf (file, "red, fillcolor=orange, ");
 
         else if (lst -> tail == i)
-            fprintf (file, "orange, fillcolor=orange, ");
+            fprintf (file, "red, fillcolor=orange, ");
 
         else if (lst -> node[i].prev == PosIsFree)
-            fprintf (file, "green, fillcolor=green, ");
+            fprintf (file, "black, fillcolor=green, ");
         else
-            fprintf (file, "red, ");
+            fprintf (file, "black, fillcolor=red, ");
 
-        fprintf (file, "label = \"{<p> %d | {%d | %d} |<n> %d }\"]\n", lst -> node[i].prev, i, lst -> node[i].data, lst -> node[i].next);
+        fprintf (file, "label = \"{{<p> prev\n %d | {index\n %d | data\n %d} |<n> next\n %d }}\"]\n", lst -> node[i].prev, i, lst -> node[i].data, lst -> node[i].next);
 
     }
 
