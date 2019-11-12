@@ -60,26 +60,27 @@ void TreeDestruct                                                    (Tree* tree
 bool ParentsCheck                     (const Tree_node* branch, const Tree* tree, const int deep = 0);
 
 Tree_node* NewNode          (const Element_t elem);
-Tree_node* AddNodeAndCheck  (const Element_t elem, Tree* tree);
-bool AddRoot                (const Element_t elem,                    Tree* tree);
-bool AddLeftLeaf            (const Element_t elem, Tree_node* branch, Tree* tree);
-bool AddRightLeaf           (const Element_t elem, Tree_node* branch, Tree* tree);
+Tree_node* AddNodeAndCheck  (Tree* tree,                    const Element_t elem);
+bool AddRoot                (Tree* tree,                    const Element_t elem);
+bool AddLeftLeaf            (Tree* tree, Tree_node* branch, const Element_t elem);
+bool AddRightLeaf           (Tree* tree, Tree_node* branch, const Element_t elem);
 
-bool DeleteBranch                                 (Tree_node* branch, Tree* tree);
+bool DeleteBranch           (Tree* tree, Tree_node* branch);
 
 //Tree_node* SearchElement (const Element_t elem,               const Tree* tree);
 
-void PrintPreNode                 (FILE* file,                  const Tree* tree);
-void PrintPreTree                 (FILE* file,                  const Tree* tree);
-void ReadLeft                     (FILE* file, Tree_node* node,       Tree* tree);
-void ReadRight                    (FILE* file, Tree_node* node,       Tree* tree); 
-void ReadPreNode                  (FILE* file, Tree_node* node,       Tree* tree);
-void ReadPreTree                  (FILE* file,                        Tree* tree);
+void PrintPreNode                 (FILE* file, const Tree* tree);
+void PrintPreTree                 (FILE* file, const Tree* tree);
+void ReadLeft                     (FILE* file,       Tree* tree, Tree_node* node);
+void ReadRight                    (FILE* file,       Tree* tree, Tree_node* node); 
+void ReadPreNode                  (FILE* file,       Tree* tree, Tree_node* node);
+void ReadPreTree                  (FILE* file,       Tree* tree);
 void Print (FILE* file, const char* item);
 void Print (FILE* file, const int item);
 void Print (FILE* file, const char item);
 void Print (FILE* file, const double item);
 
+bool CheckConnection                        (const Tree* tree, Tree_node* branch); 
 bool TreeOk                                                    (const Tree* tree);
 void TreeDump                                                  (const Tree* tree);
 void DrawNode                                 (FILE* file, const Tree_node* node);
@@ -139,7 +140,7 @@ Tree_node* NewNode (const Element_t elem) {
 
 }
 
-Tree_node* AddNodeAndCheck (const Element_t elem, Tree* tree) {
+Tree_node* AddNodeAndCheck (Tree* tree, const Element_t elem) {
 
     ASSERTTREE (tree);
 
@@ -155,7 +156,7 @@ Tree_node* AddNodeAndCheck (const Element_t elem, Tree* tree) {
 
 }
 
-bool AddRoot (const Element_t elem, Tree* tree) {
+bool AddRoot (Tree* tree, const Element_t elem) {
 
     ASSERTTREE (tree);
 
@@ -171,7 +172,7 @@ bool AddRoot (const Element_t elem, Tree* tree) {
  
 }
 
-bool AddLeftLeaf (const Element_t elem, Tree_node* branch, Tree* tree) {
+bool AddLeftLeaf (Tree* tree, Tree_node* branch, const Element_t elem) {
 
     ASSERTTREE (tree);
 
@@ -188,7 +189,7 @@ bool AddLeftLeaf (const Element_t elem, Tree_node* branch, Tree* tree) {
 
 }
 
-bool AddRightLeaf (const Element_t elem, Tree_node* branch, Tree* tree) {
+bool AddRightLeaf (Tree* tree, Tree_node* branch, const Element_t elem) {
 
     ASSERTTREE (tree);
 
@@ -205,7 +206,7 @@ bool AddRightLeaf (const Element_t elem, Tree_node* branch, Tree* tree) {
 
 }
 
-bool DeleteBranch (Tree_node* branch, Tree* tree) {
+bool DeleteBranch (Tree* tree, Tree_node* branch) {
 
     ASSERTTREE (tree);
     
@@ -275,7 +276,7 @@ void PrintPreTree (FILE* file, const Tree* tree) {
 
 }
 
-void ReadLeft (FILE* file, Tree_node* node, Tree* tree) {
+void ReadLeft (FILE* file, Tree* tree, Tree_node* node) {
     
     assert (file);
     assert (node);
@@ -297,7 +298,7 @@ void ReadLeft (FILE* file, Tree_node* node, Tree* tree) {
 
 }
 
-void ReadRight (FILE* file, Tree_node* node, Tree* tree) {
+void ReadRight (FILE* file, Tree* tree, Tree_node* node) {
 
     assert (file);
     assert (node);
@@ -328,7 +329,7 @@ void ReadRight (FILE* file, Tree_node* node, Tree* tree) {
 
 }
 
-void ReadPreNode (FILE* file, Tree_node* node, Tree* tree) {
+void ReadPreNode (FILE* file, Tree* tree, Tree_node* node) {
 
     char buf[MaxStrBufSize] = "";
 
@@ -406,9 +407,11 @@ void Print (FILE* file, const double item) {
 }
 
 
-bool TreeOk                                                             (const Tree* tree) {}
+bool CheckConnection (const Tree* tree, Tree_node* branch) {}
 
-void TreeDump                                                           (const Tree* tree) {
+bool TreeOk (const Tree* tree) {}
+
+void TreeDump (const Tree* tree) {
 
     FILE* fileout = fopen (DumpFile, "r");
 
