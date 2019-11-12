@@ -11,7 +11,6 @@ bool YesOrNoRead ();
 
 Tree* CreateQuestionTreeAndOpenDataBaseFile (Tree* tree, FILE** file);
 bool Game (Tree* tree);
-bool ReplaceData (Element_t* elem, Tree_node* node);
 bool AddNewQuestion (Tree_node* question, Tree* tree);
 void LastQuestion (Tree_node* question, Tree* tree);
 void Ask (Tree_node* question, Tree* tree);
@@ -29,6 +28,8 @@ int main () {
         return 1;
 
     }
+
+    ASSERTTREE (&tree);
 
     while (Game (&tree));
 
@@ -82,41 +83,24 @@ bool Game (Tree* tree) {
 
 }
 
-bool ReplaceData (Element_t* elem, Tree_node* node) {
-
-    assert (elem);
-    assert (node);
-
-    node -> data = (Element_t*) realloc (node -> data, sizeof (*elem));
-    
-    if (node -> data == nullptr)
-        return false;
-
-    memcpy (node -> data, elem, sizeof (*elem));
-
-    return true;
-
-}
-
 bool AddNewQuestion (Tree_node* question, Tree* tree) {
 
     assert (question);
 
-    char AnsBuf[MaxStrBufSize] = "";
-    scanf ("%s", AnsBuf);
+    char* AnsBuf = nullptr;
+    scanf ("%ms", &AnsBuf);
 
-    printf ("\nAnd what the difference between %s and %s?\n", *(question -> data), AnsBuf);
-    char QueBuf[MaxStrBufSize] = "";
-    scanf ("%s", QueBuf);
+    printf ("\nAnd what the difference between %s and %s?\n", question -> data, AnsBuf);
+    char* QueBuf = nullptr;
+    scanf ("%ms", &QueBuf);
 
-    if (!AddLeftLeaf (AnsBuf, question, tree))
+    if (!AddLeftLeaf (tree, question, AnsBuf))
         return false;
 
-    if (!AddRightLeaf (*(question -> data), question, tree))
+    if (!AddRightLeaf (tree, question, question -> data))
         return false;
 
-    if (!ReplaceData (&QueBuf, question))
-        return false;
+    question -> data = QueBuf;
 
     printf ("%s %s added\n", QueBuf, AnsBuf);
 
@@ -144,12 +128,12 @@ void LastQuestion (Tree_node* question, Tree* tree) {
 
 void Ask (Tree_node* question, Tree* tree) {
 
-    printf ("%s?\n", *(question -> data));
+    printf ("%s?\n", question -> data);
 
     if (question -> left == nullptr && question -> right == nullptr)
         LastQuestion (question, tree);
 
-    else
+    else {
 
         if (question -> left == nullptr || question -> right == nullptr) {
             printf ("Database error: incomplete tree\n");
@@ -161,6 +145,8 @@ void Ask (Tree_node* question, Tree* tree) {
         else
             Ask (question -> right, tree);
 
+    }
+
     return;
 
 }
@@ -168,6 +154,12 @@ void Ask (Tree_node* question, Tree* tree) {
 void PrintNewDataBaseAndCloseDataBaseFile (Tree* tree, FILE** file) {
     
     ASSERTTREE (tree);
+    assert (file);
+
+    fclose (*file);
+    *file = fopen (DataBaseFile, "w");
+
+    assert (*file);
 
     PrintPreTree (*file, tree);
 

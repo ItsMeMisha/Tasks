@@ -7,9 +7,9 @@
 #include <assert.h>
 #include <string.h>
 
-#ifdef _DEBUG
+#define _DEBUG
 
-    #define assert( cond ) assert (cond)
+#ifdef _DEBUG
 
     #define ASSERTTREE( cond )  \
         if (!TreeOk (cond)) {   \
@@ -27,7 +27,7 @@
 typedef char* Element_t;
 
 const int MaxStrBufSize = 512;
-const char[] DumpFile = "tree.dot";
+const char DumpFile[] = "tree.dot";
 
 enum Error {
 
@@ -83,11 +83,11 @@ void Print (FILE* file, const char item);
 void Print (FILE* file, const double item);
 
 bool CheckConnection                        (const Tree* tree, Tree_node* branch); 
-bool TreeOk                                                    (const Tree* tree);
+bool TreeOk                                                          (Tree* tree);
 void TreeDump                                                  (const Tree* tree);
 void DrawNode                                 (FILE* file, const Tree_node* node);
-void DrawTree                                      (FILE* file, const Tree* tree);
 void ErrDecode                                     (FILE* file, const Tree* tree);
+void DrawTree                                      (FILE* file, const Tree* tree);
 
 void TreeConstruct (Tree* tree) {
 
@@ -103,7 +103,7 @@ void TreeDestruct (Tree* tree) {
 
     ASSERTTREE (tree);
 
-    DeleteBranch (tree -> root, tree);
+    DeleteBranch (tree, tree -> root);
 
     tree -> size    = 0;
     tree -> errcode = Allright;
@@ -147,7 +147,7 @@ Tree_node* AddNodeAndCheck (Tree* tree, const Element_t elem) {
 
     ASSERTTREE (tree);
 
-    Tree_node* NewLeaf = NewNode (&elem);
+    Tree_node* NewLeaf = NewNode (elem);
 
     if (NewLeaf == nullptr) {
         tree -> errcode = NoMemoryForNewNode;
@@ -165,7 +165,7 @@ bool AddRoot (Tree* tree, const Element_t elem) {
 
     Tree_node* Root = nullptr;
 
-    if ((Root = AddNodeAndCheck (elem, tree)) == nullptr)
+    if ((Root = AddNodeAndCheck (tree, elem)) == nullptr)
         return false;
 
     tree -> size++;
@@ -181,7 +181,7 @@ bool AddLeftLeaf (Tree* tree, Tree_node* branch, const Element_t elem) {
 
     Tree_node* NewLeaf = nullptr;
 
-    if ((NewLeaf = AddNodeAndCheck (elem, tree)) == nullptr)
+    if ((NewLeaf = AddNodeAndCheck (tree, elem)) == nullptr)
         return false;
     
     tree -> size++;
@@ -198,7 +198,7 @@ bool AddRightLeaf (Tree* tree, Tree_node* branch, const Element_t elem) {
 
     Tree_node* NewLeaf = nullptr;
 
-    if ((NewLeaf = AddNodeAndCheck (elem, tree)) == nullptr)
+    if ((NewLeaf = AddNodeAndCheck (tree, elem)) == nullptr)
         return false;
     
     tree -> size++;
@@ -217,10 +217,10 @@ bool DeleteBranch (Tree* tree, Tree_node* branch) {
         return false;
 
     if (branch -> left != nullptr)
-        DeleteBranch (branch -> left, tree);
+        DeleteBranch (tree, branch -> left);
 
     if (branch -> right != nullptr)
-        DeleteBranch (branch -> right, tree);
+        DeleteBranch (tree, branch -> right);
 
     if (branch != tree -> root) {
 
@@ -249,7 +249,7 @@ void PrintPreNode (FILE* file, const Tree_node* node) {
 
     fprintf (file, "{\"");
     Print (file, node -> data);
-    fprintf (file, "\"");`
+    fprintf (file, "\"");
     
     if (node -> left != nullptr || node -> right != nullptr) {
 
@@ -291,8 +291,8 @@ void ReadLeft (FILE* file, Tree* tree, Tree_node* node) {
     else {
  
         fseek (file, -1, SEEK_CUR);
-        AddLeftLeaf (0, node, tree);
-        ReadPreNode (file, node -> left, tree);
+        AddLeftLeaf (tree, node, 0);
+        ReadPreNode (file, tree, node -> left);
         ASSERTTREE (tree);
 
     }
@@ -321,8 +321,8 @@ void ReadRight (FILE* file, Tree* tree, Tree_node* node) {
 
         }
 
-        AddRightLeaf (0, node, tree);
-        ReadPreNode (file, node -> right, tree);
+        AddRightLeaf (tree, node, 0);
+        ReadPreNode (file, tree, node -> right);
         ASSERTTREE (tree);
 
     }
@@ -333,13 +333,13 @@ void ReadRight (FILE* file, Tree* tree, Tree_node* node) {
 
 void ReadPreNode (FILE* file, Tree* tree, Tree_node* node) {
 
-    fscanf (file, "\"%m[^\"]", &(node -> data));
+    fscanf (file, "\"%m[^\"]\"", &(node -> data));
     char bracket = 0;
 
     if ((bracket = fgetc (file)) == '{') {
 
-        ReadLeft  (file, node, tree);
-        ReadRight (file, node, tree);
+        ReadLeft  (file, tree, node);
+        ReadRight (file, tree, node);
 
         bracket = fgetc (file);
 
@@ -367,9 +367,9 @@ void ReadPreTree (FILE* file, Tree* tree) {
 
     }
 
-    AddRoot (0, tree);
+    AddRoot (tree, 0);
 
-    ReadPreNode (file, tree -> root, tree);
+    ReadPreNode (file, tree, tree -> root);
 
     return;
 
@@ -409,7 +409,7 @@ bool CheckConnection (const Tree* tree, Tree_node* branch) {
     assert (tree);
     assert (branch);
 
-    if (!ParentsCheck (tree, branch))
+    if (!ParentsCheck (branch, tree))
         return false;
 
     if (branch -> left != nullptr)
@@ -417,14 +417,14 @@ bool CheckConnection (const Tree* tree, Tree_node* branch) {
             return false;
 
     if (branch -> right != nullptr)
-        if (!CheckConnection (tree, bracnh -> right))
+        if (!CheckConnection (tree, branch -> right))
             return false;
 
     return true;
 
 }
 
-bool TreeOk (const Tree* tree) {
+bool TreeOk (Tree* tree) {
 
     if (tree == nullptr)
         return false;
@@ -436,14 +436,16 @@ bool TreeOk (const Tree* tree) {
 
     }
 
-    if (!CheckConnection (const Tree* tree, Tree_node* branch)) {
+    if (tree -> size > 0)
 
-        tree -> errcode = InvalidConnection;
-        return false;
+        if (!CheckConnection (tree, tree -> root)) {
 
-    }
+            tree -> errcode = InvalidConnection;
+            return false;
 
-    if (lst -> errcode != Allright)
+        }
+
+    if (tree -> errcode != Allright)
         return false;
 
     return true;
@@ -452,7 +454,7 @@ bool TreeOk (const Tree* tree) {
 
 void TreeDump (const Tree* tree) {
 
-    FILE* fileout = fopen (DumpFile, "r");
+    FILE* fileout = fopen (DumpFile, "w");
 
     if (tree == nullptr) {
 
@@ -463,6 +465,8 @@ void TreeDump (const Tree* tree) {
         
     DrawTree (fileout, tree);
 
+    fclose (fileout);
+
     return;
 
 }
@@ -471,15 +475,15 @@ void DrawNode (FILE* file, const Tree_node* node) {
 
     if (node -> left != nullptr) {
 
-        fprintf (file , "\t%x[label = \"%p | %s | {%p | %p}\"]\n", node -> left, node -> left, node -> left -> data, node -> left -> left, node -> left -> right);
+        fprintf (file , "\t%x[label = \"{%p | %s | {%p | %p}}\"]\n", node -> left, node -> left, node -> left -> data, node -> left -> left, node -> left -> right);
         fprintf (file, "%x -> %x\n", node, node -> left);
         DrawNode (file, node -> left);
 
     }
     
-    if (node -> left != nullptr) {
+    if (node -> right != nullptr) {
 
-        fprintf (file , "\t%x[label = \"%p | %s | {%p | %p}\"]\n", node -> right, node -> right, node -> right -> data, node -> right -> left, node -> right -> right);
+        fprintf (file , "\t%x[label = \"{%p | %s | {%p | %p}}\"]\n", node -> right, node -> right, node -> right -> data, node -> right -> left, node -> right -> right);
         fprintf (file, "%x -> %x\n", node, node -> right);
         DrawNode (file, node -> right);
 
@@ -497,7 +501,7 @@ void DrawTree (FILE* file, const Tree* tree) {
     fprintf (file, "digraph\n{\n");
     fprintf (file, "node[shape=record]\n"); 
 
-    fprintf ("\tTree[label=\"%p\"]\n", tree);
+    fprintf (file, "\tTree[label=\"%p\"]\n", tree);
     ErrDecode (file, tree);
 
     if (tree -> size > 0) {
@@ -514,7 +518,7 @@ void DrawTree (FILE* file, const Tree* tree) {
 
 }
 
-void ErrDecode (FILE* file, Tree* tree) {
+void ErrDecode (FILE* file, const Tree* tree) {
 
     assert (file);
     assert (tree);
@@ -522,14 +526,16 @@ void ErrDecode (FILE* file, Tree* tree) {
     switch (tree -> errcode) {
 
     case Allright: fprintf (file, "\tError[label=\"Allright\"]\n"); break;
-    case NoMemoryForNewNode: fprintf (file, "\tError[label=\"Allright\"]\n"); break;
-    case CantReadTreeFromFile:  fprintf (file, "\tError[label=\"Allright\"]\n"); break;
-    case NotEmptyHasNoRoot:  fprintf (file, "\tError[label=\"Allright\"]\n"); break;
-    case InvalidConnection: fprintf (file, "\tError[label=\"Allright\"]\n"); break;
+    case NoMemoryForNewNode: fprintf (file, "\tError[label=\"No Memory For New Node\"]\n"); break;
+    case CantReadTreeFromFile:  fprintf (file, "\tError[label=\"Cannot Read Tree From File\"]\n"); break;
+    case NotEmptyHasNoRoot:  fprintf (file, "\tError[label=\"Not Empty tree but root is null\"]\n"); break;
+    case InvalidConnection: fprintf (file, "\tError[label=\"Invalid Connection\"]\n"); break;
 
     default: fprintf (file, "\tError[label=\"Unexpected error\"]\n"); break;
 
     }
+
+    return;
 
 }
 
