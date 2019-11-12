@@ -333,12 +333,7 @@ void ReadRight (FILE* file, Tree* tree, Tree_node* node) {
 
 void ReadPreNode (FILE* file, Tree* tree, Tree_node* node) {
 
-    char buf[MaxStrBufSize] = "";
-
-    fscanf (file, "\"%m[^\"]", buf);
-    node -> data = (Element_t*) calloc (strlen (buf), sizeof (char));
-    strncpy (node -> data, buf, strlen (buf));
-
+    fscanf (file, "\"%m[^\"]", &(node -> data));
     char bracket = 0;
 
     if ((bracket = fgetc (file)) == '{') {
