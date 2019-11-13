@@ -74,11 +74,12 @@ bool AddRightLeaf           (Tree* tree, Tree_node* branch, const Element_t elem
 
 bool DeleteBranch           (Tree* tree, Tree_node* branch);
 
-Tree_node* SearchElement    (const Tree* tree,              const Element_t elem);
-
+Tree_node* SearchElement      (Tree*      tree,   const char* elem);
+Tree_node* SearchElemInBranch (Tree_node* branch, const char* elem);
+ 
 void ScipSpace                    (FILE* file);
-void PrintPreNode                 (FILE* file, const Tree* tree);
-void PrintPreTree                 (FILE* file, const Tree* tree);
+void PrintPreNode                 (FILE* file,       Tree_node* node, int deep = 0);
+void PrintPreTree                 (FILE* file,       Tree* tree);
 void ReadLeft                     (FILE* file,       Tree* tree, Tree_node* node);
 void ReadRight                    (FILE* file,       Tree* tree, Tree_node* node); 
 void ReadPreNode                  (FILE* file,       Tree* tree, Tree_node* node);
@@ -254,8 +255,39 @@ bool DeleteBranch (Tree* tree, Tree_node* branch) {
 
 }
 
-Tree_node* SearchElement    (const Tree* tree, const Element_t elem) {
+//should be Overload function!!!!
 
+Tree_node* SearchElement (Tree* tree, const char* elem) {
+
+    ASSERTTREE (tree);
+    assert (elem);
+
+    if (tree -> root == nullptr)
+        return nullptr;
+
+    return SearchElemInBranch (tree -> root, elem);
+
+}
+
+Tree_node* SearchElemInBranch (Tree_node* branch, const char* elem) {
+
+    assert (branch);
+    assert (elem);
+
+    if (strncmp (elem, branch -> data, MaxStrBufSize) == 0)
+        return branch;
+
+    Tree_node* place = nullptr;
+
+    if (branch -> left != nullptr)
+        if ((place = SearchElemInBranch (branch -> left, elem)) != nullptr)
+            return place;
+
+    if (branch -> right != nullptr)
+        if ((place = SearchElemInBranch (branch -> right, elem)) != nullptr)
+            return place;
+
+    return place;
 
 }
 
@@ -268,33 +300,50 @@ void SkipSpace (FILE* file) {
 
 }
 
-void PrintPreNode (FILE* file, const Tree_node* node) {
+void PrintPreNode (FILE* file, Tree_node* node, int deep) {
 
+    assert (file);
+    assert (node);
+    assert (deep >= 0);
+
+    for (int i = 0; i < deep; ++i)
+        fprintf (file, "\t");
+ 
+    deep++;
     fprintf (file, "{\"");
     Print (file, node -> data);
     fprintf (file, "\"");
-    
+
+   
     if (node -> left != nullptr || node -> right != nullptr) {
 
+        fprintf (file, "\n");
+
         if (node -> left != nullptr)
-            PrintPreNode (file, node -> left);
+            PrintPreNode (file, node -> left, deep);
         else 
             fprintf (file, "@");
 
         if (node -> right != nullptr)
-            PrintPreNode (file, node -> right);
+            PrintPreNode (file, node -> right, deep);
         else 
             fprintf (file, "@");
 
+        for (int i = 0; i < deep - 1; ++i)
+            fprintf (file, "\t");
+
     }
 
-    fprintf (file, "}");
+    fprintf (file, "}\n");
     
     return;
 
 }
 
-void PrintPreTree (FILE* file, const Tree* tree) {
+void PrintPreTree (FILE* file, Tree* tree) {
+
+    ASSERTTREE (tree);
+    assert (file);
 
     PrintPreNode (file, tree -> root);
 
