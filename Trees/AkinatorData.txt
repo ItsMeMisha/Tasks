@@ -1,0 +1,25 @@
+{"Alive"
+	{"Animal"
+		{"Green"
+			{"Crocodile"}
+			{"Big"
+				{"Elephant"}
+				{"Mouse"}
+			}
+		}
+		{"Plant"
+			{"Cucmber"}
+			{"Human"}
+		}
+	}
+	{"Furniture"
+		{"table"}
+		{"Building"
+			{"dometry"}
+			{"Scince"
+				{"Math"}
+				{"Bag"}
+			}
+		}
+	}
+}
