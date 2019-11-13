@@ -1,15 +1,23 @@
-#include "Tree_t.h"
 #include <stdio.h>
+#include <ctype.h>
+#include "Tree_t.h"
 
 #define _DEBUG
 
+const int ShortAnsLen = 4;
 const int MaxStrSize = 256;
 const int MaxFileNameSize = 128;
 const char DataBaseFile[MaxFileNameSize] = "AkinatorData.txt";
 
+void StrToLower (char* str);
 bool YesOrNoRead ();
 
 Tree* CreateQuestionTreeAndOpenDataBaseFile (Tree* tree, FILE** file);
+
+//void CompareMode (Tree* tree);
+void ElemDef (Tree* tree, Tree_node* node);
+void DefinMode (Tree* tree);
+void ChooseGamemode (Tree* tree);
 bool Game (Tree* tree);
 bool AddNewQuestion (Tree_node* question, Tree* tree);
 void LastQuestion (Tree_node* question, Tree* tree);
@@ -29,7 +37,9 @@ int main () {
 
     }
 
+    printf ("If you desturb me one more time, I will find you\n\n");
     while (Game (&tree));
+    printf ("Goodbye, humanoid\n");    
 
     PrintNewDataBaseAndCloseDataBaseFile (&tree, &file);
 
@@ -41,20 +51,37 @@ int main () {
 
 }
 
+void StrToLower (char* str) {
+
+    assert (str);
+
+    for (int i = 0; str[i] != '\0'; ++i)
+        if (isalpha (str[i]))
+            str[i] = tolower (str[i]);
+
+    return;
+
+}
+
 bool YesOrNoRead () {
 
-    char answer[4] = "";
+    char* answer = nullptr;
+    scanf ("%ms", &answer);
+    StrToLower (answer);
 
-    scanf ("%s", answer);
-
-    if (strncmp (answer, "Yes", 4) == 0 || strncmp (answer, "yes", 4) == 0)
+    if (strncmp (answer, "yes", ShortAnsLen) == 0)
         return true;
-    else 
+    else if (strncmp (answer, "no", ShortAnsLen) == 0)
         return false;
+        
+    printf ("What the hell have you typed?! Type normally 'yes' or 'no'!!!\n");
+    return YesOrNoRead ();
 
 }
 
 Tree* CreateQuestionTreeAndOpenDataBaseFile (Tree* tree, FILE** file) {
+
+    ASSERTTREE (tree);
 
     *file = fopen (DataBaseFile, "r");
 
@@ -68,11 +95,84 @@ Tree* CreateQuestionTreeAndOpenDataBaseFile (Tree* tree, FILE** file) {
 
 }
 
+//void CompareMode (Tree* tree);
+void ElemDef (Tree* tree, Tree_node* node) {
+
+    ASSERTTREE (tree);
+    assert (node);
+
+    if (!ParentsCheck (node, tree))
+        return;
+
+    if (node -> parent != tree -> root)
+        ElemDef (tree, node -> parent);
+
+    if (node == node -> parent -> left)
+        printf ("\t%s \n", node -> parent -> data);
+    
+    if (node == node -> parent -> right)
+        printf ("\tNot %s \n", node -> parent -> data);
+
+    return;
+
+}
+
+void DefinMode (Tree* tree) {
+
+    ASSERTTREE (tree);
+
+    printf ("Ok, what do you want to know?\n");
+
+    char* AnsBuf = nullptr;
+    scanf ("%*[ \n]%m[^\n]", &AnsBuf);
+
+    Tree_node* leaf = nullptr;
+
+    if ((leaf = SearchElement (tree, AnsBuf)) != nullptr)
+        ElemDef (tree, leaf);
+
+    else
+        printf ("You've invented this word, you are cheating, please turn me off, I don't wanna talk with you anymore \n");
+
+}
+
+void ChooseGamemode (Tree* tree) {
+
+    ASSERTTREE (tree);
+    
+    printf ("Come on, choose gamemode: \n\n\t Guessing \n\t Definitions \n\t Comparing  (Coming soon! Make a pre-order only for 300$ and play it erlier!)\n\n");
+
+    char* answer = nullptr;
+    scanf ("%ms", &answer);
+    StrToLower (answer);
+
+    if (strncmp (answer, "guessing", MaxStrSize) == 0) {
+
+        Ask (tree -> root, tree);
+        return;
+    }
+
+    else if (strncmp (answer, "definitions", MaxStrSize) == 0) {
+
+        DefinMode (tree);
+        return;
+    }
+
+    printf ("What the hell have you typed?! Type normally!!!\n");
+    ChooseGamemode (tree);
+    return;
+
+}
+
 bool Game (Tree* tree) {
+
+    ASSERTTREE (tree);
 
     bool Continue = false;
 
-    Ask (tree -> root, tree);
+//    printf ("With who do you wanna play? \n");
+
+    ChooseGamemode (tree);
 
     printf ("Want to play one more time?\n");
 
@@ -85,11 +185,27 @@ bool Game (Tree* tree) {
 
 bool AddNewQuestion (Tree_node* question, Tree* tree) {
 
+    ASSERTTREE (tree);
+
     assert (question);
+
+    printf ("Unbelievable! Who is it then?\n");
+
     char* AnsBuf = nullptr;
     scanf ("%*[ \n]%m[^\n]", &AnsBuf);
 
+    Tree_node* leaf = nullptr;
+
+    if ((leaf = SearchElement (tree, AnsBuf)) != nullptr) {
+
+        printf ("You what, why don't you what is %s?\n Ok, look riiiiiight here: %s is\n", AnsBuf, AnsBuf);
+        ElemDef (tree, leaf);
+        return true;
+
+    } 
+
     printf ("\nAnd what the difference between %s and %s?\n", question -> data, AnsBuf);
+
     char* QueBuf = nullptr;
     scanf ("%*[ \n]%m[^\n]", &QueBuf);
 
@@ -114,12 +230,8 @@ void LastQuestion (Tree_node* question, Tree* tree) {
     if (YesOrNoRead ())
         printf ("I knew it!\n");
 
-    else {
-
-        printf ("Unbelievable! Who is it then?\n");
-        AddNewQuestion (question, tree);
-
-    }        
+    else 
+        AddNewQuestion (question, tree);        
 
     return;
     

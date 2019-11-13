@@ -92,9 +92,11 @@ void Print (FILE* file, const double item);
 bool CheckConnection                        (const Tree* tree, Tree_node* branch); 
 bool TreeOk                                                          (Tree* tree);
 void __TreeDump                                                (const Tree* tree, int line, const char* func);
-void DrawNode                                 (FILE* file, const Tree_node* node);
+void DrawNode                                      (FILE* file, const Tree_node* node);
 void ErrDecode                                     (FILE* file, const Tree* tree);
 void DrawTree                                      (FILE* file, const Tree* tree);
+void DrawEasyNode                                  (FILE* file, const Tree_node* node);
+void DrawEasyTree                                  (FILE* file, const Tree* tree);
 
 void __TreeConstruct (Tree* tree, const char* Name) {
 
