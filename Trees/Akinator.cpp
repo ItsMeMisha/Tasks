@@ -46,6 +46,8 @@ int main () {
 
     PrintNewDataBaseAndCloseDataBaseFile (&tree, &file);
 
+    TreeDump (&tree);
+
     TreeDestruct (&tree);
 
     return 0;
@@ -271,7 +273,7 @@ void ChooseGamemode (Tree* tree) {
 
     }
 
-    else if (strncmp (answer, "comparing", MaxStrSize) == 0) {
+    else if (strncmp (answer, "300$", MaxStrSize) == 0) {
 
         CompareMode (tree);
         return;
