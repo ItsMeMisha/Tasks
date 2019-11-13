@@ -29,11 +29,11 @@ int main () {
 
     }
 
-    ASSERTTREE (&tree);
-
     while (Game (&tree));
 
     PrintNewDataBaseAndCloseDataBaseFile (&tree, &file);
+
+    TreeDump (&tree);
 
     TreeDestruct (&tree);
 
@@ -86,13 +86,12 @@ bool Game (Tree* tree) {
 bool AddNewQuestion (Tree_node* question, Tree* tree) {
 
     assert (question);
-
     char* AnsBuf = nullptr;
-    scanf ("%ms", &AnsBuf);
+    scanf ("%*[ \n]%m[^\n]", &AnsBuf);
 
     printf ("\nAnd what the difference between %s and %s?\n", question -> data, AnsBuf);
     char* QueBuf = nullptr;
-    scanf ("%ms", &QueBuf);
+    scanf ("%*[ \n]%m[^\n]", &QueBuf);
 
     if (!AddLeftLeaf (tree, question, AnsBuf))
         return false;
