@@ -627,4 +627,52 @@ void ErrDecode (FILE* file, const Tree* tree) {
 
 }
 
+void DrawEasyNode (FILE* file, const Tree_node* node) {
+
+    assert (file);
+    assert (node);
+
+    if (node -> left != nullptr) {
+
+        fprintf (file , "\t%x[fillcolor=blue, label = \"%s\"]\n", node -> left, node -> left -> data);
+        fprintf (file, "%x -> %x\n", node, node -> left);
+        DrawEasyNode (file, node -> left);
+
+    }
+    
+    if (node -> right != nullptr) {
+
+        fprintf (file , "\t%x[fillcolor=green, label = \"%s\"]\n", node -> right, node -> right -> data);
+        fprintf (file, "%x -> %x\n", node, node -> right);
+        DrawEasyNode (file, node -> right);
+
+    }
+
+    return;
+
+}
+
+void DrawEasyTree (FILE* file, const Tree* tree) {
+
+    assert (file);
+    assert (tree);
+
+    fprintf (file, "digraph\n{\n");
+    fprintf (file, "node[shape=record]\n"); 
+ 
+    fprintf (file, "node[style=filled]\n");
+
+    if (tree -> size > 0) {
+
+        fprintf (file , "\t%x[fillcolor=red, label = \"%s\"]\n", tree -> root, tree -> root -> data);
+        DrawEasyNode (file, tree -> root);
+
+    }
+  
+    fprintf (file, "}\n");
+
+    return; 
+
+}
+
 #endif

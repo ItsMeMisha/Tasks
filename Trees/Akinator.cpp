@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include "Tree_t.h"
 
 #define _DEBUG
@@ -14,7 +15,9 @@ bool YesOrNoRead ();
 
 Tree* CreateQuestionTreeAndOpenDataBaseFile (Tree* tree, FILE** file);
 
-//void CompareMode (Tree* tree);
+void CompareElems (Tree* tree, Tree_node* Elem1, Tree_node* Elem2);
+void CompareMode (Tree* tree);
+void Draw (Tree* tree);
 void ElemDef (Tree* tree, Tree_node* node);
 void DefinMode (Tree* tree);
 void ChooseGamemode (Tree* tree);
@@ -39,11 +42,9 @@ int main () {
 
     printf ("If you desturb me one more time, I will find you\n\n");
     while (Game (&tree));
-    printf ("Goodbye, humanoid\n");    
+    printf ("\nGoodbye, humanoid\n");    
 
     PrintNewDataBaseAndCloseDataBaseFile (&tree, &file);
-
-    TreeDump (&tree);
 
     TreeDestruct (&tree);
 
@@ -95,7 +96,112 @@ Tree* CreateQuestionTreeAndOpenDataBaseFile (Tree* tree, FILE** file) {
 
 }
 
-//void CompareMode (Tree* tree);
+void CompareElems (Tree* tree, Tree_node* Elem1, Tree_node* Elem2) {
+
+    ASSERTTREE (tree);
+    assert (Elem1);
+    assert (Elem2);
+
+    if (!ParentsCheck (Elem1, tree))
+        return;
+
+    if (!ParentsCheck (Elem2, tree))
+        return;
+
+    if (Elem1 -> parent == Elem2 -> parent) {
+
+        if (Elem1 -> parent != tree -> root)
+            ElemDef (tree, Elem1 -> parent);
+
+        printf ("\t BUT \n");
+
+    }
+
+    else {
+        
+        if (Elem1 -> parent == tree -> root)
+            CompareElems (tree, Elem1, Elem2 -> parent);
+
+        else if (Elem2 -> parent == tree -> root)
+            CompareElems (tree, Elem1 -> parent, Elem2);
+
+        else CompareElems (tree, Elem1 -> parent, Elem2 -> parent);
+
+    }
+
+    if (Elem1 == Elem1 -> parent -> left)
+        printf (" %s \t", Elem1 -> parent -> data);
+    
+    if (Elem1 == Elem1-> parent -> right)
+        printf (" Not %s \t", Elem1 -> parent -> data);
+
+    if (Elem2 == Elem2 -> parent -> left)
+        printf ("\t%s \n", Elem2 -> parent -> data);
+    
+    if (Elem2 == Elem2 -> parent -> right)
+        printf ("\tNot %s \n", Elem2 -> parent -> data);
+
+    return;
+
+}
+
+void CompareMode (Tree* tree) {
+
+    ASSERTTREE (tree);
+
+    printf ("What do you want me to compare?\n");    
+
+    char* AnsBuf = nullptr;
+    scanf ("%*[ \n]%m[^\n]", &AnsBuf);
+
+    Tree_node* Elem1 = nullptr;
+
+    if ((Elem1 = SearchElement (tree, AnsBuf)) == nullptr) {
+
+        printf ("I don't know what is it, go away!\n");
+        return;
+
+    }
+
+    printf ("And???\n");
+ 
+    scanf ("%*[ \n]%m[^\n]", &AnsBuf);
+
+    Tree_node* Elem2 = nullptr;
+
+    if ((Elem2 = SearchElement (tree, AnsBuf)) == nullptr) {
+
+        printf ("I don't know what is it, go away!\n");
+        return;
+
+    }
+
+    printf ("%s \tvs\t %s\n", Elem1 -> data, Elem2 -> data);
+
+    CompareElems (tree, Elem1, Elem2);
+ 
+    return;
+
+}
+
+void Draw (Tree* tree) {
+
+    ASSERTTREE (tree);
+
+    FILE* fileout = fopen ("AkinatorTree.dot", "w");
+    assert (fileout);
+
+    DrawEasyTree (fileout, tree);
+
+    fclose (fileout);
+    system ("dot AkinatorTree.dot -T png -o AkinatorTree.png");
+
+    printf ("I draw the tree in Tree.png, as you can see, you could say \"thanks\" at least\n");
+
+    return;
+
+}
+
 void ElemDef (Tree* tree, Tree_node* node) {
 
     ASSERTTREE (tree);
@@ -140,7 +246,7 @@ void ChooseGamemode (Tree* tree) {
 
     ASSERTTREE (tree);
     
-    printf ("Come on, choose gamemode: \n\n\t Guessing \n\t Definitions \n\t Comparing  (Coming soon! Make a pre-order only for 300$ and play it erlier!)\n\n");
+    printf ("Come on, choose gamemode: \n\n\t Guessing \n\t Definitions \n\t Draw \n\t Comparing  (Coming soon! Make a pre-order only for 300$ and play it erlier!)\n\n");
 
     char* answer = nullptr;
     scanf ("%ms", &answer);
@@ -156,6 +262,20 @@ void ChooseGamemode (Tree* tree) {
 
         DefinMode (tree);
         return;
+    }
+
+    else if (strncmp (answer, "draw", MaxStrSize) == 0) {
+
+        Draw (tree);
+        return;
+
+    }
+
+    else if (strncmp (answer, "comparing", MaxStrSize) == 0) {
+
+        CompareMode (tree);
+        return;
+
     }
 
     printf ("What the hell have you typed?! Type normally!!!\n");
