@@ -49,6 +49,7 @@ struct Tree_node {
     Tree_node* parent;
     Tree_node* left;
     Tree_node* right;
+    int level;
 
 };
 
@@ -150,6 +151,7 @@ Tree_node* NewNode (const Element_t elem) {
     NewLeaf -> parent = nullptr;
     NewLeaf -> left   = nullptr;
     NewLeaf -> right  = nullptr;
+    NewLeaf -> level  = 0;
 
     return NewLeaf;
 
@@ -199,6 +201,7 @@ bool AddLeftLeaf (Tree* tree, Tree_node* branch, const Element_t elem) {
     tree -> size++;
     branch -> left = NewLeaf;
     NewLeaf -> parent = branch;
+    NewLeaf -> level  = branch -> level + 1;
 
     return true;
 
@@ -216,6 +219,7 @@ bool AddRightLeaf (Tree* tree, Tree_node* branch, const Element_t elem) {
     tree -> size++;
     branch -> right = NewLeaf;
     NewLeaf -> parent = branch;
+    NewLeaf -> level = branch -> level + 1;
 
     return true;
 
@@ -564,16 +568,16 @@ void DrawNode (FILE* file, const Tree_node* node) {
 
     if (node -> left != nullptr) {
 
-        fprintf (file , "\t%x[fillcolor=blue, label = \"{%p | %s | {%p |%p}}\"]\n", node -> left, node -> left, node -> left -> data, node -> left -> left, node -> left -> right);
-        fprintf (file, "%x -> %x\n", node, node -> left);
+        fprintf (file , "\tN%x[fillcolor=blue, label = \"{{%p | %d} | %s | {%p |%p}}\"]\n", node -> left, node -> left, node -> left -> level, node -> left -> data, node -> left -> left, node -> left -> right);
+        fprintf (file, "N%x -> N%x\n", node, node -> left);
         DrawNode (file, node -> left);
 
     }
     
     if (node -> right != nullptr) {
 
-        fprintf (file , "\t%x[fillcolor=green, label = \"{%p | %s | {%p |%p}}\"]\n", node -> right, node -> right, node -> right -> data, node -> right -> left, node -> right -> right);
-        fprintf (file, "%x -> %x\n", node, node -> right);
+        fprintf (file , "\tN%x[fillcolor=green, label = \"{{%p | %d} | %s | {%p |%p}}\"]\n", node -> right, node -> right, node -> right -> level, node -> right -> data, node -> right -> left, node -> right -> right);
+        fprintf (file, "N%x -> N%x\n", node, node -> right);
         DrawNode (file, node -> right);
 
     }
@@ -594,7 +598,7 @@ void DrawTree (FILE* file, const Tree* tree) {
 
     if (tree -> size > 0) {
 
-        fprintf (file , "\t%x[fillcolor=red, label = \"{%p | %s | {%p |%p}}\"]\n", tree -> root, tree -> root, tree -> root -> data, tree -> root -> left, tree -> root -> right);
+        fprintf (file , "\tN%x[fillcolor=red, label = \"{{%p | %d} | %s | {%p |%p}}\"]\n", tree -> root, tree -> root, tree -> root -> level, tree -> root -> data, tree -> root -> left, tree -> root -> right);
 
         DrawNode (file, tree -> root);
 
@@ -634,16 +638,16 @@ void DrawEasyNode (FILE* file, const Tree_node* node) {
 
     if (node -> left != nullptr) {
 
-        fprintf (file , "\t%x[fillcolor=blue, label = \"%s\"]\n", node -> left, node -> left -> data);
-        fprintf (file, "%x -> %x\n", node, node -> left);
+        fprintf (file , "\tN%x[fillcolor=blue, label = \"%s\"]\n", node -> left, node -> left -> data);
+        fprintf (file, "N%x -> N%x\n", node, node -> left);
         DrawEasyNode (file, node -> left);
 
     }
     
     if (node -> right != nullptr) {
 
-        fprintf (file , "\t%x[fillcolor=green, label = \"%s\"]\n", node -> right, node -> right -> data);
-        fprintf (file, "%x -> %x\n", node, node -> right);
+        fprintf (file , "\tN%x[fillcolor=green, label = \"%s\"]\n", node -> right, node -> right -> data);
+        fprintf (file, "N%x -> N%x\n", node, node -> right);
         DrawEasyNode (file, node -> right);
 
     }
@@ -664,7 +668,7 @@ void DrawEasyTree (FILE* file, const Tree* tree) {
 
     if (tree -> size > 0) {
 
-        fprintf (file , "\t%x[fillcolor=red, label = \"%s\"]\n", tree -> root, tree -> root -> data);
+        fprintf (file , "\tN%x[fillcolor=red, label = \"%s\"]\n", tree -> root, tree -> root -> data);
         DrawEasyNode (file, tree -> root);
 
     }
