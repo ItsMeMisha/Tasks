@@ -60,7 +60,7 @@ int main () {
 
     char SayingBuf[MaxStrSize] = "";
 
-    sprintf (SayingBuf, "If you desturb me one more time, I will find you\n\n");
+    sprintf (SayingBuf, "If you desturb me one more time, I will find you\n Use 'y' and 'n' to say 'yes' or 'no'\n");
     say (SayingBuf);
 
     while (Game (&tree));
@@ -96,14 +96,14 @@ bool YesOrNoRead () {
     scanf ("%ms", &answer);
     StrToLower (answer);
 
-    if (strncmp (answer, "yes", ShortAnsLen) == 0)
+    if (strncmp (answer, "y", ShortAnsLen) == 0)
         return true;
-    else if (strncmp (answer, "no", ShortAnsLen) == 0)
+    else if (strncmp (answer, "n", ShortAnsLen) == 0)
         return false;
 
     char SayingBuf[MaxStrSize] = "";
         
-    sprintf (SayingBuf, "What the hell have you typed?! Type normally 'yes' or 'no'!!!\n");
+    sprintf (SayingBuf, "What the hell have you typed?! Type normally 'y' or 'n'!!!\n");
     say (SayingBuf);
 
     return YesOrNoRead ();
@@ -138,38 +138,36 @@ void CompareElems (Tree* tree, Tree_node* Elem1, Tree_node* Elem2, Element_t dat
     if (!ParentsCheck (Elem2, tree))
         return;
 
+    char SayingBuf[MaxStrSize] = "";
+
     if (Elem1 -> parent == Elem2 -> parent) {
 
         if (Elem1 -> parent != tree -> root)
-            ElemDef (tree, Elem1 -> parent);
+            ElemDef (tree, Elem1 -> parent, tree -> root);
 
-        printf ("\t BUT \n");
+        sprintf (SayingBuf, "\t BUT \n");
+        say (SayingBuf);
 
     }
 
     else {
         
-        if (Elem1 -> parent == tree -> root)
+        if (Elem1 -> parent == tree -> root || (Elem1 -> level < Elem2 -> level))
             CompareElems (tree, Elem1, Elem2 -> parent, Elem1 -> data, Elem2 -> parent -> data);
 
-        else if (Elem2 -> parent == tree -> root)
+        else if (Elem2 -> parent == tree -> root || (Elem1 -> level < Elem2 -> level))
             CompareElems (tree, Elem1 -> parent, Elem2, Elem1 -> parent -> data, Elem1 -> data);
 
         else CompareElems (tree, Elem1 -> parent, Elem2 -> parent, Elem1 -> parent -> data, Elem2 -> parent -> data);
 
     }
 
-    if (Elem1 == Elem1 -> parent -> left)
-        printf (" %s \t", Elem1 -> parent -> data);
-    
-    if (Elem1 == Elem1-> parent -> right)
-        printf (" Not %s \t", Elem1 -> parent -> data);
+    if (Elem1 -> data == data1 && Elem2 -> data == data2) {
 
-    if (Elem2 == Elem2 -> parent -> left)
-        printf ("\t%s \n", Elem2 -> parent -> data);
-    
-    if (Elem2 == Elem2 -> parent -> right)
-        printf ("\tNot %s \n", Elem2 -> parent -> data);
+        sprintf (SayingBuf, " %s is ", Elem1 -> data);
+        say (SayingBuf);
+
+    }
 
     return;
 
@@ -254,7 +252,7 @@ void ElemDef (Tree* tree, Tree_node* node, Tree_node* RootBranch) {
         return;
 
     if (node -> parent != RootBranch && node -> parent != tree -> root)
-        ElemDef (tree, node -> parent);
+        ElemDef (tree, node -> parent, RootBranch);
 
     char SayingBuf[MaxStrSize] = "";
 
@@ -332,26 +330,41 @@ void ChooseGamemode (Tree* tree) {
     scanf ("%ms", &answer);
     StrToLower (answer);
 
-    if (strncmp (answer, "guessing", MaxStrSize) == 0) {
+    if (strncmp (answer, "1", MaxStrSize) == 0) {
 
-        Ask (tree -> root, tree);
+        bool Continue = true;
+
+        while (Continue) {
+
+            Continue = false;
+
+            Ask (tree -> root, tree);
+            sprintf (SayingBuf, "Want to play one more time?\n");
+            say (SayingBuf);
+
+            if (YesOrNoRead ())
+            Continue = true; 
+
+        }
+
         return;
+
     }
 
-    else if (strncmp (answer, "definitions", MaxStrSize) == 0) {
+    else if (strncmp (answer, "2", MaxStrSize) == 0) {
 
         DefinMode (tree);
         return;
     }
 
-    else if (strncmp (answer, "draw", MaxStrSize) == 0) {
+    else if (strncmp (answer, "3", MaxStrSize) == 0) {
 
         Draw (tree);
         return;
 
     }
 
-    else if (strncmp (answer, "300$", MaxStrSize) == 0) {
+    else if (strncmp (answer, "4", MaxStrSize) == 0) {
 
         CompareMode (tree);
         return;
@@ -378,7 +391,7 @@ bool Game (Tree* tree) {
 
     char SayingBuf[MaxStrSize] = "";
 
-    sprintf (SayingBuf, "Want to play one more time?\n");
+    sprintf (SayingBuf, "Want to see main menu\n");
     say (SayingBuf);
 
     if (YesOrNoRead ())
@@ -408,7 +421,7 @@ bool AddNewQuestion (Tree_node* question, Tree* tree) {
         sprintf (SayingBuf, "Why?? Why don't you what is %s?\n Ok, look riiiiiight here: %s is\n", AnsBuf, AnsBuf);
         say (SayingBuf);
 
-        ElemDef (tree, leaf);
+        ElemDef (tree, leaf, tree -> root);
         return true;
 
     } 
