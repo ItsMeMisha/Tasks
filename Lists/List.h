@@ -589,6 +589,8 @@ bool Delete (const int pos, List* lst) {
     lst -> node[pos].next = 0;
     lst -> node[pos].prev = PosIsFree;
 
+    lst -> sorted = false;
+
     if (!AddFreePos (pos, lst))
         return false;
 
@@ -874,6 +876,10 @@ int FindPhysPosByLogPos (const int logPos, List* lst) {
 
     if (logPos > lst -> curSize)
         return 0;
+
+
+    if (lst -> sorted)
+        return logPos;
 
     int cur = lst -> head;
 
