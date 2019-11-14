@@ -9,10 +9,8 @@
 #ifdef VOICE
     
     #define say( text ) {\
-        char* speech = (char*) calloc (strlen (text) + 20, sizeof (char)); \
-        strncpy (speech, "espeak \"", 8); \
-        strncpy (speech+8, text, strlen (text));\
-        speech[8+strlen(text)] = '"';\
+        char* speech = (char*) calloc (strlen (text) + 25, sizeof (char)); \
+        sprintf (speech, "espeak -p 25 \"%s\"", text); \
         printf ("%s", text);\
         system (speech); \
         free (speech);  }
@@ -60,7 +58,7 @@ int main () {
 
     char SayingBuf[MaxStrSize] = "";
 
-    sprintf (SayingBuf, "If you desturb me one more time, I will find you\n Use 'y' and 'n' to say 'yes' or 'no'\n");
+    sprintf (SayingBuf, "If you desturb me one more time, I will find you.\n Use 'y' and 'n' to say 'yes' or 'no'\n");
     say (SayingBuf);
 
     while (Game (&tree));
@@ -286,8 +284,6 @@ void DefinMode (Tree* tree) {
 
         sprintf (SayingBuf, "%s is ", AnsBuf);
         say (SayingBuf);
-        sprintf (SayingBuf, "\n");
-        say (SayingBuf);
 
         ElemDef (tree, leaf, tree -> root);
 
@@ -323,6 +319,9 @@ void ChooseGamemode (Tree* tree) {
     say (SayingBuf);
 
     sprintf (SayingBuf, "\t (4) Comparing  (Coming soon! Make a pre-order only for 300$ and play it erlier!)\n");
+    say (SayingBuf);
+
+    sprintf (SayingBuf, "\t (5) Exit \n");
     say (SayingBuf);
     
 
@@ -371,6 +370,9 @@ void ChooseGamemode (Tree* tree) {
 
     }
 
+    else if (strncmp (answer, "5", MaxStrSize) == 0)
+        return;
+
     sprintf (SayingBuf, "What the hell have you typed?! Type normally!!!\n");
     say (SayingBuf);
 
@@ -391,7 +393,7 @@ bool Game (Tree* tree) {
 
     char SayingBuf[MaxStrSize] = "";
 
-    sprintf (SayingBuf, "Want to see main menu\n");
+    sprintf (SayingBuf, "\nWant to see main menu?\n");
     say (SayingBuf);
 
     if (YesOrNoRead ())
