@@ -64,11 +64,11 @@ int main () {
 
     say ("\n");
 
-    say ("\n If you desturb me one more time, I will find you.\n Use 'y' or 'n' to say 'yes' or 'no'\n");
+    say ("\n I'm an Akinator! If you desturb me one more time, I will find you.\n Use 'y' or 'n' to say 'yes' or 'no'\n");
 
     while (Game (&tree));
 
-    say ("\nGoodbye, humanoid\n");
+    say ("\n Goodbye, humanoid\n");
 
     PrintNewDataBaseAndCloseDataBaseFile (&tree, &file);
 
@@ -153,7 +153,6 @@ Tree_node*  CompareElems (Tree* tree, Tree_node* Elem1, Tree_node* Elem2, Elemen
 
         else 
             say ("%s and  %s have nothing in common ", data1, data2);
-
 
         say (" BUT ");
 
@@ -338,18 +337,12 @@ void ChooseGamemode (Tree* tree) {
     ASSERTTREE (tree);
     
     say ("Come on, choose gamemode: \n");
-
     say ("\t (1) Guessing \n");
-
     say ("\t (2) Definitions \n");
-
     say ("\t (3) Draw \n ");
-
     say ("\t (4) Comparing \n");
-
     say ("\t (5) Exit \n");
    
-
     char* answer = nullptr;
     scanf ("%ms", &answer);
     StrToLower (answer);
