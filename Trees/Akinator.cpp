@@ -39,6 +39,7 @@ void CompareMode (Tree* tree);
 void Draw (Tree* tree);
 void ElemDef (Tree* tree, Tree_node* node, Tree_node* RootBranch);
 void DefinMode (Tree* tree);
+void GuessMode (Tree* tree);
 void ChooseGamemode (Tree* tree);
 bool Game (Tree* tree);
 bool AddNewQuestion (Tree_node* question, Tree* tree);
@@ -307,6 +308,31 @@ void DefinMode (Tree* tree) {
 
 }
 
+void GuessMode (Tree* tree) {
+
+        ASSERTTREE (tree);
+
+        bool Continue = true;
+
+        while (Continue) {
+
+            Continue = false;
+
+            say ("Ok, let's start.\n");
+
+            Ask (tree -> root, tree);
+
+            say ("Want to play one more time?\n");
+
+            if (YesOrNoRead ())
+                Continue = true; 
+
+        }
+
+        return;
+
+}
+
 void ChooseGamemode (Tree* tree) {
 
     ASSERTTREE (tree);
@@ -330,22 +356,7 @@ void ChooseGamemode (Tree* tree) {
 
     if (strncmp (answer, "1", MaxStrSize) == 0) {
 
-        bool Continue = true;
-
-        while (Continue) {
-
-            Continue = false;
-
-            say ("Ok, let's start.\n");
-
-            Ask (tree -> root, tree);
-
-            say ("Want to play one more time?\n");
-
-            if (YesOrNoRead ())
-                Continue = true; 
-
-        }
+        GuessMode (tree);
 
         return;
 
