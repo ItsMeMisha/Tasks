@@ -4,7 +4,10 @@
 			{"Crocodile"}
 			{"Big"
 				{"Elephant"}
-				{"Mouse"}
+				{"Cat"
+					{"Poltorashka"}
+					{"Mouse"}
+				}
 			}
 		}
 		{"Plant"
