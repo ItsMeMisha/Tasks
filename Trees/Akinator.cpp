@@ -1,25 +1,20 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include "Tree_t.h"
 
 #define _DEBUG
+
 #define VOICE
 
 #ifdef VOICE
-    
-    #define say( ... ) {\
-        char* speech = (char*) calloc (MaxStrSize + strlen (Espeak), sizeof (char)); \
-        sprintf (speech, "%s", Espeak); \
-        sprintf (speech + strlen (Espeak), __VA_ARGS__);\
-        speech[strlen (speech)] = '"';\
-        printf (__VA_ARGS__);\
-        system (speech); \
-        free (speech);  }
+
+    #define say( ... ) __say (__VA_ARGS__)
 
 #else
 
-    #define say( text ) printf ("%s", text)
+    #define say( ... ) vprintf (__VA_ARGS__)
 
 #endif
 
@@ -28,6 +23,8 @@ const int ShortAnsLen = 4;
 const int MaxStrSize = 256;
 const int MaxFileNameSize = 128;
 const char DataBaseFile[MaxFileNameSize] = "AkinatorData.txt";
+
+void __say (const char* format, ...);
 
 void StrToLower (char* str);
 bool YesOrNoRead ();
@@ -64,7 +61,7 @@ int main () {
 
     say ("\n");
 
-    say ("\n I'm an Akinator! If you desturb me one more time, I will find you.\n Use 'y' or 'n' to say 'yes' or 'no'\n");
+    say ("\n I'm the Akinator! If you desturb me one more time, I will find you.\n Use 'y' or 'n' to say 'yes' or 'no'\n");
 
     while (Game (&tree));
 
@@ -79,6 +76,32 @@ int main () {
     system ("killall aplay");
 
     return 0;
+
+}
+
+void __say (const char* format, ...) {
+
+    va_list args = {};
+    va_start (args, format); 
+
+    char* speech = (char*) calloc (MaxStrSize + strlen (Espeak), sizeof (char)); 
+
+    sprintf (speech, "%s", Espeak); 
+    speech += strlen (Espeak);
+
+    vsprintf (speech, format, args);
+    printf ("%s", speech);
+
+    speech[strlen (speech)] = '"';
+    speech -= strlen (Espeak);
+
+    system (speech); 
+
+    free (speech);  
+
+    va_end (args);
+
+    return;
 
 }
 
@@ -154,7 +177,7 @@ Tree_node*  CompareElems (Tree* tree, Tree_node* Elem1, Tree_node* Elem2, Elemen
         else 
             say ("%s and  %s have nothing in common ", data1, data2);
 
-        say (" BUT ");
+        say (" but ");
 
         return Elem1 -> parent;
 
@@ -227,7 +250,7 @@ void CompareMode (Tree* tree) {
 
         CompareElems (tree, Elem1, Elem2, Elem1 -> data, Elem2 -> data);
 
-        say ("Want to compare one more time?\n");
+        say ("\nWant to compare one more time?\n");
 
         if (!YesOrNoRead ())
             Continue = false; 
@@ -261,9 +284,7 @@ void ElemDef (Tree* tree, Tree_node* node, Tree_node* RootBranch) {
 
     ASSERTTREE (tree);
     assert (node);
-
-    if (RootBranch == nullptr)
-        return;
+    assert (RootBranch);
 
     if (!ParentsCheck (node, tree))
         return;
@@ -350,7 +371,6 @@ void ChooseGamemode (Tree* tree) {
     if (strncmp (answer, "1", MaxStrSize) == 0) {
 
         GuessMode (tree);
-
         return;
 
     }
@@ -465,7 +485,7 @@ void LastQuestion (Tree_node* question, Tree* tree) {
     assert (question);
    
     if (YesOrNoRead ())
-        say ("I knew it!\n")
+        say ("I knew it!\n");
     else 
         AddNewQuestion (question, tree);        
 
