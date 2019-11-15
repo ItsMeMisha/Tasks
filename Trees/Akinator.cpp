@@ -53,14 +53,15 @@ int main () {
     FILE* file = nullptr;
     if (CreateQuestionTreeAndOpenDataBaseFile (&tree, &file) == nullptr) {
 
-        printf ("Database file error: cannot open file %s\n", DataBaseFile);
+        printf ("\nDatabase file error: cannot open file %s\n", DataBaseFile);
         return 1;
 
     }
 
     char SayingBuf[MaxStrSize] = "";
+    say (SayingBuf);
 
-    sprintf (SayingBuf, "If you desturb me one more time, I will find you.\n Use 'y' or 'n' to say 'yes' or 'no'\n");
+    sprintf (SayingBuf, "\n If you desturb me one more time, I will find you.\n Use 'y' or 'n' to say 'yes' or 'no'\n");
     say (SayingBuf);
 
     while (Game (&tree));
@@ -172,10 +173,10 @@ Tree_node*  CompareElems (Tree* tree, Tree_node* Elem1, Tree_node* Elem2, Elemen
 
     else {
         
-        if (Elem1 -> parent == tree -> root || (Elem1 -> level < Elem2 -> level))
+        if (Elem1 -> level < Elem2 -> level)
             LastCommon = CompareElems (tree, Elem1, Elem2 -> parent, data1, data2);
 
-        else if (Elem2 -> parent == tree -> root || (Elem1 -> level < Elem2 -> level))
+        else if (Elem1 -> level > Elem2 -> level)
             LastCommon = CompareElems (tree, Elem1 -> parent, Elem2, data1, data2);
 
         else LastCommon = CompareElems (tree, Elem1 -> parent, Elem2 -> parent, data1, data2);
@@ -208,39 +209,51 @@ void CompareMode (Tree* tree) {
     ASSERTTREE (tree);
 
     char SayingBuf[MaxStrSize] = "";
+
+    bool Continue = true;
+
+    while (Continue) {
+   
+        sprintf (SayingBuf, "What do you want me to compare?\n");
+        say (SayingBuf);
+
+        char* AnsBuf = nullptr;
+        scanf ("%*[ \n]%m[^\n]", &AnsBuf);
+
+        Tree_node* Elem1 = nullptr;
+
+        if ((Elem1 = SearchElement (tree, AnsBuf)) == nullptr) {
+
+            sprintf (SayingBuf, "I don't know what is it, go away!\n");
+            say (SayingBuf);
+            continue;
+
+        }
     
-    sprintf (SayingBuf, "What do you want me to compare?\n");
-    say (SayingBuf);
-
-    char* AnsBuf = nullptr;
-    scanf ("%*[ \n]%m[^\n]", &AnsBuf);
-
-    Tree_node* Elem1 = nullptr;
-
-    if ((Elem1 = SearchElement (tree, AnsBuf)) == nullptr) {
-
-        sprintf (SayingBuf, "I don't know what is it, go away!\n");
+        sprintf (SayingBuf, "And???\n");
         say (SayingBuf);
-        return;
+     
+        scanf ("%*[ \n]%m[^\n]", &AnsBuf);
+    
+        Tree_node* Elem2 = nullptr;
+    
+        if ((Elem2 = SearchElement (tree, AnsBuf)) == nullptr) {
+    
+            sprintf (SayingBuf, "I don't know what is it, go away!\n");
+            say (SayingBuf);
+            continue;
+
+        }
+
+        CompareElems (tree, Elem1, Elem2, Elem1 -> data, Elem2 -> data);
+
+        sprintf (SayingBuf, "Want to compare one more time?\n");
+        say (SayingBuf);
+
+        if (!YesOrNoRead ())
+            Continue = false; 
 
     }
-
-    sprintf (SayingBuf, "And???\n");
-    say (SayingBuf);
- 
-    scanf ("%*[ \n]%m[^\n]", &AnsBuf);
-
-    Tree_node* Elem2 = nullptr;
-
-    if ((Elem2 = SearchElement (tree, AnsBuf)) == nullptr) {
-
-        sprintf (SayingBuf, "I don't know what is it, go away!\n");
-        say (SayingBuf);
-        return;
-
-    }
-
-    CompareElems (tree, Elem1, Elem2, Elem1 -> data, Elem2 -> data);
  
     return;
 
@@ -288,7 +301,7 @@ void ElemDef (Tree* tree, Tree_node* node, Tree_node* RootBranch) {
         sprintf (SayingBuf, "%s, ", node -> parent -> data);
     
     if (node == node -> parent -> right)
-        sprintf (SayingBuf, "not, %s ", node -> parent -> data);
+        sprintf (SayingBuf, "not %s, ", node -> parent -> data);
 
     say (SayingBuf);
 
@@ -348,7 +361,7 @@ void ChooseGamemode (Tree* tree) {
     sprintf (SayingBuf, "\t (3) Draw \n ");
     say (SayingBuf);
 
-    sprintf (SayingBuf, "\t (4) Comparing  (Coming soon! Make a pre-order only for 300$ and play it erlier!)\n");
+    sprintf (SayingBuf, "\t (4) Comparing \n");
     say (SayingBuf);
 
     sprintf (SayingBuf, "\t (5) Exit \n");
