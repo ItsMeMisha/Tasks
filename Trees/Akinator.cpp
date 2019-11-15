@@ -17,7 +17,7 @@
 
 #else
 
-    #define say( text ) printf ( "%s", text)
+    #define say( text ) printf ("%s", text)
 
 #endif
 

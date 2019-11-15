@@ -6,7 +6,10 @@
 				{"Elephant"}
 				{"Cat"
 					{"Poltorashka"}
-					{"Mouse"}
+					{"Bird"
+						{"Raven"}
+						{"Mouse"}
+					}
 				}
 			}
 		}
