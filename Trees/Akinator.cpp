@@ -8,10 +8,12 @@
 
 #ifdef VOICE
     
-    #define say( text ) {\
-        char* speech = (char*) calloc (strlen (text) + 50, sizeof (char)); \
-        sprintf (speech, "espeak -p 0 -a 150 \"%s\"", text); \
-        printf ("%s", text);\
+    #define say( ... ) {\
+        char* speech = (char*) calloc (MaxStrSize + strlen (Espeak), sizeof (char)); \
+        sprintf (speech, "%s", Espeak); \
+        sprintf (speech + strlen (Espeak), __VA_ARGS__);\
+        speech[strlen (speech)] = '"';\
+        printf (__VA_ARGS__);\
         system (speech); \
         free (speech);  }
 
@@ -21,6 +23,7 @@
 
 #endif
 
+const char Espeak[] = "espeak -p 0 -a 150 \"";
 const int ShortAnsLen = 4;
 const int MaxStrSize = 256;
 const int MaxFileNameSize = 128;
@@ -58,16 +61,13 @@ int main () {
 
     }
 
-    char SayingBuf[MaxStrSize] = "";
-    say (SayingBuf);
+    say ("\n");
 
-    sprintf (SayingBuf, "\n If you desturb me one more time, I will find you.\n Use 'y' or 'n' to say 'yes' or 'no'\n");
-    say (SayingBuf);
+    say ("\n If you desturb me one more time, I will find you.\n Use 'y' or 'n' to say 'yes' or 'no'\n");
 
     while (Game (&tree));
 
-    sprintf (SayingBuf, "\nGoodbye, humanoid\n");
-    say (SayingBuf);
+    say ("\nGoodbye, humanoid\n");
 
     PrintNewDataBaseAndCloseDataBaseFile (&tree, &file);
 
@@ -103,11 +103,8 @@ bool YesOrNoRead () {
         return true;
     else if (strncmp (answer, "n", ShortAnsLen) == 0)
         return false;
-
-    char SayingBuf[MaxStrSize] = "";
         
-    sprintf (SayingBuf, "What the hell have you typed?! Type normally 'y' or 'n'!!!\n");
-    say (SayingBuf);
+    say ("What the hell have you typed?! Type normally 'y' or 'n'!!!\n");
 
     return YesOrNoRead ();
 
@@ -143,29 +140,21 @@ Tree_node*  CompareElems (Tree* tree, Tree_node* Elem1, Tree_node* Elem2, Elemen
     if (!ParentsCheck (Elem2, tree))
         return LastCommon;
 
-    char SayingBuf[MaxStrSize] = "";
-
     if (Elem1 -> parent == Elem2 -> parent) {
 
         if (Elem1 -> parent != tree -> root) {
 
-            sprintf (SayingBuf, "%s and  %s both are ", data1, data2);
-            say (SayingBuf);
+            say ("%s and  %s both are ", data1, data2);
 
             ElemDef (tree, Elem1 -> parent, tree -> root);
 
         }
 
-        else {
-
-            sprintf (SayingBuf, "%s and  %s have nothing in common ", data1, data2);
-            say (SayingBuf);
-
-        }
+        else 
+            say ("%s and  %s have nothing in common ", data1, data2);
 
 
-        sprintf (SayingBuf, " BUT ");
-        say (SayingBuf);
+        say (" BUT ");
 
         return Elem1 -> parent;
 
@@ -185,18 +174,15 @@ Tree_node*  CompareElems (Tree* tree, Tree_node* Elem1, Tree_node* Elem2, Elemen
 
     if (Elem1 -> data == data1 && Elem2 -> data == data2) {
 
-        sprintf (SayingBuf, " %s is ", data1);
-        say (SayingBuf);
+        say (" %s is ", data1);
 
         ElemDef (tree, Elem1, LastCommon);
 
-        sprintf (SayingBuf, "and %s is ", data2);
-        say (SayingBuf);
+        say ("and %s is ", data2);
 
         ElemDef (tree, Elem2, LastCommon);
 
-        sprintf (SayingBuf, "got it?\n");
-        say (SayingBuf);
+        say ("got it?\n");
 
     }
 
@@ -208,14 +194,11 @@ void CompareMode (Tree* tree) {
 
     ASSERTTREE (tree);
 
-    char SayingBuf[MaxStrSize] = "";
-
     bool Continue = true;
 
     while (Continue) {
    
-        sprintf (SayingBuf, "What do you want me to compare?\n");
-        say (SayingBuf);
+        say ("What do you want me to compare?\n");
 
         char* AnsBuf = nullptr;
         scanf ("%*[ \n]%m[^\n]", &AnsBuf);
@@ -224,14 +207,12 @@ void CompareMode (Tree* tree) {
 
         if ((Elem1 = SearchElement (tree, AnsBuf)) == nullptr) {
 
-            sprintf (SayingBuf, "I don't know what is it, go away!\n");
-            say (SayingBuf);
+            say ("I don't know what is it, go away!\n");
             continue;
 
         }
     
-        sprintf (SayingBuf, "And???\n");
-        say (SayingBuf);
+        say ("And???\n");
      
         scanf ("%*[ \n]%m[^\n]", &AnsBuf);
     
@@ -239,16 +220,14 @@ void CompareMode (Tree* tree) {
     
         if ((Elem2 = SearchElement (tree, AnsBuf)) == nullptr) {
     
-            sprintf (SayingBuf, "I don't know what is it, go away!\n");
-            say (SayingBuf);
+            say ("I don't know what is it, go away!\n");
             continue;
 
         }
 
         CompareElems (tree, Elem1, Elem2, Elem1 -> data, Elem2 -> data);
 
-        sprintf (SayingBuf, "Want to compare one more time?\n");
-        say (SayingBuf);
+        say ("Want to compare one more time?\n");
 
         if (!YesOrNoRead ())
             Continue = false; 
@@ -270,14 +249,10 @@ void Draw (Tree* tree) {
 
     fclose (fileout);
     system ("dot AkinatorTree.dot -T png -o AkinatorTree.png");
-
-    char SayingBuf[MaxStrSize] = "";
     
     system ("fim -a AkinatorTree.png");
-    sprintf (SayingBuf, "I draw the tree in AkinatorTree.png, as you can see, you could say \"thanks\" at least\n");
-    say (SayingBuf);
-    
-
+    say ("I draw the tree in AkinatorTree.png, as you can see, you could say \"thanks\" at least\n");
+  
     return;
 
 }
@@ -286,6 +261,7 @@ void ElemDef (Tree* tree, Tree_node* node, Tree_node* RootBranch) {
 
     ASSERTTREE (tree);
     assert (node);
+
     if (RootBranch == nullptr)
         return;
 
@@ -295,15 +271,11 @@ void ElemDef (Tree* tree, Tree_node* node, Tree_node* RootBranch) {
     if (node -> parent != RootBranch && node -> parent != tree -> root)
         ElemDef (tree, node -> parent, RootBranch);
 
-    char SayingBuf[MaxStrSize] = "";
-
     if (node == node -> parent -> left)
-        sprintf (SayingBuf, "%s, ", node -> parent -> data);
+        say ("%s, ", node -> parent -> data);
     
     if (node == node -> parent -> right)
-        sprintf (SayingBuf, "not %s, ", node -> parent -> data);
-
-    say (SayingBuf);
+        say ("not %s, ", node -> parent -> data);
 
     return;
 
@@ -313,10 +285,7 @@ void DefinMode (Tree* tree) {
 
     ASSERTTREE (tree);
 
-    char SayingBuf[MaxStrSize] = "";
-
-    sprintf (SayingBuf, "Ok, what do you want to know?\n");
-    say (SayingBuf);
+    say ("Ok, what do you want to know?\n");
 
     char* AnsBuf = nullptr;
     scanf ("%*[ \n]%m[^\n]", &AnsBuf);
@@ -325,19 +294,14 @@ void DefinMode (Tree* tree) {
 
     if ((leaf = SearchElement (tree, AnsBuf)) != nullptr) {
 
-        sprintf (SayingBuf, "%s is ", AnsBuf);
-        say (SayingBuf);
+        say ("%s is ", AnsBuf);
 
         ElemDef (tree, leaf, tree -> root);
 
     }
 
-    else {
-
-        sprintf (SayingBuf, "You've invented this word, you are cheating, please turn me off, I don't wanna talk with you anymore \n");
-        say (SayingBuf);
-
-    }
+    else 
+        say ("You've invented this word, you are cheating, please turn me off, I don't wanna talk with you anymore \n");
 
     return;
 
@@ -346,27 +310,19 @@ void DefinMode (Tree* tree) {
 void ChooseGamemode (Tree* tree) {
 
     ASSERTTREE (tree);
-
-    char SayingBuf[MaxStrSize] = "";
     
-    sprintf (SayingBuf, "Come on, choose gamemode: \n");
-    say (SayingBuf);
+    say ("Come on, choose gamemode: \n");
 
-    sprintf (SayingBuf, "\t (1) Guessing \n");
-    say (SayingBuf);
+    say ("\t (1) Guessing \n");
 
-    sprintf (SayingBuf, "\t (2) Definitions \n");
-    say (SayingBuf);
+    say ("\t (2) Definitions \n");
 
-    sprintf (SayingBuf, "\t (3) Draw \n ");
-    say (SayingBuf);
+    say ("\t (3) Draw \n ");
 
-    sprintf (SayingBuf, "\t (4) Comparing \n");
-    say (SayingBuf);
+    say ("\t (4) Comparing \n");
 
-    sprintf (SayingBuf, "\t (5) Exit \n");
-    say (SayingBuf);
-    
+    say ("\t (5) Exit \n");
+   
 
     char* answer = nullptr;
     scanf ("%ms", &answer);
@@ -380,12 +336,11 @@ void ChooseGamemode (Tree* tree) {
 
             Continue = false;
 
-            sprintf (SayingBuf, "Ok, let's start.\n");
-            say (SayingBuf);
+            say ("Ok, let's start.\n");
 
             Ask (tree -> root, tree);
-            sprintf (SayingBuf, "Want to play one more time?\n");
-            say (SayingBuf);
+
+            say ("Want to play one more time?\n");
 
             if (YesOrNoRead ())
                 Continue = true; 
@@ -405,8 +360,7 @@ void ChooseGamemode (Tree* tree) {
             Continue = false;
 
             DefinMode (tree);
-            sprintf (SayingBuf, "understandable? \nWant to learn one more word?\n");
-            say (SayingBuf);
+            say ("understandable? \nWant to learn one more word?\n");
 
             if (YesOrNoRead ())
                 Continue = true; 
@@ -434,8 +388,7 @@ void ChooseGamemode (Tree* tree) {
     else if (strncmp (answer, "5", MaxStrSize) == 0)
         return;
 
-    sprintf (SayingBuf, "What the hell have you typed?! Type normally!!!\n");
-    say (SayingBuf);
+    say ("What the hell have you typed?! Type normally!!!\n");
 
     ChooseGamemode (tree);
     return;
@@ -448,14 +401,9 @@ bool Game (Tree* tree) {
 
     bool Continue = false;
 
-//    printf ("With who do you wanna play? \n");
-
     ChooseGamemode (tree);
 
-    char SayingBuf[MaxStrSize] = "";
-
-    sprintf (SayingBuf, "\nWant to see main menu? (y). Or exit? (n)\n");
-    say (SayingBuf);
+    say ("\nWant to see main menu? (y). Or exit? (n)\n");
 
     if (YesOrNoRead ())
         Continue = true; 
@@ -470,33 +418,26 @@ bool AddNewQuestion (Tree_node* question, Tree* tree) {
 
     assert (question);
 
-    char SayingBuf[MaxStrSize] = "";
-
-    sprintf (SayingBuf, "Unbelievable! So, who is it?\n");
-    say (SayingBuf);
+    say ("Unbelievable! So, who is it?\n");
 
     char* AnsBuf = nullptr;
     scanf ("%*[ \n]%m[^\n]", &AnsBuf);
 
     Tree_node* leaf = nullptr;
 
-
     if ((leaf = SearchElement (tree, AnsBuf)) != nullptr) {
 
-        sprintf (SayingBuf, "Why?? Why don't you what is %s?\n Ok, look riiiiiight here: %s is\n", AnsBuf, AnsBuf);
-        say (SayingBuf);
+        say ("Why?? Why don't you what is %s?\n Ok, look riiiiiight here: %s is\n", AnsBuf, AnsBuf);
 
         ElemDef (tree, leaf, tree -> root);
 
-        sprintf (SayingBuf, "now understandable? \n");
-        say (SayingBuf);
+        say ("now it's understandable? \n");
 
         return true;
 
     } 
 
-    sprintf (SayingBuf, "\nAnd what the difference between %s and %s?\n", question -> data, AnsBuf);
-    say (SayingBuf);
+    say ("\nAnd what the difference between %s and %s?\n", question -> data, AnsBuf);
 
     char* QueBuf = nullptr;
     scanf ("%*[ \n]%m[^\n]", &QueBuf);
@@ -509,8 +450,7 @@ bool AddNewQuestion (Tree_node* question, Tree* tree) {
 
     question -> data = QueBuf;
 
-    sprintf (SayingBuf, "%s %s added\n", QueBuf, AnsBuf);
-    say (SayingBuf);
+    say ("%s %s added\n", QueBuf, AnsBuf);
 
     return true;
 
@@ -520,14 +460,8 @@ void LastQuestion (Tree_node* question, Tree* tree) {
 
     assert (question);
    
-    if (YesOrNoRead ()) {
-
-        char SayingBuf[MaxStrSize] = "";
-        sprintf (SayingBuf, "I knew it!\n");
-        say (SayingBuf);
-
-    }
-
+    if (YesOrNoRead ())
+        say ("I knew it!\n")
     else 
         AddNewQuestion (question, tree);        
 
@@ -537,10 +471,7 @@ void LastQuestion (Tree_node* question, Tree* tree) {
 
 void Ask (Tree_node* question, Tree* tree) {
 
-    char SayingBuf[MaxStrSize] = "";
-
-    sprintf (SayingBuf, "%s?\n", question -> data);
-    say (SayingBuf);
+    say ("%s?\n", question -> data);
 
     if (question -> left == nullptr && question -> right == nullptr)
         LastQuestion (question, tree);
