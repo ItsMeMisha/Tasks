@@ -747,12 +747,12 @@ void DrawNext (FILE* file, List* lst) {
 
     for (int i = 1; i < lst -> curSize; ++i) {
 
-        fprintf (file, "%x:<n> -> ", lst -> node + cur);
+        fprintf (file, "N%x:<n> -> ", lst -> node + cur);
         cur = lst -> node[cur].next;
 
     }
 
-    fprintf (file, "%x:<n>\n", lst -> node + lst -> tail);
+    fprintf (file, "N%x:<n>\n", lst -> node + lst -> tail);
 
     fprintf (file, "edge[color=green] \n");
  
@@ -760,12 +760,12 @@ void DrawNext (FILE* file, List* lst) {
 
     for (int i = 1; i < lst -> maxSize - lst -> curSize - 1; ++i) {
 
-        fprintf (file, "%x:<n> -> ", lst -> node + cur);
+        fprintf (file, "N%x:<n> -> ", lst -> node + cur);
         cur = lst -> freePos[cur].next;
 
     }
 
-    fprintf (file, "%x:<n>\n", lst -> node + cur);
+    fprintf (file, "N%x:<n>\n", lst -> node + cur);
 
     return;
  
@@ -779,12 +779,12 @@ void DrawPrev (FILE* file, List* lst) {
 
     for (int i = 1; i < lst -> curSize; ++i) {
 
-        fprintf (file, "%x:<p> -> ", lst -> node + cur);
+        fprintf (file, "N%x:<p> -> ", lst -> node + cur);
         cur = lst -> node[cur].prev;
 
     }
 
-    fprintf (file, "%x:<p>\n", lst -> node + lst -> head);
+    fprintf (file, "N%x:<p>\n", lst -> node + lst -> head);
 
     return;
 
@@ -806,7 +806,7 @@ void DrawList (FILE* file, List* lst, const char* funcName) {
 
     for (int i = 1; i < lst -> maxSize; ++i) {
 
-        fprintf (file, "\t%x[style=filled, color =", lst -> node + i);
+        fprintf (file, "\tN%x[style=filled, color =", lst -> node + i);
 
         if (lst -> head == i)
             fprintf (file, "red, fillcolor=orange, ");
@@ -819,14 +819,14 @@ void DrawList (FILE* file, List* lst, const char* funcName) {
         else
             fprintf (file, "black, fillcolor=red, ");
 
-        fprintf (file, "label = \"{{<p> prev\n %d | {index\n %d | data\n %d} |<n> next\n %d }}\"]\n", lst -> node[i].prev, i, lst -> node[i].data, lst -> node[i].next);
+        fprintf (file, "label = \"{{<p> prev %d | {index %d | data %d} |<n> next %d }}\"]\n", lst -> node[i].prev, i, lst -> node[i].data, lst -> node[i].next);
 
     }
 
     for (int i = 1; i < lst -> maxSize - 1; ++i) 
-        fprintf (file, "%x -> ", lst -> node + i);
+        fprintf (file, "N%x -> ", lst -> node + i);
 
-    fprintf (file, "%x\n", lst -> node + lst -> maxSize - 1);
+    fprintf (file, "N%x\n", lst -> node + lst -> maxSize - 1);
 
     DrawNext (file, lst);
     DrawPrev (file, lst);
