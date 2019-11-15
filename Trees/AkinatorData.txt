@@ -14,17 +14,23 @@
 			}
 		}
 		{"Plant"
-			{"Cucmber"}
-			{"Human"}
+			{"Cucumber"}
+			{"Human"
+				{"Kuzmenko"}
+				{"Truffle"}
+			}
 		}
 	}
 	{"Furniture"
-		{"table"}
+		{"Table"}
 		{"Building"
 			{"dometry"}
-			{"Scince"
+			{"Science"
 				{"Math"}
-				{"Bag"}
+				{"Mineral"
+					{"Stone"}
+					{"Bag"}
+				}
 			}
 		}
 	}

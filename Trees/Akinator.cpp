@@ -60,7 +60,7 @@ int main () {
 
     char SayingBuf[MaxStrSize] = "";
 
-    sprintf (SayingBuf, "If you desturb me one more time, I will find you.\n Use 'y' and 'n' to say 'yes' or 'no'\n");
+    sprintf (SayingBuf, "If you desturb me one more time, I will find you.\n Use 'y' or 'n' to say 'yes' or 'no'\n");
     say (SayingBuf);
 
     while (Game (&tree));
@@ -189,11 +189,13 @@ Tree_node*  CompareElems (Tree* tree, Tree_node* Elem1, Tree_node* Elem2, Elemen
 
         ElemDef (tree, Elem1, LastCommon);
 
-        sprintf (SayingBuf, "\nAnd %s is ", data2);
+        sprintf (SayingBuf, "and %s is ", data2);
         say (SayingBuf);
 
         ElemDef (tree, Elem2, LastCommon);
 
+        sprintf (SayingBuf, "got it?\n");
+        say (SayingBuf);
 
     }
 
@@ -283,10 +285,10 @@ void ElemDef (Tree* tree, Tree_node* node, Tree_node* RootBranch) {
     char SayingBuf[MaxStrSize] = "";
 
     if (node == node -> parent -> left)
-        sprintf (SayingBuf, "%s ", node -> parent -> data);
+        sprintf (SayingBuf, "%s, ", node -> parent -> data);
     
     if (node == node -> parent -> right)
-        sprintf (SayingBuf, "not %s ", node -> parent -> data);
+        sprintf (SayingBuf, "not, %s ", node -> parent -> data);
 
     say (SayingBuf);
 
@@ -390,7 +392,7 @@ void ChooseGamemode (Tree* tree) {
             Continue = false;
 
             DefinMode (tree);
-            sprintf (SayingBuf, "\nWant to learn one more word?\n");
+            sprintf (SayingBuf, "understandable? \nWant to learn one more word?\n");
             say (SayingBuf);
 
             if (YesOrNoRead ())
@@ -472,6 +474,10 @@ bool AddNewQuestion (Tree_node* question, Tree* tree) {
         say (SayingBuf);
 
         ElemDef (tree, leaf, tree -> root);
+
+        sprintf (SayingBuf, "now understandable? \n");
+        say (SayingBuf);
+
         return true;
 
     } 

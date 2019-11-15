@@ -300,7 +300,7 @@ Tree_node* SearchElemInBranch (Tree_node* branch, const char* elem) {
 void SkipSpace (FILE* file) {
     
     assert (file);
-    fscanf (file, "%*[\n\t\r]");
+    fscanf (file, "%*[ \n\t\r]");
 
     return;
 
@@ -421,6 +421,7 @@ void ReadPreNode (FILE* file, Tree* tree, Tree_node* node) {
     if ((bracket = fgetc (file)) == '{') {
 
         ReadLeft  (file, tree, node);
+        SkipSpace (file);
         ReadRight (file, tree, node);
         SkipSpace (file);
         bracket = fgetc (file);
