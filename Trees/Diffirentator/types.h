@@ -1,4 +1,14 @@
 
+#define CHNG changes++;
+
+#define BR branch
+
+#define BRL branch -> left
+
+#define BRR branch -> right
+
+#define DLT(node) DeleteBranch (OutTree, node);
+
 #define DIF(In, Out) NodeDiffer (In, Out, OutTree)
 
 #define SET(Out, newdata, newtype) sscanf (newdata, "%ms", &(Out -> data)); Out -> type = newtype;
@@ -23,9 +33,9 @@
 
 #define NEWR(out) AddRightLeaf (OutTree, out, 0)
 
-//NODE_TYPE (type_name, type_signature, type_num, code)
+//NODE_TYPE (type_name, type_signature, type_num, code, opimiseCode)
 
-NODE_TYPE (NoType, " ", 0, return;  )
+NODE_TYPE (NoType, " ", 0, return;, {}  )
 
 NODE_TYPE (Add, "+", 1, {
 
@@ -35,6 +45,28 @@ NODE_TYPE (Add, "+", 1, {
     DIF (INL, OUTL);
     DIF (INR, OUTR);
 
+},
+
+{ //OPTIMISE
+
+    if (BRL -> type == type_Num && BRR -> type == type_Num) {
+
+        double NBuf1 = atof (BRL -> data);
+        double NBuf2 = atof (BRR -> data);
+
+        free (BR -> data);
+        BR -> data = (char*) calloc (MaxStrBufSize, sizeof (char));
+        sprintf (BR -> data, "%lg", NBuf1 + NBuf2);
+
+        BR -> type = type_Num;
+
+        DLT (BRL);
+        DLT (BRR);
+
+        CHNG;
+
+    }
+        
 }
 )
 
@@ -46,7 +78,31 @@ NODE_TYPE (Sub, "-", 2, {
     DIF (INL, OUTL);
     DIF (INR, OUTR);
 
+},
+
+{ //OPTIMISE
+
+    if (BRL -> type == type_Num && BRR -> type == type_Num) {
+
+        double NBuf1 = atof (BRL -> data);
+        double NBuf2 = atof (BRR -> data);
+
+        free (BR -> data);
+        BR -> data = (char*) calloc (MaxStrBufSize, sizeof (char));
+        sprintf (BR -> data, "%lg", NBuf1 - NBuf2);
+
+        BR -> type = type_Num;
+
+        DLT (BRL);
+        DLT (BRR);
+
+
+        CHNG;
+
+    }
+        
 }
+
 )
 
 NODE_TYPE (Mul, "*", 3, {
@@ -70,7 +126,31 @@ NODE_TYPE (Mul, "*", 3, {
     CPY (INL, OUTR -> left);
     DIF (INR, OUTR -> right);
 
+},
+
+{ //OPTIMISE
+
+    if (BRL -> type == type_Num && BRR -> type == type_Num) {
+
+        double NBuf1 = atof (BRL -> data);
+        double NBuf2 = atof (BRR -> data);
+
+        free (BR -> data);
+        BR -> data = (char*) calloc (MaxStrBufSize, sizeof (char));
+        sprintf (BR -> data, "%lg", NBuf1 * NBuf2);
+
+        BR -> type = type_Num;
+
+        DLT (BRL);
+        DLT (BRR);
+
+
+        CHNG;
+
+    }
+        
 }
+
 )
 
 NODE_TYPE (Div, "/", 4, {
@@ -106,29 +186,123 @@ NODE_TYPE (Div, "/", 4, {
     CPY (INL, OUTL -> right -> left);
     DIF (INR, OUTL -> right -> right);
 
+},
+
+{ //OPTIMISE
+
+    if (BRL -> type == type_Num && BRR -> type == type_Num) {
+
+        double NBuf1 = atof (BRL -> data);
+        double NBuf2 = atof (BRR -> data);
+
+        free (BR -> data);
+        BR -> data = (char*) calloc (MaxStrBufSize, sizeof (char));
+        sprintf (BR -> data, "%lg", NBuf1 / NBuf2);
+
+        BR -> type = type_Num;
+
+        DLT (BRL);
+        DLT (BRR);
+
+
+        CHNG;
+
+    }
+        
 }
+
 )
 
 NODE_TYPE (Sin, "sin", 5, {
 
+    SET (OUT, "*", type_Mul);
+    
+    NEWL (OUT);
+    NEWR (OUT);
+
+    DIF (INL, OUTL);
+    SET (OUTR, "cos", type_Cos);
+
+    NEWL (OUTR);
+    CPY (INL, OUTR -> left);
+
+},
+
+{ //OPTIMISE
+
+    if (BRL -> type == type_Num) {
+
+        double NBuf1 = atof (BRL -> data);
+
+        free (BR -> data);
+        BR -> data = (char*) calloc (MaxStrBufSize, sizeof (char));
+        sprintf (BR -> data, "%lg", sin (NBuf1));
+
+        BR -> type = type_Num;
+
+        DLT (BRL);
 
 
+        CHNG;
 
+    }
+        
 }
+
 )
 
 NODE_TYPE (Cos, "cos", 6, {
 
+    SET (OUT, "*", type_Mul);
+    
+    NEWL (OUT);
+    NEWR (OUT);
 
+    NEWL (OUTL);
+    NEWR (OUTL);
 
+    SET (OUTL, "*", type_Mul); 
+
+    DIF (INL, OUTL -> left);
+    SET (OUTL -> right, "-1", type_Num);
+
+    SET (OUTR, "sin", type_Sin);
+
+    NEWL (OUTR);
+    CPY (INL, OUTR -> left);
+
+},
+
+{ //OPTIMISE
+
+    if (BRL -> type == type_Num) {
+
+        double NBuf1 = atof (BRL -> data);
+
+        free (BR -> data);
+        BR -> data = (char*) calloc (MaxStrBufSize, sizeof (char));
+        sprintf (BR -> data, "%lg", cos (NBuf1));
+
+        BR -> type = type_Num;
+        DLT (BRL);
+
+        CHNG;
+
+    }
+        
 }
+
+
 )
 
 NODE_TYPE (Tg, "tg", 7, {
 
 
 
-}
+}, 
+
+
+{}
 )
 
 NODE_TYPE (Ctg, "ctg", 8, {
@@ -136,34 +310,44 @@ NODE_TYPE (Ctg, "ctg", 8, {
 
 
 
-}
+},
+
+{}
 )
 
 NODE_TYPE (Deg, "^", 9, {
+    
+    
 
+},
 
-
-}
+{}
 )
 
 NODE_TYPE (Var, "x", 10, {
 
+    SET (OUT, "1", type_Num);
 
+},
 
-
-}
+{}
 )
 
 NODE_TYPE (Num, "0", 11, {
 
     SET (OUT, "0", type_Num);
 
-}
+},
+
+{}
 )
 
 
 
-
+#undef CHNG
+#undef BR
+#undef BRL
+#undef BRR
 #undef DIF
 #undef SET
 #undef CPYINOUT

@@ -512,22 +512,14 @@ bool CheckNumType (Tree_node* node) {
     assert (node);
 
     bool isNum = true;
+    double NumCheckBuf = 0;
 
-    for (int i = 0; i < strlen (node -> data); ++i)
-
-        if ((!isdigit (node -> data[i])) && (node -> data[i] != '.')) {
-            isNum = false;
-            break;
-        }
-
-    if (isNum) {
-
+    if (sscanf (node -> data, "%lg", &NumCheckBuf) > 0)
         node -> type = type_Num;
-        return true;
+    else
+        isNum = false;
 
-    }
-
-    return false;
+    return isNum;
 
 }
 
@@ -535,7 +527,7 @@ void DefineNodeType (Tree_node* node) {
 
     assert (node);
 
-    #define NODE_TYPE(name, signature, num, code)                    \
+    #define NODE_TYPE(name, signature, num, code, opt)               \
             if (type_##name == type_NoType);                         \
             else if (type_##name == type_Num)                        \
                 CheckNumType (node);                                 \
