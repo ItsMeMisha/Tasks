@@ -80,6 +80,8 @@ bool AddRoot                (Tree* tree,                    const Element_t elem
 bool AddLeftLeaf            (Tree* tree, Tree_node* branch, const Element_t elem);
 bool AddRightLeaf           (Tree* tree, Tree_node* branch, const Element_t elem);
 
+void CopyBranch (Tree_node* SourceBranch, Tree_node* OutBranch, Tree* OutTree);
+
 bool DeleteBranch           (Tree* tree, Tree_node* branch);
 
 Tree_node* SearchElement      (Tree*      tree,   const char* elem);
@@ -241,6 +243,30 @@ bool AddRightLeaf (Tree* tree, Tree_node* branch, const Element_t elem) {
     return true;
 
 }
+
+void CopyBranch (Tree_node* SourceBranch, Tree_node* OutBranch, Tree* OutTree) {
+
+    ASSERTTREE (OutTree);
+    assert (SourceBranch);
+    assert (OutBranch);
+
+    sscanf (SourceBranch -> data, "%ms", &(OutBranch -> data));
+    OutBranch -> type = SourceBranch -> type;
+
+    if (SourceBranch -> left != nullptr) {
+        AddLeftLeaf (OutTree, OutBranch, 0);
+        CopyBranch (SourceBranch -> left, OutBranch -> left, OutTree);
+    }
+
+    if (SourceBranch -> right != nullptr) {
+        AddRightLeaf (OutTree, OutBranch, 0);
+        CopyBranch (SourceBranch -> right, OutBranch -> right, OutTree);
+    }
+
+    return;
+    
+}
+
 
 bool DeleteBranch (Tree* tree, Tree_node* branch) {
 

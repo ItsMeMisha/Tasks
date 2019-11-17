@@ -1,7 +1,7 @@
 
 #define DIF(In, Out) NodeDiffer (In, Out, OutTree)
 
-#define SET(OutNode, data, type) sscanf (data, "%ms", &(OutNode -> data)); OutNode -> type = type;
+#define SET(Out, newdata, newtype) sscanf (newdata, "%ms", &(Out -> data)); Out -> type = newtype;
 
 #define CPYINOUT sscanf (InNode -> data, "%ms", &(OutNode -> data)); OutNode -> type = InNode -> type;
 
@@ -23,38 +23,15 @@
 
 #define NEWR(out) AddRightLeaf (OutTree, out, 0)
 
-void CopyBranch (Tree_node* SourceBranch, Tree_node* OutBranch, Tree* OutTree) {
-
-    ASSERTTREE (OutTree);
-    assert (SourceBranch);
-    assert (OutBranch);
-
-    sscanf (SourceBranch -> data, "%ms", &(OutBranch -> data));
-    OutBranch -> type = SourceBranch -> type;
-
-    if (SourceBranch -> left != nullptr) {
-        NEWL (OutBranch);
-        CPY (SourceBranch -> left, OutBranch -> left);
-    }
-
-    if (SourceBranch -> right != nullptr) {
-        NEWR (OutBranch);
-        CPY (SourceBranch -> right, OutBranch -> right);
-    }
-
-    return;
-    
-}
-
 //NODE_TYPE (type_name, type_signature, type_num, code)
 
-NODE_TYPE (NoType, "", 0, return;  )
+NODE_TYPE (NoType, " ", 0, return;  )
 
 NODE_TYPE (Add, "+", 1, {
 
     CPYINOUT;
-    NEWL;
-    NEWR;
+    NEWL (OUT);
+    NEWR (OUT);
     DIF (INL, OUTL);
     DIF (INR, OUTR);
 
@@ -64,10 +41,10 @@ NODE_TYPE (Add, "+", 1, {
 NODE_TYPE (Sub, "-", 2, {
 
     CPYINOUT;
-    NEWL;
-    NEWR;
-    DIF (INL, OUTL)
-    DIF (INR, OUTR)
+    NEWL (OUT);
+    NEWR (OUT);
+    DIF (INL, OUTL);
+    DIF (INR, OUTR);
 
 }
 )
@@ -111,11 +88,23 @@ NODE_TYPE (Div, "/", 4, {
     NEWL (OUTR);
     NEWR (OUTR);
 
-    CPY (INL, OUTR -> left);
+    CPY (INR, OUTR -> left);
     SET (OUTR -> right, "2", type_Num);
 
     SET (OUTL -> left, "*", type_Mul);
     SET (OUTL -> right, "*", type_Mul);
+
+    NEWL (OUTL -> left);
+    NEWR (OUTL -> left);
+
+    CPY (INR, OUTL -> left -> right);
+    DIF (INL, OUTL -> left -> left);
+
+    NEWL (OUTL -> right);
+    NEWR (OUTL -> right);
+
+    CPY (INL, OUTL -> right -> left);
+    DIF (INR, OUTL -> right -> right);
 
 }
 )
@@ -165,15 +154,27 @@ NODE_TYPE (Var, "x", 10, {
 }
 )
 
-NODE_TYPE (Num, "", 11, {
+NODE_TYPE (Num, "0", 11, {
 
-
-
-
+    SET (OUT, "0", type_Num);
 
 }
 )
 
 
+
+
+#undef DIF
+#undef SET
+#undef CPYINOUT
+#undef CPY                     
+#undef IN
+#undef INL
+#undef INR
+#undef OUT
+#undef OUTL
+#undef OUTR
+#undef NEWL
+#undef NEWR
 
 
