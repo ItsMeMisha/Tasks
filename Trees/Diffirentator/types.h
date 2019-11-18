@@ -65,6 +65,26 @@ NODE_TYPE (Add, "+", 1, {
 
         CHNG;
 
+    } else
+
+    if (BRL -> type == type_Num && (strncmp (BRL -> data, "0", 2) == 0)) {
+
+        CPY (BRL, BR);
+        DLT (BRL);
+        DLT (BRR); 
+
+        CHNG;
+
+    } else
+ 
+    if (BRR -> type == type_Num && (strncmp (BRR -> data, "0", 2) == 0)) {
+
+        CPY (BRR, BR);
+        DLT (BRL);
+        DLT (BRR); 
+
+        CHNG;
+
     }
         
 }
@@ -99,8 +119,18 @@ NODE_TYPE (Sub, "-", 2, {
 
         CHNG;
 
+    } else
+
+    if (BRR -> type == type_Num &&  (strncmp (BRR -> data, "0", 2) == 0)) {
+
+        CPY (BRR, BR);
+        DLT (BRL);
+        DLT (BRR); 
+
+        CHNG;
+
     }
-        
+         
 }
 
 )
@@ -144,6 +174,18 @@ NODE_TYPE (Mul, "*", 3, {
         DLT (BRL);
         DLT (BRR);
 
+
+        CHNG;
+
+    } else
+
+    if ((strncmp (BRL -> data, "0", 2) == 0) || (strncmp (BRR -> data, "0", 2) == 0)) {
+
+        strncpy (BR -> data,  "0", 2);
+        BR -> type = type_Num;
+
+        DLT (BRL);
+        DLT (BRR);
 
         CHNG;
 
@@ -207,8 +249,20 @@ NODE_TYPE (Div, "/", 4, {
 
         CHNG;
 
+    } else
+
+    if ((strncmp (BRL -> data, "0", 2) == 0)) {
+
+        strncpy (BR -> data,  "0", 2);
+        BR -> type = type_Num;
+
+        DLT (BRL);
+        DLT (BRR);
+
+        CHNG;
+
     }
-        
+
 }
 
 )
@@ -316,12 +370,57 @@ NODE_TYPE (Ctg, "ctg", 8, {
 )
 
 NODE_TYPE (Deg, "^", 9, {
+
+    if (INL -> type != type_Num && INR -> type == type_Num) {
     
+        SET (OUT, "*", type_Mul);
+
+        NEWL (OUT);
+        NEWR (OUT);
+
+        NEWL (OUTR);
+        NEWL (OUTL);
+
+        CPY (INL, OUTR -> left);
+        CPY (INR, OUTR -> right);
+        CPY (OUTR -> right, OUTL);
     
+        double NBuf1 = atof (OUTR -> right -> data) - 1;
+        OUTR -> data = (char*) calloc (MaxStrBufSize, sizeof (char));
+        sprintf (OUTR -> right -> data, "%lg", NBuf1);
+
+    }
+        
 
 },
 
-{}
+{   //OPTIMISE
+
+    if (BRL -> type == type_Num && BRR -> type == type_Num) {
+
+        double NBuf1 = atof (BRL -> data);
+        double NBuf2 = atof (BRR -> data);
+
+        free (BR -> data);
+        BR -> data = (char*) calloc (MaxStrBufSize, sizeof (char));
+        sprintf (BR -> data, "%lg", pow (NBuf1, NBuf2);
+
+        BR -> type = type_Num;
+
+        DLT (BRL);
+        DLT (BRR);
+
+        CHNG;
+
+    } else
+
+    if (BRR -> type != type_Num) {
+
+        SET (BR, "*", type_Mul);
+
+    }
+
+}
 )
 
 NODE_TYPE (Var, "x", 10, {
@@ -342,7 +441,73 @@ NODE_TYPE (Num, "0", 11, {
 {}
 )
 
+NODE_TYPE (Exp, "exp", 12, {
 
+        SET (OUT, "*", type_Mul);
+
+        NEWL (OUT);
+        NEWR (OUT);
+
+        NEWL (OUTR);
+        NEWL (OUTL);
+
+        CPY (INL, OUTR -> left);
+        CPY (INR, OUTR -> right);
+        CPY (OUTR -> right, OUTL);
+ 
+},
+
+{ //OPTIMISE
+
+    if (BRL -> type == type_Num) {
+
+        double NBuf1 = atof (BRL -> data);
+
+        free (BR -> data);
+        BR -> data = (char*) calloc (MaxStrBufSize, sizeof (char));
+        sprintf (BR -> data, "%lg", exp (NBuf1));
+
+        BR -> type = type_Num;
+        DLT (BRL);
+
+        CHNG;
+
+    }
+}
+  
+)
+
+NODE_TYPE (Ln, "ln", 13, {
+
+        SET (OUT, "/", type_Div);
+
+        NEWL (OUT);
+        NEWR (OUT);
+
+        CPY (INL, OUTR);
+        DIF (INL, OUTL);
+
+},
+
+{ //OPTIMISE
+
+    if (BRL -> type == type_Num) {
+
+        double NBuf1 = atof (BRL -> data);
+
+        free (BR -> data);
+        BR -> data = (char*) calloc (MaxStrBufSize, sizeof (char));
+        sprintf (BR -> data, "%lg", log (NBuf1));
+
+        BR -> type = type_Num;
+        DLT (BRL);
+
+        CHNG;
+
+    }
+}
+
+)
 
 #undef CHNG
 #undef BR
