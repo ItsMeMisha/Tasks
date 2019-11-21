@@ -10,13 +10,16 @@ int main () {
 
     Tree inputTree = {};
     TreeConstruct (&inputTree);
-    Tree outputTree = {};
+printf ("\n%p\n", &inputTree);
+
+ TreeDump (&inputTree);
+
+     Tree outputTree = {};
     TreeConstruct (&outputTree);
 
     FILE* file  = fopen ("input.txt", "r");
     ReadInfixTree (file, &inputTree);
     fclose (file);
-
     Differ (&inputTree, &outputTree);
     
     file = fopen ("output.txt", "w");
@@ -36,7 +39,9 @@ void NodeDiffer (Tree_node* InNode, Tree_node* OutNode, Tree* OutTree) {
     assert (OutNode);
     ASSERTTREE (OutTree);
 
-    #define NODE_TYPE( name, sign, num, code, opt) \
+    #define DIFFER
+
+    #define NODE_TYPE( name, sign, num, code) \
             case type_##name: code; break;
 
 
@@ -47,6 +52,8 @@ void NodeDiffer (Tree_node* InNode, Tree_node* OutNode, Tree* OutTree) {
     }
 
     #undef NODE_TYPE
+
+    #undef DIFFER
 
     return;
 
@@ -61,7 +68,7 @@ void Differ (Tree* InTree, Tree* OutTree) {
     AddRoot (OutTree, 0);
 
     Optimise (InTree, InTree -> root);
-
+ 
     NodeDiffer (InTree -> root, OutTree -> root, OutTree);
 
     return;
@@ -81,8 +88,10 @@ void Optimise (Tree* OutTree, Tree_node* branch) {
 
     int changes = 1;
 
-    #define NODE_TYPE(name, signaure, num, code, optimise) \
-        case type_##name: optimise; break;
+    #define OPTIMISE
+
+    #define NODE_TYPE(name, signaure, num, code) \
+        case type_##name: code; break;
 
     while (changes) {
 
@@ -95,6 +104,10 @@ void Optimise (Tree* OutTree, Tree_node* branch) {
         }
 
     }
+
+    #undef NODE_TYPE
+
+    #undef OPTIMISE
 
     return;
 

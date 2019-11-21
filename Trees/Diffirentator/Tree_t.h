@@ -1,8 +1,9 @@
 /*! This version of tree for differentator */
 
 
-
 #ifndef __TREE_T__
+
+    #include "enum_type.h"
 
     #define __TREE_T__
 
@@ -527,7 +528,7 @@ void DefineNodeType (Tree_node* node) {
 
     assert (node);
 
-    #define NODE_TYPE(name, signature, num, code, opt)               \
+    #define NODE_TYPE(name, signature, num, code)                    \
             if (type_##name == type_NoType);                         \
             else if (type_##name == type_Num)                        \
                 CheckNumType (node);                                 \
@@ -785,7 +786,7 @@ void DrawTree (FILE* file, const Tree* tree) {
 
     fprintf (file, "node[style=filled]\n");
 
-    if (tree -> size > 0) {
+    if (tree -> root != nullptr) {
 
         fprintf (file , "\tN%x[fillcolor=red, label = \"{{%p | %d} | {%s | %d} | {%p |%p}}\"]\n", tree -> root, tree -> root, tree -> root -> level, tree -> root -> data, tree -> root -> type, tree -> root -> left, tree -> root -> right);
 
