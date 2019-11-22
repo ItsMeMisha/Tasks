@@ -2,28 +2,37 @@
 #include <stdlib.h>
 #include "Tree_t.h"
 
+const char LateXFile[] = "laTeX.latex";
+
 void NodeDiffer (Tree_node* InNode, Tree_node* OutNode, Tree* OutTree);
 void Differ (Tree* InTree, Tree* OutTree);
 void Optimise (Tree* OutTree, Tree_node* branch);
+void LateXNodeOut (FILE* file, Tree* tree, Tree_node* node);
+void LateXTreeOut (FILE* file, Tree* tree);
 
 int main () {
 
     Tree inputTree = {};
     TreeConstruct (&inputTree);
-printf ("\n%p\n", &inputTree);
 
- TreeDump (&inputTree);
 
-     Tree outputTree = {};
+    Tree outputTree = {};
     TreeConstruct (&outputTree);
 
     FILE* file  = fopen ("input.txt", "r");
     ReadInfixTree (file, &inputTree);
     fclose (file);
+
+TreeDump (&inputTree);
+
     Differ (&inputTree, &outputTree);
     
-    file = fopen ("output.txt", "w");
-    PrintInfixTree (file, &outputTree);
+    file = fopen (LateXFile, "w");
+
+    fprintf (file, "\\begin{document}\n");
+    LateXTreeOut (file, &outputTree);
+    fprintf (file, "\n\\end{document}\n");    
+
     fclose (file);
 
     TreeDestruct (&inputTree);
@@ -41,7 +50,7 @@ void NodeDiffer (Tree_node* InNode, Tree_node* OutNode, Tree* OutTree) {
 
     #define DIFFER
 
-    #define NODE_TYPE( name, sign, num, code) \
+    #define NODE_TYPE( name, sign, num, prior, code) \
             case type_##name: code; break;
 
 
@@ -68,7 +77,8 @@ void Differ (Tree* InTree, Tree* OutTree) {
     AddRoot (OutTree, 0);
 
     Optimise (InTree, InTree -> root);
- 
+     TreeDump (InTree);
+
     NodeDiffer (InTree -> root, OutTree -> root, OutTree);
 
     return;
@@ -90,7 +100,7 @@ void Optimise (Tree* OutTree, Tree_node* branch) {
 
     #define OPTIMISE
 
-    #define NODE_TYPE(name, signaure, num, code) \
+    #define NODE_TYPE(name, signaure, num, prior, code) \
         case type_##name: code; break;
 
     while (changes) {
@@ -108,6 +118,68 @@ void Optimise (Tree* OutTree, Tree_node* branch) {
     #undef NODE_TYPE
 
     #undef OPTIMISE
+
+    return;
+
+}
+
+void LateXNodeOut (FILE* file, Tree* tree, Tree_node* node) {
+
+    ASSERTTREE (tree);
+
+    if (node -> type == type_Div)
+        fprintf (file, "\\frac ");
+
+    if (node -> left != nullptr) {
+
+       if (node -> left -> priority > node -> priority)
+            fprintf (file, "{(");
+
+        LateXNodeOut (file, tree, node -> left);
+
+        if (node -> left -> priority > node -> priority)
+            fprintf (file, ")}");
+
+    }
+
+    if (node -> type == type_Mul)
+        fprintf (file, "\\cdot ");
+
+    else if (node -> type == type_Add || node -> type == type_Sub || node -> type == type_Pow || node -> type == type_Num || node -> type == type_Var)
+        fprintf (file, "%s ", node -> data);
+
+    else if (node -> type != type_Div)
+        fprintf (file, "\\%s ", node -> data);
+
+    if (node -> right != nullptr) {
+
+        if (node -> right -> priority > node -> priority)
+            fprintf (file, "{(");
+
+
+        LateXNodeOut (file, tree, node -> right);
+
+        if (node -> right -> priority > node -> priority)
+            fprintf (file, ")}");
+
+    }
+
+    return;
+
+}
+
+void LateXTreeOut (FILE* file, Tree* tree) {
+
+    ASSERTTREE (tree);
+
+    fprintf (file, "\\begin{math}\n");
+
+    fprintf (file, "$f(x) = ");
+
+    if (tree -> root != nullptr)
+        LateXNodeOut (file, tree, tree -> root);
+
+    fprintf (file, "\n\\end{math}");
 
     return;
 

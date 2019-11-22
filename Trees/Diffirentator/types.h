@@ -33,9 +33,9 @@
 
 #define NEWR(out) AddRightLeaf (OutTree, out, 0)
 
-//NODE_TYPE (type_name, type_signature, type_num, code, opimiseCode)
+//NODE_TYPE (type_name, type_signature, type_num, priority, code, opimiseCode)
 
-NODE_TYPE (NoType, " ", 0, 
+NODE_TYPE (NoType, " ", 0, 100,
 
     #ifdef DIFFER 
 
@@ -49,7 +49,7 @@ NODE_TYPE (NoType, " ", 0,
 
 )
 
-NODE_TYPE (Add, "+", 1, 
+NODE_TYPE (Add, "+", 1, 3,
 
     #ifdef DIFFER 
 
@@ -114,7 +114,7 @@ NODE_TYPE (Add, "+", 1,
     #endif
 )
 
-NODE_TYPE (Sub, "-", 2, 
+NODE_TYPE (Sub, "-", 2, 3,
 
     #ifdef DIFFER
 {
@@ -170,7 +170,7 @@ NODE_TYPE (Sub, "-", 2,
 
 )
 
-NODE_TYPE (Mul, "*", 3,
+NODE_TYPE (Mul, "*", 3, 2,
 
     #ifdef DIFFER
 
@@ -241,7 +241,7 @@ NODE_TYPE (Mul, "*", 3,
     #endif
 )
 
-NODE_TYPE (Div, "/", 4, 
+NODE_TYPE (Div, "/", 4, 2,
 
     #ifdef DIFFER
 
@@ -325,7 +325,7 @@ NODE_TYPE (Div, "/", 4,
 
 )
 
-NODE_TYPE (Sin, "sin", 5,
+NODE_TYPE (Sin, "sin", 5, 1,
 
 
     #ifdef DIFFER
@@ -340,7 +340,7 @@ NODE_TYPE (Sin, "sin", 5,
     DIF (INR, OUTL);
     SET (OUTR, "cos", type_Cos);
 
-    NEWL (OUTR);
+    NEWR (OUTR);
     CPY (INR, OUTR -> right);
 
 }
@@ -376,7 +376,7 @@ NODE_TYPE (Sin, "sin", 5,
 
 )
 
-NODE_TYPE (Cos, "cos", 6, 
+NODE_TYPE (Cos, "cos", 6, 1,
 
     #ifdef DIFFER
 
@@ -397,7 +397,7 @@ NODE_TYPE (Cos, "cos", 6,
 
     SET (OUTR, "sin", type_Sin);
 
-    NEWL (OUTR);
+    NEWR (OUTR);
     CPY (INR, OUTR -> right);
 
 }
@@ -450,7 +450,7 @@ NODE_TYPE (Cos, "cos", 6,
 
 //{})
 
-NODE_TYPE (Pow, "^", 9, 
+NODE_TYPE (Pow, "^", 9, 1,
 
     #ifdef DIFFER
 
@@ -557,7 +557,7 @@ NODE_TYPE (Pow, "^", 9,
 
 )
 
-NODE_TYPE (Var, "x", 10,
+NODE_TYPE (Var, "x", 10, 0,
 
     #ifdef DIFFER
 
@@ -574,7 +574,7 @@ NODE_TYPE (Var, "x", 10,
     #endif
 )
 
-NODE_TYPE (Num, "0", 11, 
+NODE_TYPE (Num, "0", 11, 0,
 
     #ifdef DIFFER
 
@@ -591,7 +591,7 @@ NODE_TYPE (Num, "0", 11,
     #endif
 )
 
-NODE_TYPE (Exp, "exp", 12, 
+NODE_TYPE (Exp, "exp", 12, 1,
 
     #ifdef DIFFER
 
@@ -638,7 +638,7 @@ NODE_TYPE (Exp, "exp", 12,
 
 )
 
-NODE_TYPE (Ln, "ln", 13, 
+NODE_TYPE (Ln, "ln", 13, 1,
 
     #ifdef DIFFER
 
