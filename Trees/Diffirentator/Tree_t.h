@@ -84,7 +84,8 @@ bool AddRightLeaf           (Tree* tree, Tree_node* branch, const Element_t elem
 void CopyBranch (Tree_node* SourceBranch, Tree_node* OutBranch, Tree* OutTree);
 
 bool DeleteBranch           (Tree* tree, Tree_node* branch);
-
+void CutBrunchWithoutLeaf (Tree* tree, Tree_node* branch, Tree_node* leaf);
+ 
 Tree_node* SearchElement      (Tree*      tree,   const char* elem);
 Tree_node* SearchElemInBranch (Tree_node* branch, const char* elem);
  
@@ -101,6 +102,7 @@ void Print (FILE* file, const char* item);
 void Print (FILE* file, const int item);
 void Print (FILE* file, const char item);
 void Print (FILE* file, const double item);
+void Print (FILE* file, const void* item);
 
 bool CheckConnection                        (const Tree* tree, Tree_node* branch); 
 bool TreeOk                                                          (Tree* tree);
@@ -245,6 +247,8 @@ void CopyBranch (Tree_node* SourceBranch, Tree_node* OutBranch, Tree* OutTree) {
     sscanf (SourceBranch -> data, "%ms", &(OutBranch -> data));
     OutBranch -> type = SourceBranch -> type;
 
+    OutBranch -> priority = SourceBranch -> priority;
+
     if (SourceBranch -> left != nullptr) {
         AddLeftLeaf (OutTree, OutBranch, 0);
         CopyBranch (SourceBranch -> left, OutBranch -> left, OutTree);
@@ -293,6 +297,56 @@ bool DeleteBranch (Tree* tree, Tree_node* branch) {
     tree -> size--;
 
     return true;
+
+}
+
+void CutBrunchWithoutLeaf (Tree* tree, Tree_node* branch, Tree_node* leaf) {
+
+    ASSERTTREE (tree);
+
+    ParentsCheck (branch, tree);
+    ParentsCheck (leaf, tree);
+    
+    ASSERTTREE (tree);
+
+    Tree_node* TmpNodePtr = leaf;
+
+    Tree_node* Parent = branch -> parent;
+    
+    if (leaf == branch -> left)
+        branch -> left = nullptr;
+
+    else if (leaf == branch -> right)
+        branch -> right = nullptr;
+   
+    if (Parent != nullptr) {
+
+        if (branch -> parent -> left == branch) {
+
+            DeleteBranch (tree, branch);
+            Parent -> left = TmpNodePtr;
+               
+        }
+
+        else if (branch -> parent -> right == branch) {
+
+           DeleteBranch (tree, branch);
+           Parent -> right = TmpNodePtr;
+ 
+        }
+
+    }
+
+    else {
+
+        DeleteBranch (tree, branch);
+        tree -> root = TmpNodePtr;
+
+    }
+
+    TmpNodePtr -> parent = Parent;
+
+    return;
 
 }
 
@@ -509,6 +563,13 @@ void Print (FILE* file, const char item) {
 void Print (FILE* file, const double item) {
 
     fprintf (file, "%lg", item);
+    return;
+
+}
+
+void Print (FILE* file, const void* item) {
+
+    fprintf (file, "%p", item);
     return;
 
 }

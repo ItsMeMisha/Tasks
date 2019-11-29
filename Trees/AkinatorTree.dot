@@ -1,0 +1,58 @@
+digraph
+{
+node[shape=record]
+node[style=filled]
+	N721444a0[fillcolor=red, label = "Alive"]
+	N72144540[fillcolor=blue, label = "Animal"]
+N721444a0 -> N72144540
+	N721445e0[fillcolor=blue, label = "Green"]
+N72144540 -> N721445e0
+	N72144680[fillcolor=blue, label = "Crocodile"]
+N721445e0 -> N72144680
+	N72144720[fillcolor=green, label = "Big"]
+N721445e0 -> N72144720
+	N721447c0[fillcolor=blue, label = "Elephant"]
+N72144720 -> N721447c0
+	N72144860[fillcolor=green, label = "Cat"]
+N72144720 -> N72144860
+	N72144900[fillcolor=blue, label = "Poltorashka"]
+N72144860 -> N72144900
+	N721449a0[fillcolor=green, label = "Bird"]
+N72144860 -> N721449a0
+	N72144a40[fillcolor=blue, label = "Raven"]
+N721449a0 -> N72144a40
+	N72144ae0[fillcolor=green, label = "Mouse"]
+N721449a0 -> N72144ae0
+	N72144b80[fillcolor=green, label = "Plant"]
+N72144540 -> N72144b80
+	N72144c20[fillcolor=blue, label = "Cucumber"]
+N72144b80 -> N72144c20
+	N72144cc0[fillcolor=green, label = "Human"]
+N72144b80 -> N72144cc0
+	N72144d60[fillcolor=blue, label = "Famous Russian Writer"]
+N72144cc0 -> N72144d60
+	N72144e00[fillcolor=blue, label = "Sorokin"]
+N72144d60 -> N72144e00
+	N72144ea0[fillcolor=green, label = "Kuzmenko"]
+N72144d60 -> N72144ea0
+	N72144f40[fillcolor=green, label = "Truffle"]
+N72144cc0 -> N72144f40
+	N72144fe0[fillcolor=green, label = "Furniture"]
+N721444a0 -> N72144fe0
+	N72145080[fillcolor=blue, label = "Table"]
+N72144fe0 -> N72145080
+	N72145120[fillcolor=green, label = "Building"]
+N72144fe0 -> N72145120
+	N721451c0[fillcolor=blue, label = "dometry"]
+N72145120 -> N721451c0
+	N72145260[fillcolor=green, label = "Science"]
+N72145120 -> N72145260
+	N72145300[fillcolor=blue, label = "Math"]
+N72145260 -> N72145300
+	N721453a0[fillcolor=green, label = "Mineral"]
+N72145260 -> N721453a0
+	N72145440[fillcolor=blue, label = "Stone"]
+N721453a0 -> N72145440
+	N721454e0[fillcolor=green, label = "Bag"]
+N721453a0 -> N721454e0
+}

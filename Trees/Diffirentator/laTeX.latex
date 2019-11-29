@@ -1,0 +1,23 @@
+\documentclass[a4paper, 16pt]{article}
+ \begin{document}
+ \begin{math} 
+(x \cdot 5 + x \cdot 4 )' = 
+\newline No\ doubt:\ x \cdot 5 + x \cdot 4 
+\newline It\ is\ easy\ to\ see\ that\ x \cdot 5 + x \cdot 4 
+\newline Absolutely\ clear\ next:\ x \cdot 5 + x \cdot 4 
+\newline Obviously,\ {(1 \cdot 5 + x \cdot 0 )}+ 1 \cdot 4 + x \cdot 0  = \newline 
+{(5 + x \cdot 0 )}+ 1 \cdot 4 + x \cdot 0 
+\newline No\ doubt:\ {(5 + x \cdot 0 )}+ 1 \cdot 4 + x \cdot 0  = \newline 
+{(5 + 0 )}+ 1 \cdot 4 + x \cdot 0 
+\newline Obviously,\ {(5 + 0 )}+ 1 \cdot 4 + x \cdot 0  = \newline 
+5 + 1 \cdot 4 + x \cdot 0 
+\newline It\ is\ easy\ to\ see\ that\ 5 + 1 \cdot 4 + x \cdot 0  = \newline 
+5 + 4 + x \cdot 0 
+\newline Absolutely\ clear\ next:\ 5 + 4 + x \cdot 0  = \newline 
+5 + 4 + 0 
+\newline Fully\ understandable:\ 5 + 4 + 0  = \newline 
+5 + 4 
+\newline It\ is\ easy\ to\ see\ that\ 5 + 4  = \newline 
+9 \newline9 
+ \end{math} 
+ \end{document}

@@ -79,12 +79,19 @@ Tree_node* SearchElement      (Tree*      tree,   const char* elem);
 Tree_node* SearchElemInBranch (Tree_node* branch, const char* elem);
  
 void ScipSpace                    (FILE* file);
+
 void PrintPreNode                 (FILE* file,       Tree_node* node, int deep = 0);
 void PrintPreTree                 (FILE* file,       Tree* tree);
 void ReadLeft                     (FILE* file,       Tree* tree, Tree_node* node);
 void ReadRight                    (FILE* file,       Tree* tree, Tree_node* node); 
 void ReadPreNode                  (FILE* file,       Tree* tree, Tree_node* node);
 void ReadPreTree                  (FILE* file,       Tree* tree);
+
+Tree_node* ReadInfixNode          (FILE* file,       Tree* tree, Tree_node* prenode);
+void ReadInfixTree                (FILE* file,       Tree* tree);   
+void PrintInfixNode               (FILE* file,       Tree_node* node);
+void PrintInfixNode               (FILE* file,       Tree* tree);
+
 void Print (FILE* file, const char* item);
 void Print (FILE* file, const int item);
 void Print (FILE* file, const char item);
@@ -159,7 +166,7 @@ Tree_node* NewNode (const Element_t elem) {
 
 Tree_node* AddNodeAndCheck (Tree* tree, const Element_t elem) {
 
-    ASSERTTREE (tree);
+    assert (tree);
 
     Tree_node* NewLeaf = NewNode (elem);
 
@@ -413,6 +420,10 @@ void ReadRight (FILE* file, Tree* tree, Tree_node* node) {
 
 void ReadPreNode (FILE* file, Tree* tree, Tree_node* node) {
 
+    assert (file);
+    ASSERTTREE (tree);
+    assert (node);
+
     SkipSpace (file);
     fscanf (file, "\"%m[^\"]\"", &(node -> data));
     char bracket = 0;
@@ -455,6 +466,106 @@ void ReadPreTree (FILE* file, Tree* tree) {
     AddRoot (tree, 0);
 
     ReadPreNode (file, tree, tree -> root);
+
+    return;
+
+}
+
+
+Tree_node* ReadInfixNode (FILE* file, Tree* tree, Tree_node* prenode) {
+
+    assert (tree);
+    assert (file);
+
+    Tree_node* node = AddNodeAndCheck (tree, 0);
+
+    char bracket = 0;
+
+    SkipSpace (file);
+    if ((bracket = fgetc (file)) == '(') {
+
+        node -> left = ReadInfixNode  (file, tree, node);
+        SkipSpace (file);
+
+    }
+
+    else fseek (file, -1, SEEK_CUR);
+
+    fscanf (file, "%m[^ ()]", &(node -> data));
+    SkipSpace (file);
+
+    if ((bracket = fgetc (file)) == '(') {
+        
+        node -> right = ReadInfixNode (file, tree, node);
+        SkipSpace (file);
+
+        bracket = fgetc (file);
+
+    }
+
+
+    if (bracket != ')') {
+
+        tree -> errcode = CantReadTreeFromFile;
+        return nullptr;
+
+    }
+    
+    tree -> size++;
+    
+    node -> parent = prenode;
+
+
+    return node;   
+
+}
+
+void ReadInfixTree (FILE* file, Tree* tree) {
+
+    ASSERTTREE (tree);
+    assert (file);
+
+    SkipSpace (file);
+    if (fgetc (file) != '(') {
+
+        tree -> errcode = CantReadTreeFromFile;
+        return;
+
+    }
+
+    tree -> root = ReadInfixNode (file, tree, tree -> root);
+
+    return;
+
+}
+
+void PrintInfixNode (FILE* file, Tree_node* node) {
+
+    assert (file);
+
+    if (node == nullptr)
+        return;
+
+    fprintf (file, "(");
+
+    PrintInfixNode (file, node -> left);
+
+    Print (file, node -> data);
+
+    PrintInfixNode (file, node -> right);
+
+    fprintf (file, ")");
+
+    return;
+
+}
+
+void PrintInfixTree (FILE* file, Tree* tree) {
+
+    ASSERTTREE (tree);
+    assert (file);
+
+    PrintInfixNode (file, tree -> root);    
 
     return;
 
@@ -548,7 +659,7 @@ void __TreeDump (const Tree* tree, int line, const char* func) {
  
     if (tree == nullptr) {
 
-        fprintf (fileout, "\tERROR [label=\"ERROR Tree is nullptr\"]\n");
+        fprintf (fileout, "\tERROR [label=\"ERROR Tree is nullptr\"]\n}");
         fclose (fileout);
         return;
 

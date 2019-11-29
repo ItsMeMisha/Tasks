@@ -4,7 +4,7 @@
 
 const int MaxComLength = 8;
 
-#define NODE_TYPE(name, sign, num, code) \
+#define NODE_TYPE(name, sign, num, prior, code) \
         type_##name = num,
 
 enum NodeType {

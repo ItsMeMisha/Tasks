@@ -1,0 +1,62 @@
+digraph
+{
+node[shape=record]
+	line [label="Line 72"]
+	func [label="In function main"]
+	Tree[label="0x7ffd574ded90 | tree"]
+	Error[label="Allright"]
+node[style=filled]
+	Ne7cb64a0[fillcolor=red, label = "{{0x5562e7cb64a0 | 0} | Alive | {0x5562e7cb6540 |0x5562e7cb6fe0}}"]
+	Ne7cb6540[fillcolor=blue, label = "{{0x5562e7cb6540 | 1} | Animal | {0x5562e7cb65e0 |0x5562e7cb6b80}}"]
+Ne7cb64a0 -> Ne7cb6540
+	Ne7cb65e0[fillcolor=blue, label = "{{0x5562e7cb65e0 | 2} | Green | {0x5562e7cb6680 |0x5562e7cb6720}}"]
+Ne7cb6540 -> Ne7cb65e0
+	Ne7cb6680[fillcolor=blue, label = "{{0x5562e7cb6680 | 3} | Crocodile | {(nil) |(nil)}}"]
+Ne7cb65e0 -> Ne7cb6680
+	Ne7cb6720[fillcolor=green, label = "{{0x5562e7cb6720 | 3} | Big | {0x5562e7cb67c0 |0x5562e7cb6860}}"]
+Ne7cb65e0 -> Ne7cb6720
+	Ne7cb67c0[fillcolor=blue, label = "{{0x5562e7cb67c0 | 4} | Elephant | {(nil) |(nil)}}"]
+Ne7cb6720 -> Ne7cb67c0
+	Ne7cb6860[fillcolor=green, label = "{{0x5562e7cb6860 | 4} | Cat | {0x5562e7cb6900 |0x5562e7cb69a0}}"]
+Ne7cb6720 -> Ne7cb6860
+	Ne7cb6900[fillcolor=blue, label = "{{0x5562e7cb6900 | 5} | Poltorashka | {(nil) |(nil)}}"]
+Ne7cb6860 -> Ne7cb6900
+	Ne7cb69a0[fillcolor=green, label = "{{0x5562e7cb69a0 | 5} | Bird | {0x5562e7cb6a40 |0x5562e7cb6ae0}}"]
+Ne7cb6860 -> Ne7cb69a0
+	Ne7cb6a40[fillcolor=blue, label = "{{0x5562e7cb6a40 | 6} | Raven | {(nil) |(nil)}}"]
+Ne7cb69a0 -> Ne7cb6a40
+	Ne7cb6ae0[fillcolor=green, label = "{{0x5562e7cb6ae0 | 6} | Mouse | {(nil) |(nil)}}"]
+Ne7cb69a0 -> Ne7cb6ae0
+	Ne7cb6b80[fillcolor=green, label = "{{0x5562e7cb6b80 | 2} | Plant | {0x5562e7cb6c20 |0x5562e7cb6cc0}}"]
+Ne7cb6540 -> Ne7cb6b80
+	Ne7cb6c20[fillcolor=blue, label = "{{0x5562e7cb6c20 | 3} | Cucumber | {(nil) |(nil)}}"]
+Ne7cb6b80 -> Ne7cb6c20
+	Ne7cb6cc0[fillcolor=green, label = "{{0x5562e7cb6cc0 | 3} | Human | {0x5562e7cb6d60 |0x5562e7cb6f40}}"]
+Ne7cb6b80 -> Ne7cb6cc0
+	Ne7cb6d60[fillcolor=blue, label = "{{0x5562e7cb6d60 | 4} | Famous Russian Writer | {0x5562e7cb6e00 |0x5562e7cb6ea0}}"]
+Ne7cb6cc0 -> Ne7cb6d60
+	Ne7cb6e00[fillcolor=blue, label = "{{0x5562e7cb6e00 | 5} | Sorokin | {(nil) |(nil)}}"]
+Ne7cb6d60 -> Ne7cb6e00
+	Ne7cb6ea0[fillcolor=green, label = "{{0x5562e7cb6ea0 | 5} | Kuzmenko | {(nil) |(nil)}}"]
+Ne7cb6d60 -> Ne7cb6ea0
+	Ne7cb6f40[fillcolor=green, label = "{{0x5562e7cb6f40 | 4} | Truffle | {(nil) |(nil)}}"]
+Ne7cb6cc0 -> Ne7cb6f40
+	Ne7cb6fe0[fillcolor=green, label = "{{0x5562e7cb6fe0 | 1} | Furniture | {0x5562e7cb7080 |0x5562e7cb7120}}"]
+Ne7cb64a0 -> Ne7cb6fe0
+	Ne7cb7080[fillcolor=blue, label = "{{0x5562e7cb7080 | 2} | Table | {(nil) |(nil)}}"]
+Ne7cb6fe0 -> Ne7cb7080
+	Ne7cb7120[fillcolor=green, label = "{{0x5562e7cb7120 | 2} | Building | {0x5562e7cb71c0 |0x5562e7cb7260}}"]
+Ne7cb6fe0 -> Ne7cb7120
+	Ne7cb71c0[fillcolor=blue, label = "{{0x5562e7cb71c0 | 3} | dometry | {(nil) |(nil)}}"]
+Ne7cb7120 -> Ne7cb71c0
+	Ne7cb7260[fillcolor=green, label = "{{0x5562e7cb7260 | 3} | Science | {0x5562e7cb7300 |0x5562e7cb73a0}}"]
+Ne7cb7120 -> Ne7cb7260
+	Ne7cb7300[fillcolor=blue, label = "{{0x5562e7cb7300 | 4} | Math | {(nil) |(nil)}}"]
+Ne7cb7260 -> Ne7cb7300
+	Ne7cb73a0[fillcolor=green, label = "{{0x5562e7cb73a0 | 4} | Mineral | {0x5562e7cb7440 |0x5562e7cb74e0}}"]
+Ne7cb7260 -> Ne7cb73a0
+	Ne7cb7440[fillcolor=blue, label = "{{0x5562e7cb7440 | 5} | Stone | {(nil) |(nil)}}"]
+Ne7cb73a0 -> Ne7cb7440
+	Ne7cb74e0[fillcolor=green, label = "{{0x5562e7cb74e0 | 5} | Bag | {(nil) |(nil)}}"]
+Ne7cb73a0 -> Ne7cb74e0
+}

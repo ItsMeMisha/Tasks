@@ -1,0 +1,66 @@
+digraph
+{
+node[shape=record]
+	line [label="Line 41"]
+	func [label="In function main"]
+	Tree[label="0x7ffc65d649b0 | &outputTree"]
+	Error[label="Allright"]
+node[style=filled]
+	N875ba9f0[fillcolor=red, label = "{{0x55af875ba9f0 | 3} | {+ | 1} | {0x55af875babd0 |0x55af875bab00}}"]
+	N875babd0[fillcolor=blue, label = "{{0x55af875babd0 | 1} | {cos | 6} | {(nil) |0x55af875bace0}}"]
+N875ba9f0 -> N875babd0
+	N875bace0[fillcolor=green, label = "{{0x55af875bace0 | 0} | {x | 10} | {(nil) |(nil)}}"]
+N875babd0 -> N875bace0
+	N875bab00[fillcolor=green, label = "{{0x55af875bab00 | 2} | {* | 3} | {0x55af875badf0 |0x55af875bae20}}"]
+N875ba9f0 -> N875bab00
+	N875badf0[fillcolor=blue, label = "{{0x55af875badf0 | 1} | {^ | 9} | {0x55af875baec0 |0x55af875bb1e0}}"]
+N875bab00 -> N875badf0
+	N875baec0[fillcolor=blue, label = "{{0x55af875baec0 | 3} | {- | 2} | {0x55af875baf60 |0x55af875bb140}}"]
+N875badf0 -> N875baec0
+	N875baf60[fillcolor=blue, label = "{{0x55af875baf60 | 2} | {* | 3} | {0x55af875bb000 |0x55af875bb0a0}}"]
+N875baec0 -> N875baf60
+	N875bb000[fillcolor=blue, label = "{{0x55af875bb000 | 0} | {5 | 11} | {(nil) |(nil)}}"]
+N875baf60 -> N875bb000
+	N875bb0a0[fillcolor=green, label = "{{0x55af875bb0a0 | 0} | {x | 10} | {(nil) |(nil)}}"]
+N875baf60 -> N875bb0a0
+	N875bb140[fillcolor=green, label = "{{0x55af875bb140 | 0} | {4 | 11} | {(nil) |(nil)}}"]
+N875baec0 -> N875bb140
+	N875bb1e0[fillcolor=green, label = "{{0x55af875bb1e0 | 0} | {x | 10} | {(nil) |(nil)}}"]
+N875badf0 -> N875bb1e0
+	N875bae20[fillcolor=green, label = "{{0x55af875bae20 | 3} | {+ | 1} | {0x55af875bb2f0 |0x55af875bb430}}"]
+N875bab00 -> N875bae20
+	N875bb2f0[fillcolor=blue, label = "{{0x55af875bb2f0 | 2} | {/ | 4} | {0x55af875bb890 |0x55af875bc1f0}}"]
+N875bae20 -> N875bb2f0
+	N875bb890[fillcolor=blue, label = "{{0x55af875bb890 | 2} | {* | 3} | {0x55af875bba00 |0x55af875bb960}}"]
+N875bb2f0 -> N875bb890
+	N875bba00[fillcolor=blue, label = "{{0x55af875bba00 | 3} | {+ | 1} | {0x55af875bbad0 |0x55af875bbb00}}"]
+N875bb890 -> N875bba00
+	N875bbad0[fillcolor=blue, label = "{{0x55af875bbad0 | 0} | {0 | 11} | {(nil) |(nil)}}"]
+N875bba00 -> N875bbad0
+	N875bbb00[fillcolor=green, label = "{{0x55af875bbb00 | 0} | {5 | 11} | {(nil) |(nil)}}"]
+N875bba00 -> N875bbb00
+	N875bb960[fillcolor=green, label = "{{0x55af875bb960 | 0} | {x | 10} | {(nil) |(nil)}}"]
+N875bb890 -> N875bb960
+	N875bc1f0[fillcolor=green, label = "{{0x55af875bc1f0 | 3} | {- | 2} | {0x55af875bc290 |0x55af875bc470}}"]
+N875bb2f0 -> N875bc1f0
+	N875bc290[fillcolor=blue, label = "{{0x55af875bc290 | 2} | {* | 3} | {0x55af875bc330 |0x55af875bc3d0}}"]
+N875bc1f0 -> N875bc290
+	N875bc330[fillcolor=blue, label = "{{0x55af875bc330 | 0} | {5 | 11} | {(nil) |(nil)}}"]
+N875bc290 -> N875bc330
+	N875bc3d0[fillcolor=green, label = "{{0x55af875bc3d0 | 0} | {x | 10} | {(nil) |(nil)}}"]
+N875bc290 -> N875bc3d0
+	N875bc470[fillcolor=green, label = "{{0x55af875bc470 | 0} | {4 | 11} | {(nil) |(nil)}}"]
+N875bc1f0 -> N875bc470
+	N875bb430[fillcolor=green, label = "{{0x55af875bb430 | 1} | {ln | 13} | {(nil) |0x55af875bb570}}"]
+N875bae20 -> N875bb430
+	N875bb570[fillcolor=green, label = "{{0x55af875bb570 | 3} | {- | 2} | {0x55af875bb610 |0x55af875bb7f0}}"]
+N875bb430 -> N875bb570
+	N875bb610[fillcolor=blue, label = "{{0x55af875bb610 | 2} | {* | 3} | {0x55af875bb6b0 |0x55af875bb750}}"]
+N875bb570 -> N875bb610
+	N875bb6b0[fillcolor=blue, label = "{{0x55af875bb6b0 | 0} | {5 | 11} | {(nil) |(nil)}}"]
+N875bb610 -> N875bb6b0
+	N875bb750[fillcolor=green, label = "{{0x55af875bb750 | 0} | {x | 10} | {(nil) |(nil)}}"]
+N875bb610 -> N875bb750
+	N875bb7f0[fillcolor=green, label = "{{0x55af875bb7f0 | 0} | {4 | 11} | {(nil) |(nil)}}"]
+N875bb570 -> N875bb7f0
+}
