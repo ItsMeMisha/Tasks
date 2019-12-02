@@ -28,17 +28,16 @@
 #else
 
     #define assert( cond )
-
     #define ASSERTTREE( cond )
 
 #endif
 
 #define TreeConstruct(tree) __TreeConstruct(tree, #tree);
 
-typede union {
+typedef union {
 
-    char*  Sdata;//TODO???
     double Ndata;
+    FuncType Fdata;
 
 } Element_t;
 
@@ -80,7 +79,8 @@ void TreeDestruct                                                    (Tree* tree
 
 bool ParentsCheck                     (const Tree_node* branch, const Tree* tree, const int deep = 0);
 
-Tree_node* NewNode (const Element_t elem, NodeType type, int priorirty);
+Tree_node* NewNode (const Element_t elem, NodeType type);
+
 Tree_node* __NewNode        (const Element_t elem);
 Tree_node* AddNodeAndCheck  (Tree* tree,                    const Element_t elem);
 bool AddRoot                (Tree* tree,                    const Element_t elem);
@@ -90,12 +90,13 @@ bool AddRightLeaf           (Tree* tree, Tree_node* branch, const Element_t elem
 void CopyBranch (Tree_node* SourceBranch, Tree_node* OutBranch, Tree* OutTree);
 
 bool DeleteBranch           (Tree* tree, Tree_node* branch);
-void CutBrunchWithoutLeaf (Tree* tree, Tree_node* branch, Tree_node* leaf);
+void CutBrunchWithoutLeaf   (Tree* tree, Tree_node* branch, Tree_node* leaf);
 
 void SkipSpace                    (FILE* file);
 
-bool CheckNumType                                   (Tree_node* node);
-void DefineNodeType                                 (Tree_node* node);
+Element_t FuncDef (const char* elem);
+bool CheckNumType                                   (Tree_node* node, const char* Sdata);
+void DefineNodeType                                 (Tree_node* node, const char* Sdata);
 Tree_node* ReadInfixNode          (FILE* file,       Tree* tree, Tree_node* prenode);
 void ReadInfixTree                (FILE* file,       Tree* tree);   
 void PrintInfixNode               (FILE* file,       Tree_node* node);
@@ -143,8 +144,8 @@ void TreeDestruct (Tree* tree) {
 
 bool ParentsCheck (const Tree_node* branch, const Tree* tree, const int deep) {
 
-    if (deep > tree -> size)
-        return false;
+/*    if (deep > tree -> size)
+        return false; */
 
     if (branch == tree -> root)
         return true;
@@ -156,12 +157,24 @@ bool ParentsCheck (const Tree_node* branch, const Tree* tree, const int deep) {
 
 }
 
-Tree_node* NewNode (const Element_t elem, NodeType Type, int prior) {
+Tree_node* NewNode (const Element_t elem, NodeType Type) {
 
     Tree_node* node = __NewNode (elem);
 
     if (node == nullptr)
         return nullptr;
+
+    int prior = 0;
+
+    if (Type == TFunc) {
+
+        #define NODE_TYPE(name, signature, num, priority, code) \
+            if (elem.Fdata == type_##name) \
+                prior = priority;
+
+        #undef NODE_TYPE
+
+    }
 
     node -> type = Type;
     node -> priority = prior;
@@ -268,6 +281,10 @@ void CopyBranch (Tree_node* SourceBranch, Tree_node* OutBranch, Tree* OutTree) {
         CopyBranch (SourceBranch -> right, OutBranch -> right, OutTree);
     }
 
+    OutBranch -> data = SourceBranch -> data;
+    OutBranch -> type = SourceBranch -> type;
+    OutBranch -> priority = SourceBranch -> priority;
+
     return;
     
 }
@@ -276,9 +293,9 @@ void CopyBranch (Tree_node* SourceBranch, Tree_node* OutBranch, Tree* OutTree) {
 bool DeleteBranch (Tree* tree, Tree_node* branch) {
 
     ASSERTTREE (tree);
-    
+   
     if (!ParentsCheck (branch, tree))
-        return false;
+        return false; 
 
     if (branch -> left != nullptr)
         DeleteBranch (tree, branch -> left);
@@ -286,7 +303,7 @@ bool DeleteBranch (Tree* tree, Tree_node* branch) {
     if (branch -> right != nullptr)
         DeleteBranch (tree, branch -> right);
 
-    if (branch != tree -> root) {
+    if (branch -> parent != nullptr) {
 
         if (branch -> parent -> left == branch)
             branch -> parent -> left = nullptr;
@@ -302,7 +319,7 @@ bool DeleteBranch (Tree* tree, Tree_node* branch) {
     
     free (branch);
 
-    tree -> size--;
+//    tree -> size--;
 
     return true;
 
@@ -367,17 +384,35 @@ void SkipSpace (FILE* file) {
 
 }
 
-bool CheckNumType (Tree_node* node) {
+Element_t FuncDef (const char* elem) {
+
+    Element_t ftype = {};
+
+    for (int i  = 0; i < NumOfFunc; i++)
+
+        if (strncmp (elem, func[i], MaxIdName) == 0) {
+
+            ftype.Fdata = (FuncType) i;
+            break;
+    
+        }
+
+    return ftype;   
+
+}
+
+bool CheckNumType (Tree_node* node, const char* Sdata) {
 
     assert (node);
 
     bool isNum = true;
     double NumCheckBuf = 0;
 
-    if (sscanf (node -> data.Sdata, "%lg", &NumCheckBuf) > 0) {
+    if (sscanf (Sdata, "%lg", &NumCheckBuf) > 0) {
 
-        node -> data.type = type_Num;
-        node -> data.priority = 0;
+        node -> data.Ndata = atof (Sdata);
+        node -> type = TNum;
+        node -> priority = 0;
 
     }
 
@@ -388,18 +423,18 @@ bool CheckNumType (Tree_node* node) {
 
 }
 
-void DefineNodeType (Tree_node* node) {
+void DefineNodeType (Tree_node* node, const char* Sdata) {
 
     assert (node);
 
     #define NODE_TYPE(name, signature, num, prior, code)              \
             if (type_##name == type_NoType);                          \
             else  if (type_##name == type_Num)                        \
-                CheckNumType (node);                                  \
+                CheckNumType (node, Sdata);                           \
             else                                                      \
-            if (strncmp (node -> data.Sdata, signature, MaxComLength) == 0){\
-                node -> data.type = type_##name;                           \
-                node -> data.priority = prior; }
+            if (strncmp (Sdata, signature, MaxComLength) == 0){       \
+                node -> type = TFunc;                                 \
+                node -> priority = prior; }
 
     #include "types.h" ;
 
@@ -429,9 +464,11 @@ Tree_node* ReadInfixNode (FILE* file, Tree* tree, Tree_node* prenode) {
 
     else fseek (file, -1, SEEK_CUR);
 
-    fscanf (file, "%m[^ ()]", &(node -> data.Sdata));
+    char* DataBuf = nullptr;
 
-    DefineNodeType (node); 
+    fscanf (file, "%m[^ ()]", &DataBuf);
+
+    DefineNodeType (node, DataBuf); 
 
     SkipSpace (file);
 
@@ -490,7 +527,7 @@ void PrintInfixNode (FILE* file, Tree_node* node) {
 
     PrintInfixNode (file, node -> left);
 
-    Print (file, node -> data.Sdata);
+    Print (file, node -> data.Fdata);
 
     PrintInfixNode (file, node -> right);
 
@@ -572,7 +609,7 @@ bool TreeOk (Tree* tree) {
 
     }
 
-    if (tree -> size > 0)
+/*    if (tree -> size > 0)
 
         if (!CheckConnection (tree, tree -> root)) {
 
@@ -580,6 +617,7 @@ bool TreeOk (Tree* tree) {
             return false;
 
         }
+*/
 
     if (tree -> errcode != Allright)
         return false;
@@ -620,7 +658,7 @@ void DrawNode (FILE* file, const Tree_node* node) {
 
     if (node -> left != nullptr) {
 
-        fprintf (file , "\tN%x[fillcolor=blue, label = \"{{%p | %d} | {%s | %d} | {%p |%p}}\"]\n", node -> left, node -> left, node -> left -> priority, node -> left -> data.Sdata, node -> left -> type, node -> left -> left, node -> left -> right);
+        fprintf (file , "\tN%x[fillcolor=blue, label = \"{{%p | %d} | {%d | %d} | {%p |%p}}\"]\n", node -> left, node -> left, node -> left -> priority, node -> left -> data.Fdata, node -> left -> type, node -> left -> left, node -> left -> right);
         fprintf (file, "N%x -> N%x\n", node, node -> left);
         DrawNode (file, node -> left);
 
@@ -628,7 +666,7 @@ void DrawNode (FILE* file, const Tree_node* node) {
     
     if (node -> right != nullptr) {
 
-        fprintf (file , "\tN%x[fillcolor=green, label = \"{{%p | %d} | {%s | %d} | {%p |%p}}\"]\n", node -> right, node -> right, node -> right -> priority, node -> right -> data.Sdata, node -> right -> type, node -> right -> left, node -> right -> right);
+        fprintf (file , "\tN%x[fillcolor=green, label = \"{{%p | %d} | {%d | %d} | {%p |%p}}\"]\n", node -> right, node -> right, node -> right -> priority, node -> right -> data.Fdata, node -> right -> type, node -> right -> left, node -> right -> right);
         fprintf (file, "N%x -> N%x\n", node, node -> right);
         DrawNode (file, node -> right);
 
@@ -650,7 +688,7 @@ void DrawTree (FILE* file, const Tree* tree) {
 
     if (tree -> root != nullptr) {
 
-        fprintf (file , "\tN%x[fillcolor=red, label = \"{{%p | %d} | {%s | %d} | {%p |%p}}\"]\n", tree -> root, tree -> root, tree -> root -> priority, tree -> root -> data.Sdata, tree -> root -> type, tree -> root -> left, tree -> root -> right);
+        fprintf (file , "\tN%x[fillcolor=red, label = \"{{%p | %d} | {%d | %d} | {%p |%p}}\"]\n", tree -> root, tree -> root, tree -> root -> priority, tree -> root -> data.Fdata, tree -> root -> type, tree -> root -> left, tree -> root -> right);
 
         DrawNode (file, tree -> root);
 
@@ -690,7 +728,7 @@ void DrawEasyNode (FILE* file, const Tree_node* node) {
 
     if (node -> left != nullptr) {
 
-        fprintf (file , "\tN%x[fillcolor=blue, label = \"%s\"]\n", node -> left, node -> left -> data.Sdata);
+        fprintf (file , "\tN%x[fillcolor=blue, label = \"%d\"]\n", node -> left, node -> left -> data.Fdata);
         fprintf (file, "N%x -> N%x\n", node, node -> left);
         DrawEasyNode (file, node -> left);
 
@@ -698,7 +736,7 @@ void DrawEasyNode (FILE* file, const Tree_node* node) {
     
     if (node -> right != nullptr) {
 
-        fprintf (file , "\tN%x[fillcolor=green, label = \"%s\"]\n", node -> right, node -> right -> data.Sdata);
+        fprintf (file , "\tN%x[fillcolor=green, label = \"%d\"]\n", node -> right, node -> right -> data.Fdata);
         fprintf (file, "N%x -> N%x\n", node, node -> right);
         DrawEasyNode (file, node -> right);
 
@@ -720,7 +758,7 @@ void DrawEasyTree (FILE* file, const Tree* tree) {
 
     if (tree -> size > 0) {
 
-        fprintf (file , "\tN%x[fillcolor=red, label = \"%s\"]\n", tree -> root, tree -> root -> data.Sdata);
+        fprintf (file , "\tN%x[fillcolor=red, label = \"%d\"]\n", tree -> root, tree -> root -> data.Fdata);
         DrawEasyNode (file, tree -> root);
 
     }
