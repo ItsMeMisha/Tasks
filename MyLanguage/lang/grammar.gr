@@ -1,0 +1,22 @@
+G ::= D+ '\0'
+D ::= { "legato" Func | "nota" Var+ }
+Func ::= FId Varlist Def
+FId ::= { 'a'-'z' | 'A'-'Z'}{'a'-'z'|'A'-'Z'|'0'-'9' }*
+Varlist ::= '[' VId* { ','VId }* ']'
+Def ::= "||" { "nota" Var+ | Op | FId Varlist '|'}* "||"
+Op ::= { VId Init | FId Varlist | While | If }
+Var ::= VId FrInit (Init)** '|'
+VId ::= { 'A'-'Z' | 'a'-'z' }{ 'A' - 'Z' | 'a' - 'z' | '#' |'0'-'9' }*
+Frinit ::= '=' [ 'A'-'H' ] ( 'b' | '#' )** [ '0'-'8' ]
+Init ::= '=' E
+E ::= T{[ '+''-' ]T}*
+T ::= P{['*''/']P}*
+P ::= '('E')' | N | Id
+N ::= ['0'-'9']+ Mt
+Mt ::= {{.}['0' -'9']+}
+Id ::= VId | FId Varlist
+While ::= "reprisa" Cond Def
+If ::= "volta" Cond Def ("svolta" Def)**
+Cond ::= '[' {E Comp E}** ']'
+Comp ::= { "meno" | "piu" | "!=" | "==" }
+
