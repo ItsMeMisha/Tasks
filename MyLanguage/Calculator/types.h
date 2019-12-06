@@ -13,6 +13,8 @@
 #define EXP(RIGHT) NewNode (type_Exp, TFunc, nullptr, RIGHT)
 #define LN(RIGHT)  NewNode (type_Ln,  TFunc, nullptr, RIGHT)
 #define N(num)   NewNode (num, TNum, nullptr, nullptr)
+#define CH(RIGHT) NewNode (type_Ch, TFunc, nullptr, RIGHT)
+#define SH(RIGHT) NewNode (type_Sh, TFunc, nullptr, RIGHT)
 
 #define BR branch
 #define BRT branch -> type
@@ -686,6 +688,74 @@ NODE_TYPE (arctan, "arctan", 16, 1,
 
 )
 
+NODE_TYPE (Ch, "cosh", 17, 1,
+
+    #ifdef DIFFER
+
+{
+
+        OUT = MUL (DIF (INR), SH (INR));
+
+}
+
+    #elif defined (OPTIMISE)
+
+{ //OPTIMISE
+
+    if (BRRT == TNum) {
+
+        SETN (BR, (exp (BRR -> NUM) + exp (-1* BRR -> NUM)) / 2);    
+
+        DLT (BRR);
+
+        CHNG;
+
+    }
+
+}
+
+    #else
+
+    {}
+
+    #endif
+
+)
+
+NODE_TYPE (Sh, "sinh", 18, 1,
+
+    #ifdef DIFFER
+
+{
+
+        OUT = MUL (DIF (INR), CH (INR));
+
+}
+
+    #elif defined (OPTIMISE)
+
+{ //OPTIMISE
+
+    if (BRRT == TNum) {
+
+        SETN (BR, (exp (BRR -> NUM) - exp (-1* BRR -> NUM)) / 2);    
+
+        DLT (BRR);
+
+        CHNG;
+
+    }
+
+}
+
+    #else
+
+    {}
+
+    #endif
+
+)
+
 
 #undef SETF
 #undef SETN
@@ -718,4 +788,15 @@ NODE_TYPE (arctan, "arctan", 16, 1,
 #undef NEWL
 #undef NEWR
 #undef DLT
-
+#undef ADD
+#undef SUB
+#undef MUL
+#undef DIV
+#undef POW
+#undef EXP
+#undef LN
+#undef SIN
+#undef COS
+#undef N
+#undef CH
+#undef SH

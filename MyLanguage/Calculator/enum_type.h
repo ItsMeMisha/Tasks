@@ -26,10 +26,12 @@ const char* func[] = {
     "arcsin", //14
     "arccos", //15
     "arctan", //16
+    "cosh", //17
+    "sinh", //18
 
 };
 
-const int NumOfFunc = 17;
+const int NumOfFunc = 19;
 
 enum NodeType {
 
