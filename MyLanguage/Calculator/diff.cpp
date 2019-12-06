@@ -43,8 +43,9 @@ int main () {
 
 void LatexHeader (FILE* file) {
 
-    fprintf (file, "\\documentclass[a4paper, 32pt]{article}\n \\begin{document}\n \\begin{math} \n");
-//    fprintf (file, 
+    fprintf (file, "\\documentclass[a4paper,16pt]{article} \n");
+    fprintf (file, "\\title {Derivative} \n");
+    fprintf (file, "\\begin{document} \n \\maketitle \n \\begin{math} \n");
 
     return;
 
@@ -101,7 +102,10 @@ void Differ (Tree* InTree, Tree* OutTree, FILE* file) {
 
     AddRoot (OutTree, (Element_t) {0});
 
+
+    fprintf (file, "Ok,\\ we\\ have\\ ");
     LateXTreeOut (file, InTree);
+    fprintf (file, "\\newline\n");
 
     Optimise (InTree, InTree -> root, file);
 
@@ -113,7 +117,7 @@ void Differ (Tree* InTree, Tree* OutTree, FILE* file) {
 
     Optimise (OutTree, OutTree -> root, file);
 
-    fprintf (file, "\n\\newline (");
+    fprintf (file, "\n\\newline \\newline And\\ so\\ we\\ have\\ (");
     LateXTreeOut (file, InTree);
     fprintf (file, ")' = ");
     LateXTreeOut (file, OutTree);
