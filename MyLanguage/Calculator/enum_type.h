@@ -3,22 +3,46 @@
     #define  __NODETYPE__
 
 const int MaxComLength = 8;
+const int MaxIdName    = 128;
 
-const char** func = {
+typedef short varNum;
+
+const char* func[] = {
     
-    {"sin"},  //0
-    {"cos"},  //1
-    {"tg"},   //2
-    {"ctg"},  //3
-    {"exp"},  //4
-    {"ln"}    //5
+    "", //0
+    "+", //1
+    "-", //2
+    "*", //3
+    "/", //4
+    "sin",  //5
+    "cos",  //6
+    "tan",   //7
+    "ctg", //8
+    "^",//9
+    "x",//10
+    "0", //11
+    "exp",  //12
+    "ln",    //13
+    "arcsin", //14
+    "arccos", //15
+    "arctan", //16
 
-};    
+};
 
-#define NODE_TYPE(name, sign, num, prior, code) \
-        type_##name = num,
+const int NumOfFunc = 17;
 
 enum NodeType {
+
+    TNum  = 0,
+    TVar  = 1,
+    TFunc = 2
+
+}; 
+
+#define NODE_TYPE(name, signature, num, prior, code) \
+        type_##name = num,
+
+enum FuncType {
 
     #include "types.h"
 

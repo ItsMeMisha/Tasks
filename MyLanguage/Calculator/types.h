@@ -362,7 +362,7 @@ NODE_TYPE (Cos, "cos", 6, 1,
 )
 
 
-NODE_TYPE (Tg, "tg", 7, 1,
+NODE_TYPE (Tg, "tan", 7, 1,
 
     #ifdef DIFFER
 
@@ -584,6 +584,108 @@ NODE_TYPE (Ln, "ln", 13, 1,
     #endif
 
 )
+NODE_TYPE (arcsin, "arcsin", 14, 1,
+
+    #ifdef DIFFER
+
+{
+
+        OUT = DIV (DIF (INR), POW (SUB (N (1), POW (INR, N (2))), N (0.5)));
+
+}
+
+    #elif defined (OPTIMISE)
+
+{ //OPTIMISE
+
+    if (BRRT == TNum) {
+
+        SETN (BR, asin (BRR -> NUM));    
+
+        DLT (BRR);
+
+        CHNG;
+
+    }
+
+}
+
+    #else
+
+    {}
+
+    #endif
+
+)
+
+NODE_TYPE (arccos, "arccos", 15, 1,
+
+    #ifdef DIFFER
+
+{
+
+        OUT = DIV (MUL (N (-1), DIF (INR)), POW (SUB (N (1), POW (INR, N (2))), N (0.5)));
+
+}
+
+    #elif defined (OPTIMISE)
+
+{ //OPTIMISE
+
+    if (BRRT == TNum) {
+
+        SETN (BR, acos (BRR -> NUM));    
+
+        DLT (BRR);
+
+        CHNG;
+
+    }
+
+}
+
+    #else
+
+    {}
+
+    #endif
+
+)
+
+NODE_TYPE (arctan, "arctan", 16, 1,
+
+    #ifdef DIFFER
+
+{
+
+        OUT = DIV (DIF (INR), ADD (N (1), POW (INR, N (2))));
+
+}
+
+    #elif defined (OPTIMISE)
+
+{ //OPTIMISE
+
+    if (BRRT == TNum) {
+
+        SETN (BR, atan (BRR -> NUM));    
+
+        DLT (BRR);
+
+        CHNG;
+
+    }
+
+}
+
+    #else
+
+    {}
+
+    #endif
+
+)
+
 
 #undef SETF
 #undef SETN
