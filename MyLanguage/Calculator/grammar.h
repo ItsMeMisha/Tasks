@@ -81,6 +81,8 @@ Tree_node* GetE () {
         else
             val = NewNode (type_Sub, TFunc);
 
+        SkipSpace ();
+    
         Tree_node* val2 = GetT ();
 
         val -> left = val1;
@@ -91,6 +93,7 @@ Tree_node* GetE () {
 
     }
 
+    SkipSpace ();
     return val;
 
 }
@@ -113,6 +116,8 @@ Tree_node* GetT () {
         else
             val = NewNode (type_Div, TFunc);
 
+        SkipSpace ();
+
         Tree_node* val2 = GetPow ();
 
         val -> left = val1;
@@ -123,6 +128,7 @@ Tree_node* GetT () {
 
     }
 
+    SkipSpace ();
     return val;
 
 
@@ -143,6 +149,8 @@ Tree_node* GetPow () {
 
         val = NewNode (type_Pow, TFunc);
 
+        SkipSpace ();
+
         Tree_node* val2 = GetP ();
 
         val -> left = val1;
@@ -153,9 +161,9 @@ Tree_node* GetPow () {
 
     }
 
+
+    SkipSpace ();
     return val;
-
-
 
 }
 
@@ -167,6 +175,7 @@ Tree_node* GetP () {
 
         CurChar++;
         Tree_node* val = GetE ();
+        SkipSpace ();
 
         if (*CurChar != ')') {
 
@@ -177,13 +186,19 @@ Tree_node* GetP () {
         }
 
         CurChar++;
+        SkipSpace ();
         return val;
 
     }
 
-    if (isdigit (*CurChar))
+    if (isdigit (*CurChar)) {
+
+        SkipSpace ();
         return GetN ();
 
+    }
+
+    SkipSpace ();
     return GetId ();
 
 }
@@ -227,6 +242,8 @@ double GetD () {
 
     if (*CurChar != '.')
           return 0;
+
+    CurChar++;
 
     if ('0' <= *CurChar && *CurChar <= '9') {
 
@@ -297,6 +314,7 @@ Tree_node* GetId () {
     Tree_node* value = NewNode (type.Fdata, TFunc);
     value -> right = GetP ();
 
+    SkipSpace ();
     return value;
 
 }
