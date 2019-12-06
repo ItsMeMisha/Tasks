@@ -102,7 +102,6 @@ void Differ (Tree* InTree, Tree* OutTree, FILE* file) {
 
     AddRoot (OutTree, (Element_t) {0});
 
-
     fprintf (file, "Ok,\\ we\\ have\\ ");
     LateXTreeOut (file, InTree);
     fprintf (file, "\\newline\n");
@@ -110,8 +109,6 @@ void Differ (Tree* InTree, Tree* OutTree, FILE* file) {
     Optimise (InTree, InTree -> root, file);
 
     OutTree -> root = NodeDiffer (InTree -> root, OutTree, file);
-
-    TreeDump (OutTree);
 
     LateXTreeOut (file, OutTree);
 
@@ -253,13 +250,8 @@ void LateXTreeOut (FILE* file, Tree* tree) {
 
     ASSERTTREE (tree);
 
-    if (tree -> root != nullptr) {
-
-//        fprintf (file, "$");
+    if (tree -> root != nullptr)
         LateXNodeOut (file, tree, tree -> root);
-//        fprintf (file, "$");
-
-    }
 
     return;
 
