@@ -314,7 +314,7 @@ Tree_node* GetId () {
     Tree_node* value = NewNode (type.Fdata, TFunc);
     value -> right = GetP ();
 
-    SkipSpace ();
+    SkipSpace (a;
     return value;
 
 }
