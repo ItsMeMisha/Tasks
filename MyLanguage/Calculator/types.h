@@ -1,38 +1,54 @@
 
 #define CHNG changes++;
 
+#define NUM data.Ndata
+
+#define ADD(LEFT, RIGHT) NewNode (type_Add, TFunc, LEFT, RIGHT) 
+#define SUB(LEFT, RIGHT) NewNode (type_Sub, TFunc, LEFT, RIGHT)
+#define MUL(LEFT, RIGHT) NewNode (type_Mul, TFunc, LEFT, RIGHT)
+#define DIV(LEFT, RIGHT) NewNode (type_Div, TFunc, LEFT, RIGHT)
+#define POW(LEFT, RIGHT) NewNode (type_Pow, TFunc, LEFT, RIGHT)
+#define SIN(RIGHT) NewNode (type_Sin, TFunc, nullptr, RIGHT)
+#define COS(RIGHT) NewNode (type_Cos, TFunc, nullptr, RIGHT)
+#define EXP(RIGHT) NewNode (type_Exp, TFunc, nullptr, RIGHT)
+#define LN(RIGHT)  NewNode (type_Ln,  TFunc, nullptr, RIGHT)
+#define N(num)   NewNode (num, TNum, nullptr, nullptr)
+
 #define BR branch
-
+#define BRT branch -> type
 #define BRL branch -> left
-
+#define BRLT branch -> left -> type
 #define BRR branch -> right
+#define BRRT branch -> right -> type
 
 #define DLT(node) DeleteBranch (OutTree, node);
 
-#define DIF(In, Out) NodeDiffer (In, Out, OutTree)
+#define DIF(In) NodeDiffer (In, OutTree, file)
 
-#define SET(Out, newdata, newtype, prior) Out -> data.Fdata = newdata; Out -> type = newtype; Out -> priority = prior;
-
+#define SETF(Out, newdata, prior) Out -> data.Fdata = newdata; Out -> type = TFunc; Out -> priority = prior;
 #define SETN(Out, newdata) Out -> data.Ndata = newdata; Out -> type = TNum; Out -> priority = 0;
 
 #define CPYINOUT OutNode -> data = InNode -> data; OutNode -> type = InNode -> type; OutNode -> priority = InNode -> priority;
-
 #define CPY(In, Out) CopyBranch (In, Out, OutTree)
+#define CPOF(In) CopyOfBranch (In)
                      
 #define IN InNode
-
 #define INL InNode -> left
-
+#define INLL InNode -> left -> left
+#define INLR InNode -> left -> right
 #define INR InNode -> right
+#define INRL InNode -> right -> left
+#define INRR InNode -> right -> right
 
 #define OUT OutNode
-
 #define OUTL OutNode -> left
-
+#define OUTLL OutNode -> left -> left
+#define OUTLR OutNode -> left -> right
 #define OUTR OutNode -> right
+#define OUTRL OutNode -> right -> left
+#define OUTRR OutNode -> right -> right
 
 #define NEWL(out) AddLeftLeaf (OutTree, out, {})
-
 #define NEWR(out) AddRightLeaf (OutTree, out, {})
 
 //NODE_TYPE (type_name, type_signature, type_num, priority, code, opimiseCode)
@@ -41,7 +57,7 @@ NODE_TYPE (NoType, " ", 0, 100,
 
     #ifdef DIFFER 
 
-    {return;}
+    {return nullptr;}
 
     #else   
     
@@ -57,11 +73,7 @@ NODE_TYPE (Add, "+", 1, 3,
 
 {
 
-    CPYINOUT;
-    NEWL (OUT);
-    NEWR (OUT);
-    DIF (INL, OUTL);
-    DIF (INR, OUTR);
+    OUT = ADD (DIF (INL), DIF (INR));
 
 }
 
@@ -69,12 +81,9 @@ NODE_TYPE (Add, "+", 1, 3,
 
 { //OPTIMISE
 
-    if ((BRL -> type == TNum) && (BRR -> type == TNum)) {
+    if ((BRLT == TNum) && (BRRT == TNum)) {
 
-        double NBuf1 = BRL -> data.Ndata;
-        double NBuf2 = BRR -> data.Ndata;
-
-        SETN (BR, NBuf1+NBuf2);
+        SETN (BR, BRL -> NUM + BRR -> NUM);
 
         DLT (BRL);
         DLT (BRR);
@@ -83,7 +92,7 @@ NODE_TYPE (Add, "+", 1, 3,
 
     } else
 
-    if (BRL -> type == TNum && (BRL -> data.Ndata == 0)) {
+    if (BRLT == TNum && (BRL -> NUM == 0)) {
 
         Tree_node* tmp = BRL;
 
@@ -95,7 +104,7 @@ NODE_TYPE (Add, "+", 1, 3,
 
     } else
  
-    if (BRR -> type == TNum && (BRR -> data.Ndata == 0)) {
+    if (BRRT == TNum && (BRR -> NUM == 0)) {
 
         Tree_node* tmp = BRL;
 
@@ -121,11 +130,7 @@ NODE_TYPE (Sub, "-", 2, 3,
     #ifdef DIFFER
 {
 
-    CPYINOUT;
-    NEWL (OUT);
-    NEWR (OUT);
-    DIF (INL, OUTL);
-    DIF (INR, OUTR);
+    OUT = SUB (DIF (INL), DIF (INR));
 
 }
 
@@ -133,12 +138,9 @@ NODE_TYPE (Sub, "-", 2, 3,
 
 { //OPTIMISE
 
-    if (BRL -> type == TNum && BRR -> type == TNum) {
+    if (BRLT == TNum && BRRT == TNum) {
 
-        double NBuf1 = BRL -> data.Ndata;
-        double NBuf2 = BRR -> data.Ndata;
-
-        SETN (BR, NBuf1-NBuf2);
+        SETN (BR, BRL -> NUM - BRR -> NUM);
 
         DLT (BRL);
         DLT (BRR);
@@ -147,12 +149,10 @@ NODE_TYPE (Sub, "-", 2, 3,
 
     } else
 
-    if (BRR -> type == TNum && (BRR -> data.Ndata == 0)) {
+    if (BRRT == TNum && (BRR -> NUM == 0)) {
 
         Tree_node* tmp = BRL;
-
-        CutBrunchWithoutLeaf (OutTree, BR, BRL);
-        
+        CutBrunchWithoutLeaf (OutTree, BR, BRL);        
         BR = tmp;
 
         CHNG;
@@ -173,40 +173,18 @@ NODE_TYPE (Mul, "*", 3, 2,
 
     #ifdef DIFFER
 
- {
+{
 
-    SET  (OUT, type_Add, TFunc, 3);
-
-    NEWL (OUT);
-    NEWR (OUT);
-
-    CPY (IN, OUTL);
-    CPY (IN, OUTR);   
-
-    NEWL (OUTL);
-    NEWR (OUTL);
-
-    CPY (INR, OUTL -> right);
-    DIF (INL, OUTL -> left);
-
-    NEWL (OUTR);
-    NEWR (OUTR);
-
-    CPY (INL, OUTR -> left);
-    DIF (INR, OUTR -> right);
-
+    OUT = ADD (MUL (DIF (INL), CPOF (INR)), MUL (CPOF (INL), DIF (INR)));
 }
 
     #elif defined (OPTIMISE)
 
 { //OPTIMISE
 
-    if (BRL -> type == TNum && BRR -> type == TNum) {
+    if (BRLT == TNum && BRRT == TNum) {
 
-        double NBuf1 = BRL -> data.Ndata;
-        double NBuf2 = BRR -> data.Ndata;
-
-        SETN (BR, NBuf1*NBuf2);
+        SETN (BR, (BRL -> NUM) * (BRR -> NUM));
 
         DLT (BRL);
         DLT (BRR);
@@ -215,7 +193,7 @@ NODE_TYPE (Mul, "*", 3, 2,
 
     } else
 
-    if  ((BRL -> type == TNum && BRL -> data.Ndata == 0) || (BRR -> type == TNum && BRR -> data.Ndata == 0)) {
+    if  ((BRLT == TNum && BRL -> NUM == 0) || (BRRT == TNum && BRR -> NUM == 0)) {
 
         SETN (BR, 0);
 
@@ -226,22 +204,20 @@ NODE_TYPE (Mul, "*", 3, 2,
 
     } else
 
-    if (BRL -> type == TNum && BRL -> data.Ndata == 1) {
-        Tree_node* tmp = BRL;
+    if (BRLT == TNum && BRL -> NUM == 1) {
 
-        CutBrunchWithoutLeaf (OutTree, BR, BRR);
-        
+        Tree_node* tmp = BRL;
+        CutBrunchWithoutLeaf (OutTree, BR, BRR);        
         BR = tmp;
 
         CHNG;
 
     } else
 
-    if (BRR -> type == TNum && BRR -> data.Ndata == 1) {
-        Tree_node* tmp = BRL;
+    if (BRRT == TNum && BRR -> NUM == 1) {
 
-        CutBrunchWithoutLeaf (OutTree, BR, BRL);
-        
+        Tree_node* tmp = BRL;
+        CutBrunchWithoutLeaf (OutTree, BR, BRL);        
         BR = tmp;
 
         CHNG;
@@ -263,36 +239,7 @@ NODE_TYPE (Div, "/", 4, 2,
 
 {
 
-    CPYINOUT;
-    NEWL (OUT);
-    NEWR (OUT);
-
-    SET (OUTL, type_Sub, TFunc, 3);
-    SET (OUTR, type_Pow, TFunc, 1);
-
-    NEWL (OUTL);
-    NEWR (OUTL);
-
-    NEWL (OUTR);
-    NEWR (OUTR);
-
-    CPY (INR, OUTR -> left);
-    SETN (OUTR -> right, 2);
-
-    SET (OUTL -> left, type_Mul, TFunc, 2);
-    SET (OUTL -> right, type_Mul, TFunc, 2);
-
-    NEWL (OUTL -> left);
-    NEWR (OUTL -> left);
-
-    CPY (INR, OUTL -> left -> right);
-    DIF (INL, OUTL -> left -> left);
-
-    NEWL (OUTL -> right);
-    NEWR (OUTL -> right);
-
-    CPY (INL, OUTL -> right -> left);
-    DIF (INR, OUTL -> right -> right);
+    OUT = DIV (SUB (MUL (DIF (INL), CPOF (INR)), MUL (CPOF (INL), DIF (INR))), POW (CPOF (INR), N (2)));
 
 }
 
@@ -300,12 +247,9 @@ NODE_TYPE (Div, "/", 4, 2,
 
 { //OPTIMISE
 
-    if (BRL -> type == TNum && BRR -> type == TNum) {
+    if (BRLT == TNum && BRRT == TNum) {
 
-        double NBuf1 = BRL -> data.Ndata;
-        double NBuf2 = BRR -> data.Ndata;
-
-        SETN (BR, NBuf1/NBuf2);
+        SETN (BR, (BRL -> NUM) / (BRR -> NUM));
 
         DLT (BRL);
         DLT (BRR);
@@ -314,7 +258,7 @@ NODE_TYPE (Div, "/", 4, 2,
 
     } else
 
-    if (BRL -> type == TNum && BRL -> data.Ndata == 0) {
+    if (BRLT == TNum && BRL -> NUM == 0) {
 
         SETN (BR, 0);
 
@@ -325,7 +269,7 @@ NODE_TYPE (Div, "/", 4, 2,
 
     } else
 
-    if (BRR -> type == TNum && (BRR -> data.Ndata == 1)) {
+    if (BRRT == TNum && (BRR -> NUM == 1)) {
 
         Tree_node* tmp = BRL;
 
@@ -355,16 +299,7 @@ NODE_TYPE (Sin, "sin", 5, 1,
 
 {
 
-    SET (OUT, type_Mul, TFunc, 2);
-    
-    NEWL (OUT);
-    NEWR (OUT);
-
-    DIF (INR, OUTL);
-    SET (OUTR, type_Cos, TFunc, 1);
-
-    NEWR (OUTR);
-    CPY (INR, OUTR -> right);
+    OUT = MUL (DIF (INR), COS(CPOF (INR)));
 
 }
 
@@ -372,11 +307,9 @@ NODE_TYPE (Sin, "sin", 5, 1,
 
 { //OPTIMISE
 
-    if (BRR -> type == TNum) {
+    if (BRRT == TNum) {
 
-        double NBuf1 = BRR -> data.Ndata;
-
-        SETN (BR, sin (NBuf1));
+        SETN (BR, sin (BRR -> NUM));
 
         DLT (BRR);
 
@@ -400,23 +333,7 @@ NODE_TYPE (Cos, "cos", 6, 1,
 
 {
 
-    SET (OUT, type_Mul, TFunc, 2);
-    
-    NEWL (OUT);
-    NEWR (OUT);
-
-    NEWL (OUTL);
-    NEWR (OUTL);
-
-    SET (OUTL, type_Mul, TFunc, 2); 
-
-    DIF (INR, OUTL -> left);
-    SETN (OUTL -> right, -1);
-
-    SET (OUTR, type_Sin, TFunc, 1);
-
-    NEWR (OUTR);
-    CPY (INR, OUTR -> right);
+    OUT = MUL (N (-1), MUL (DIF (INR), SIN (CPOF (INR))));
 
 }
 
@@ -424,11 +341,9 @@ NODE_TYPE (Cos, "cos", 6, 1,
 
 { //OPTIMISE
 
-    if (BRR -> type == TNum) {
+    if (BRRT == TNum) {
 
-        double NBuf1 = BRR -> data.Ndata;
-
-        SETN (BR, cos (NBuf1));
+        SETN (BR, cos (BRR -> NUM));
 
         DLT (BRR);
 
@@ -452,36 +367,18 @@ NODE_TYPE (Tg, "tg", 7, 1,
     #ifdef DIFFER
 
 {
-    SET (OUT, type_Div, TFunc, 2);
-    NEWL (OUT);
-    NEWR (OUT);
 
-    SETN (OUTR, 1);
-    SET (OUTL, type_Pow, TFunc, 1);
-
-    NEWL (OUTL);
-    NEWR (OUTL);
-
-    SETN (OUTL -> right, 2);
-    SET (OUTL -> left, type_Cos, TFunc, 1);
-
-    NEWR (OUTL -> left);
-
-    CPY (INR, OUTL -> left -> right);
+    OUT = MUL (DIF (INR), DIV (N (1), POW (COS (CPOF (INR)), N (2))));
 
 }
 
     #elif defined (OPIMISE)
 
 {
-    if (BRR -> type == TNum) {
+    if (BRRT == TNum) {
 
-        double NBuf1 = BRR -> data.Ndata;
-
-        SETN (BR, tan (NBuf1));
-
+        SETN (BR, tan (BRR -> NUM));
         DLT (BRR);
-
         CHNG;
 
     }
@@ -501,34 +398,17 @@ NODE_TYPE (Ctg, "ctg", 8, 1,
     #ifdef DIFFER
 
 {
-    SET (OUT, type_Div, TFunc, 2);
-    NEWL (OUT);
-    NEWR (OUT);
 
-    SETN (OUTR, -1);
-    SET (OUTL, type_Pow, TFunc, 1);
-
-    NEWL (OUTL);
-    NEWR (OUTL);
-
-    SETN (OUTL -> right, 2);
-    SET (OUTL -> left, type_Sin, TFunc, 1);
-
-    NEWR (OUTL -> left);
-
-    CPY (INR, OUTL -> left -> right);
-
+    OUT = MUL (DIF (INR), DIV (N (-1), POW (SIN (CPOF (INR)), N (2))));
 
 }
 
     #elif defined (OPIMISE)
 
 {
-    if (BRR -> type == TNum) {
+    if (BRRT == TNum) {
 
-        double NBuf1 = BRR -> data.Ndata;
-
-        SETN (BR, 1/tan (NBuf1));
+        SETN (BR, 1/tan (BRR -> NUM));
 
         DLT (BRR);
 
@@ -552,67 +432,19 @@ NODE_TYPE (Pow, "^", 9, 1,
 {
 
     if (INL -> type != TNum && INR -> type == TNum) {
+
+
+        OUT = MUL (MUL (N (INR -> NUM), DIF (INL)), POW (CPOF (INL), N (INR -> NUM - 1)));
     
-        SET (OUT, type_Mul, TFunc, 2);
+    } else if (INL -> type == TNum) {
 
-        NEWL (OUT);
-        NEWR (OUT);
+        OUT = MUL (MUL (LN (N (INL -> NUM)), DIF (INL)), CPOF (IN));
 
-        SET (OUTL, type_Mul, TFunc, 2);
+    }
 
-        NEWL (OUTR);
-        NEWR (OUTR);
+    else {
 
-        NEWL (OUTL);
-        NEWR (OUTL);
-
-        SET (OUTR, type_Pow, TFunc, 1);
-
-        CPY (INL, OUTR -> left);
-        CPY (INR, OUTR -> right);
-        CPY (INR, OUTL -> right);
-        DIF (INL, OUTL -> left);
-        
-        double NBuf1 = OUTR -> right -> data.Ndata - 1;
-        SETN (OUTR, NBuf1);
-
-    } else {
-
-        SET (OUT, type_Mul, TFunc, 2);
-
-        NEWL (OUT);
-        NEWR (OUT);
-
-        CPY (IN, OUTL);
-        
-        SET (OUTR, type_Add, TFunc, 3);
-        
-        NEWL (OUTR);
-        NEWR (OUTR);
-
-        SET (OUTR -> right, type_Mul, TFunc, 2);
-        SET (OUTR -> left, type_Div, TFunc, 2);
-
-        NEWR (OUTR -> right);
-        NEWL (OUTR -> right);
-
-        DIF (INR, OUTR -> right -> left);
-        SET (OUTR -> right -> right, type_Ln, TFunc, 1);
-
-        NEWR (OUTR -> right -> right);
-        CPY (INL, OUTR -> right -> right -> right);
-
-        NEWL (OUTR -> left);
-        SET (OUTR -> left -> left, type_Mul, TFunc, 2);
-        
-        NEWL (OUTR -> left -> left);
-        NEWR (OUTR -> left -> left);
-
-        DIF (INL, OUTR -> left -> left -> left);
-        CPY (INR, OUTR -> left -> left -> right);
-
-        NEWR (OUTR -> left);
-        CPY (INL, OUTR -> left -> right);
+        OUT = MUL (CPOF (IN), ADD (MUL (DIF (INR), LN (CPOF (INL))), DIV (MUL (DIF (INL), CPOF (INR)), CPOF (INL))));
 
     }
 
@@ -622,12 +454,9 @@ NODE_TYPE (Pow, "^", 9, 1,
 
 {   //OPTIMISE
 
-    if (BRL -> type == TNum && BRR -> type == TNum) {
+    if (BRLT == TNum && BRRT == TNum) {
 
-        double NBuf1 = BRL -> data.Ndata;
-        double NBuf2 = BRR -> data.Ndata;
-
-        SETN (BR, pow (NBuf1, NBuf2));
+        SETN (BR, pow (BRL -> NUM, BRR -> NUM));
 
         DLT (BRL);
         DLT (BRR);
@@ -636,7 +465,7 @@ NODE_TYPE (Pow, "^", 9, 1,
 
     } else
 
-    if (BRR -> type == TNum && (BRR -> data.Ndata == 1)) {
+    if (BRRT == TNum && (BRR -> NUM == 1)) {
 
         CutBrunchWithoutLeaf (OutTree, BR, BRL);
 
@@ -661,7 +490,7 @@ NODE_TYPE (Var, "x", 10, 0,
 
  {
 
-    SETN (OUT, 1);
+    OUT = N (1);
 
 }
 
@@ -678,7 +507,7 @@ NODE_TYPE (Num, "0", 11, 0,
 
 {
 
-    SETN (OUT, 0);
+    OUT = N (0);
 
 }
 
@@ -695,28 +524,17 @@ NODE_TYPE (Exp, "exp", 12, 1,
 
 {
 
-        SET (OUT, type_Mul, TFunc, 2);
+        OUT = MUL (DIF (INR), CPOF (IN));
 
-        NEWL (OUT);
-        NEWR (OUT);
-
-        NEWL (OUTR);
-        NEWL (OUTL);
-
-        CPY (IN, OUTR);
-        DIF (INR, OUTL);
- 
 }
 
     #elif defined (OPTIMISE)
 
 { //OPTIMISE
 
-    if (BRR -> type == TNum) {
+    if (BRRT == TNum) {
 
-        double NBuf1 = BRR -> data.Ndata;
-
-        SETN (BR, exp (NBuf1));
+        SETN (BR, exp (BRR -> NUM));
 
         DLT (BRR);
 
@@ -739,13 +557,7 @@ NODE_TYPE (Ln, "ln", 13, 1,
 
 {
 
-        SET (OUT, type_Div, TFunc, 2);
-
-        NEWL (OUT);
-        NEWR (OUT);
-
-        CPY (INR, OUTR);
-        DIF (INR, OUTL);
+        OUT = DIV (DIF (INR), CPOF (INR));
 
 }
 
@@ -753,11 +565,9 @@ NODE_TYPE (Ln, "ln", 13, 1,
 
 { //OPTIMISE
 
-    if (BRR -> type == TNum) {
+    if (BRRT == TNum) {
 
-        double NBuf1 = BRR -> data.Ndata;
-
-        SETN (BR, log (NBuf1));    
+        SETN (BR, log (BRR -> NUM));    
 
         DLT (BRR);
 
@@ -775,21 +585,34 @@ NODE_TYPE (Ln, "ln", 13, 1,
 
 )
 
-#undef SET
+#undef SETF
 #undef SETN
 #undef CHNG
+#undef NUM
 #undef BR
+#undef BRT
 #undef BRL
+#undef BRLT
 #undef BRR
+#undef BRRT
 #undef DIF
 #undef CPYINOUT
 #undef CPY                     
+#undef CPOF
 #undef IN
 #undef INL
+#undef INLL
+#undef INLR
 #undef INR
+#undef INRL
+#undef INRR
 #undef OUT
 #undef OUTL
+#undef OUTLL
+#undef OUTLR
 #undef OUTR
+#undef OUTRL
+#undef OUTRR
 #undef NEWL
 #undef NEWR
 #undef DLT

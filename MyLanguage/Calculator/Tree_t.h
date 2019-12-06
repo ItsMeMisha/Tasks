@@ -23,7 +23,7 @@
     #define ASSERTTREE( cond )  \
         if (!TreeOk (cond)) {   \
             TreeDump (cond);    \
-            assert (0); }       
+            assert (TreeErroR); }       
 
 #else
 
@@ -33,6 +33,9 @@
 #endif
 
 #define TreeConstruct(tree) __TreeConstruct(tree, #tree);
+
+const int TreeErroR = 0;
+const int MaxDeep = 1000;
 
 typedef union {
 
@@ -79,7 +82,8 @@ void TreeDestruct                                                    (Tree* tree
 
 bool ParentsCheck                     (const Tree_node* branch, const Tree* tree, const int deep = 0);
 
-Tree_node* NewNode (const Element_t elem, NodeType type);
+Tree_node* NewNode (const double elem, NodeType type, Tree_node* Left = nullptr, Tree_node* Right = nullptr);
+Tree_node* NewNode (const FuncType elem, NodeType type, Tree_node* Left = nullptr, Tree_node* Right = nullptr);
 
 Tree_node* __NewNode        (const Element_t elem);
 Tree_node* AddNodeAndCheck  (Tree* tree,                    const Element_t elem);
@@ -88,6 +92,7 @@ bool AddLeftLeaf            (Tree* tree, Tree_node* branch, const Element_t elem
 bool AddRightLeaf           (Tree* tree, Tree_node* branch, const Element_t elem);
 
 void CopyBranch (Tree_node* SourceBranch, Tree_node* OutBranch, Tree* OutTree);
+Tree_node* CopyOfBranch (Tree_node* SourceBranch);
 
 bool DeleteBranch           (Tree* tree, Tree_node* branch);
 void CutBrunchWithoutLeaf   (Tree* tree, Tree_node* branch, Tree_node* leaf);
@@ -144,8 +149,8 @@ void TreeDestruct (Tree* tree) {
 
 bool ParentsCheck (const Tree_node* branch, const Tree* tree, const int deep) {
 
-/*    if (deep > tree -> size)
-        return false; */
+    if (deep > MaxDeep)
+        return false;
 
     if (branch == tree -> root)
         return true;
@@ -157,9 +162,12 @@ bool ParentsCheck (const Tree_node* branch, const Tree* tree, const int deep) {
 
 }
 
-Tree_node* NewNode (const Element_t elem, NodeType Type) {
+Tree_node* NewNode (const FuncType elem, NodeType Type, Tree_node* Left, Tree_node* Right) {
 
-    Tree_node* node = __NewNode (elem);
+    Element_t buf = {};
+    buf.Fdata = elem;
+
+    Tree_node* node = __NewNode (buf);
 
     if (node == nullptr)
         return nullptr;
@@ -169,8 +177,10 @@ Tree_node* NewNode (const Element_t elem, NodeType Type) {
     if (Type == TFunc) {
 
         #define NODE_TYPE(name, signature, num, priority, code) \
-            if (elem.Fdata == type_##name) \
+            if (elem == type_##name) \
                 prior = priority;
+
+        #include "types.h"
 
         #undef NODE_TYPE
 
@@ -178,6 +188,41 @@ Tree_node* NewNode (const Element_t elem, NodeType Type) {
 
     node -> type = Type;
     node -> priority = prior;
+
+    node -> left = Left;
+    node -> right = Right;
+    
+    if (Left != nullptr)
+        Left -> parent = node;
+
+    if (Right != nullptr)
+        Right -> parent = node;
+
+    return node;
+
+}
+
+Tree_node* NewNode (const double elem, NodeType Type, Tree_node* Left, Tree_node* Right) {
+
+    Element_t buf = {};
+    buf.Ndata = elem;
+
+    Tree_node* node = __NewNode (buf);
+
+    if (node == nullptr)
+        return nullptr;
+
+    node -> type = Type;
+    node -> priority = 0;
+
+    node -> left = Left;
+    node -> right = Right;
+    
+    if (Left != nullptr)
+        Left -> parent = node;
+
+    if (Right != nullptr)
+        Right -> parent = node;
 
     return node;
 
@@ -289,6 +334,25 @@ void CopyBranch (Tree_node* SourceBranch, Tree_node* OutBranch, Tree* OutTree) {
     
 }
 
+Tree_node* CopyOfBranch (Tree_node* SourceBranch) {
+
+    assert (SourceBranch);
+
+    Tree_node* OutBranch = NewNode (0, {});
+
+    if (SourceBranch -> left != nullptr) 
+        OutBranch -> left = CopyOfBranch (SourceBranch -> left);
+
+    if (SourceBranch -> right != nullptr)
+        OutBranch -> right = CopyOfBranch (SourceBranch -> right);
+
+    OutBranch -> data = SourceBranch -> data;
+    OutBranch -> type = SourceBranch -> type;
+    OutBranch -> priority = SourceBranch -> priority;
+
+    return OutBranch;
+    
+}
 
 bool DeleteBranch (Tree* tree, Tree_node* branch) {
 
@@ -602,14 +666,7 @@ bool TreeOk (Tree* tree) {
     if (tree == nullptr)
         return false;
 
-    if ((tree -> root == nullptr) && (tree -> size > 0)) {
-        
-        tree -> errcode = NotEmptyHasNoRoot;
-        return false;
-
-    }
-
-/*    if (tree -> size > 0)
+    if (tree -> root != nullptr)
 
         if (!CheckConnection (tree, tree -> root)) {
 
@@ -617,7 +674,6 @@ bool TreeOk (Tree* tree) {
             return false;
 
         }
-*/
 
     if (tree -> errcode != Allright)
         return false;

@@ -2,11 +2,12 @@
 #include <stdlib.h>
 #include "Tree_t.h"
 #include "Comments.h"
-#include "grammar.cpp"
+#include "grammar.h"
 
 const char LateXFile[] = "laTeX.latex";
 
-void NodeDiffer (Tree_node* InNode, Tree_node* OutNode, Tree* OutTree);
+void LatexHeader (FILE* file);
+Tree_node* NodeDiffer (Tree_node* InNode, Tree* OutTree, FILE* file);
 void Differ (Tree* InTree, Tree* OutTree, FILE* file);
 void Optimise (Tree* OutTree, Tree_node* branch, FILE* file);
 void LateXNodeOut (FILE* file, Tree* tree, Tree_node* node);
@@ -24,19 +25,14 @@ int main () {
 
     FILE* file = fopen (LateXFile, "w");
 
-    fprintf (file, "\\documentclass[a4paper, 16pt]{article}\n \\begin{document}\n \\begin{math} \n");
-
-    fprintf (file, "(");
-    LateXTreeOut (file, &inputTree);
-    fprintf (file, ")' = ");
+    LatexHeader (file);
 
     Differ (&inputTree, &outputTree, file);
    
-    LateXTreeOut (file, &outputTree);
-
     fprintf (file, "\n \\end{math} \n \\end{document}\n");    
 
     fclose (file);
+    system ("pdflatex laTeX.latex -o laTeX.pdf");
 
     TreeDestruct (&inputTree);
     TreeDestruct (&outputTree);
@@ -45,29 +41,35 @@ int main () {
 
 }
 
-void NodeDiffer (Tree_node* InNode, Tree_node* OutNode, Tree* OutTree) {
+void LatexHeader (FILE* file) {
+
+    fprintf (file, "\\documentclass[a4paper, 32pt]{article}\n \\begin{document}\n \\begin{math} \n");
+//    fprintf (file, 
+
+    return;
+
+}
+
+Tree_node* NodeDiffer (Tree_node* InNode, Tree* OutTree, FILE* file) {
 
     assert (InNode);
-    assert (OutNode);
     ASSERTTREE (OutTree);
+ 
+    Tree_node* OutNode = nullptr;
+ 
+    if (InNode -> type == TVar)
+        OutNode = NewNode (1, TNum, nullptr, nullptr);
+
+    else if (InNode -> type == TNum) 
+        OutNode = NewNode (0, TNum, nullptr, nullptr);
+
+    else  
 
     #define DIFFER
 
     #define NODE_TYPE( name, signature, num, prior, code) \
             case type_##name: code; break;
  
-    #define SET(Out, newdata, newtype, prior) Out -> data = (Element_t) {newdata}; Out -> type = newtype; Out -> priority = prior;
-   
-    if (InNode -> type == TVar) {
-        SET (OutNode, 1, TNum, 0); }
-
-    else if (InNode -> type == TNum) {
-        SET (OutNode, 0, TNum, 0); }
-
-    else  
-
-    #undef SET
-
     switch (InNode -> data.Fdata) {
 
         #include "types.h"
@@ -78,7 +80,16 @@ void NodeDiffer (Tree_node* InNode, Tree_node* OutNode, Tree* OutTree) {
 
     #undef DIFFER
 
-    return;
+    OutTree -> root = OutNode;
+
+    fprintf (file, "\\newline %s (", comment[rand ()% NumOfComments]);
+    LateXNodeOut (file, OutTree, InNode);
+    fprintf (file, ")' = ");
+ 
+    LateXNodeOut (file, OutTree, OutNode);
+    fprintf (file, "\\newline\n");
+
+    return OutNode;
 
 }
 
@@ -87,15 +98,25 @@ void Differ (Tree* InTree, Tree* OutTree, FILE* file) {
     ASSERTTREE (InTree);
     assert (InTree -> root);
     ASSERTTREE (OutTree);
-TreeDump (InTree);
 
     AddRoot (OutTree, (Element_t) {0});
 
+    LateXTreeOut (file, InTree);
+
     Optimise (InTree, InTree -> root, file);
 
-    NodeDiffer (InTree -> root, OutTree -> root, OutTree);
+    OutTree -> root = NodeDiffer (InTree -> root, OutTree, file);
+
+    TreeDump (OutTree);
+
+    LateXTreeOut (file, OutTree);
 
     Optimise (OutTree, OutTree -> root, file);
+
+    fprintf (file, "\n\\newline (");
+    LateXTreeOut (file, InTree);
+    fprintf (file, ")' = ");
+    LateXTreeOut (file, OutTree);
 
     fprintf (file, "\\newline");
 
@@ -118,21 +139,18 @@ void Optimise (Tree* OutTree, Tree_node* branch, FILE* file) {
 
     int changes = 1;
 
-    #define OPTIMISE
-
-    #define NODE_TYPE(name, signature, num, prior, code) \
-        case type_##name: { code; break; }
-
     bool ChangedAtLeastOneTime = false;
-
-    fprintf (file, "\n\\newline %s", comment[rand ()% NumOfComments]);
-    LateXTreeOut (file, OutTree);
 
     while (changes) {
 
         changes = 0;
 
         if (branch -> type == TFunc) {
+
+        #define OPTIMISE
+
+        #define NODE_TYPE(name, signature, num, prior, code) \
+            case type_##name: { code; break; }
 
             switch (branch -> data.Fdata) {
 
@@ -142,6 +160,10 @@ void Optimise (Tree* OutTree, Tree_node* branch, FILE* file) {
 
         }
 
+        #undef NODE_TYPE
+
+        #undef OPTIMISE
+
         if (changes)
             ChangedAtLeastOneTime = true;
 
@@ -149,14 +171,10 @@ void Optimise (Tree* OutTree, Tree_node* branch, FILE* file) {
 
     if (ChangedAtLeastOneTime) {
 
-        fprintf (file, " = \\newline \n");
+        fprintf (file, " = ");
         LateXTreeOut (file, OutTree);
 
     }
-
-    #undef NODE_TYPE
-
-    #undef OPTIMISE
 
     return;
 
@@ -171,13 +189,21 @@ void LateXNodeOut (FILE* file, Tree* tree, Tree_node* node) {
 
     if (node -> left != nullptr) {
 
-        if (node -> left -> priority > node -> priority)
+        if (node -> left -> priority >= node -> priority) {
+
             fprintf (file, "{(");
-
-        LateXNodeOut (file, tree, node -> left);
-
-        if (node -> left -> priority > node -> priority)
+            LateXNodeOut (file, tree, node -> left);
             fprintf (file, ")}");
+        
+        }
+
+        else {
+
+            fprintf (file, "{");
+            LateXNodeOut (file, tree, node -> left);
+            fprintf (file, "}");
+
+        }
 
     }
 
@@ -197,14 +223,21 @@ void LateXNodeOut (FILE* file, Tree* tree, Tree_node* node) {
 
     if (node -> right != nullptr) {
 
-        if (node -> right -> priority > node -> priority)
+        if (node -> right -> priority > node -> priority) {
+
             fprintf (file, "{(");
-
-
-        LateXNodeOut (file, tree, node -> right);
-
-        if (node -> right -> priority > node -> priority)
+            LateXNodeOut (file, tree, node -> right);
             fprintf (file, ")}");
+
+        }
+
+        else {
+
+            fprintf (file, "{");
+            LateXNodeOut (file, tree, node -> right);
+            fprintf (file, "}");
+
+        }
 
     }
 
@@ -216,9 +249,13 @@ void LateXTreeOut (FILE* file, Tree* tree) {
 
     ASSERTTREE (tree);
 
+    if (tree -> root != nullptr) {
 
-    if (tree -> root != nullptr)
+//        fprintf (file, "$");
         LateXNodeOut (file, tree, tree -> root);
+//        fprintf (file, "$");
+
+    }
 
     return;
 
