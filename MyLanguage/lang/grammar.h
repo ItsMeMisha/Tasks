@@ -1,37 +1,44 @@
 #include <stdio.h>
 #include <malloc.h>
+#include <ctype.h>
+#include <string.h>
 #include <sys/stat.h>
 #include "Tree_t.h"
 
 const char* CurChar = "";
+const Tree_node** CurTok = nullptr;
 
 void SkipSpace ();
 
 Tree* GetTree (const char* fileName, Tree* tree);
 
-Tree_node* GetG   (const char* str);
-Tree_node* GetD   ();
-Tree_node* GetFunc();
-Tree_node* GetFId ();
+Tree_node* GetG    (const char* str);
+Tree_node* GetD    ();
+Tree_node* GetFunc ();
+Tree_node* GetFId  ();
 Tree_node* GetVarlist ();
-Tree_node* Def    ();
-Tree_node* Op     ();
-Tree_node* Var    ();
-Tree_node* VId    ();
-Tree_node* Init   ();
+Tree_node* Def     ();
+Tree_node* Op      ();
+Tree_node* Var     ();
+Tree_node* VId     ();
+Tree_node* GetInit ();
 Tree_node* GetWhile();
-Tree_node* GetIf  ();
+Tree_node* GetIf   ();
 Tree_node* GetCond ();
 Tree_node* GetComp ();
-Tree_node* GetE   ();
-Tree_node* GetT   ();
-Tree_node* GetPow ();
-Tree_node* GetP   ();
-Tree_node* GetN   ();
-double     GetMt  ();
-Tree_node* GetId  ();
+Tree_node* GetE    ();
+Tree_node* GetT    ();
+Tree_node* GetP    ();
+Tree_node* GetN    ();
+double     GetMt   ();
+Tree_node* GetId   ();
 
+bool isspec (char ch);
 Tree_node** Tokenization (char* text);
+Tree_node*  TokWord ();
+Tree_node*  TokNum  ();
+Tree_node*  TokSpec ();
+Tree_node*  TokNote ();
 
 void SkipSpace () {
 
@@ -88,23 +95,23 @@ Tree_node* GetG (const char* str) {
 
 Tree_node* GetD () {
 
-    SkipSpace ();
+    if (CurTok -> NodeType != TDec)
+        return nullptr;
 
-    Tree_node* val = nullptr;
+    Tree_node* val = CurTok;
+    CurTok++;
 
-    if (strncmp (CurChar, "legato", 6) == 0) {
+    if (val -> data.Ddata == D_note) {
 
-        val = NewNode ();
-        CurChar += 6;
-        val -> right = GetFunc ();
+        if ((val -> right = GetFunc ()) == nullptr)
+            return nullptr;
 
     }
+ 
+    else if (val -> data.Ddata == D_leg) {
 
-    else if (strncmp (CurChar, "nota", 4) == 0) {
-
-        val = NewNode ();
-        CurChar += 4;
-        val -> right = GetVar ();
+        if ((val -> right = GetVar ()) == nullptr)
+            return nullptr;
 
     }
 
@@ -116,14 +123,12 @@ Tree_node* GetD () {
 
 Tree_node* GetFunc () {
 
-    SkipSpace ();
-//TODO
-    Tree_node* val = NewNode ();
+    Tree_node* val = NewNode (D_leg, TDec);
 
     if ((val -> left = GetVarlist ()) == nullptr)
         return nullptr;
 
-    if ((val -> right = DetFId ()) == nullptr)
+    if ((val -> right = GetFId ()) == nullptr)
         return nullptr;
 
     if ((val -> right -> right = Def ()) == nullptr)
@@ -135,9 +140,12 @@ Tree_node* GetFunc () {
 
 Tree_node* GetFId () {
 
-    SkipSpace ();
+    if (CurTok -> NodeType != TId)
+        return nullptr;
 
-    retunr val;
+    CurTok++;
+
+    return (CurTok - 1);
 
 }
 
@@ -155,37 +163,29 @@ Tree_node* GetVarlist () {
 
 Tree_node* Def () {
 
-    SkipSpace ();
-
-    if (*CurChar != '|' || *(CurChar + 1) != '|')
+    if (!(CurTok -> data.Odata == OP_dbar && CurTok -> type == OpType))
         return nullptr;
 
-    CurChar += 2;
+    CurTok++;
 
-    while (*CurChar != '|') {
+    while ((!(CurTok -> data.Odata == OP_dbar && CurTok -> type == OpType)) /* TODO */) {
 
-        if (strncmp (CurChar, "nota", 4) == 0) {
+        
+if ((CurTok -> type == TDec) && (CurTok -> data.Ddata == D_nota)) {
 
             val = NewNode ();
-            CurChar += 4;
             val -> right = GetVar ();
 
         }
 
-        else val -> right = GetOp ();
+        else 
+
+        if ((val -> right = GetOp ()) == nullptr);
     
         val -> left = NewNode ();
         val = val -> left;
 
-        SkipSpace ();
-
     }
-
-    CurChar++;
-    
-    if (*CurChar != '|') return nullptr;
-
-    CurChar++;
 
     return val;
 
@@ -193,33 +193,28 @@ Tree_node* Def () {
 
 Tree_node* Op () {
 
-    SkipSpace ();
-
     Tree_node* val = nullptr;
 
     if ((val = VId ()) != nullptr) {
 
-        SkipSpace ();
-        if (*CurChar != '=')
+        if (CurTok -> type != TOp && CurTok -> data.Odata != OP_ass)
             return nullptr;
 
-        CurChar++;
-
-        //TODO
+                 
 
     }
 
     else if ((val = GetFId ()) != nullptr) {
 
-        SkipSpace ();
-        if ((/*TODO*/ = GetVarlist ()) == nullptr)
+        if ((val -> left = GetVarlist ()) == nullptr)
             return nullptr;
 
     }
 
     else if ((val = GetWhile ()) == nullptr)
+            return nullptr;
 
-    if ((val = GetIf ()) == nullptr)
+    else if ((val = GetIf ()) == nullptr)
         return nullptr; 
 
     return val;
@@ -228,20 +223,16 @@ Tree_node* Op () {
 
 Tree_node* Var () {
 
-    SkipSpace ();
-
-    Tree_node* val = NewNode ();
+    Tree_node* val = NewNode (D_nota, TDec);
     
-    val -> left = GetVId ();
-
-    if (val -> left == nullptr) {
-
-        free (val);
+    if ((val -> right = GetVId ()) == nullptr)
         return nullptr;
 
-    }
+    if ((val -> tone = GetTone ()) == nullptr)
+        return nullptr;
 
-    val -> right = GetInit ();
+    if ((val -> left = GetInit ()) == nullptr)
+        return nullptr;
 
     return val;
 
@@ -249,15 +240,11 @@ Tree_node* Var () {
 
 Tree_node* VId () {
 
-    SkipSpace ();
-
     retunr val;
 
 }
 
-Tree_node* Init () {
-
-    SkipSpace ();
+Tree_node* GetInit () {
 
     if (*CurChar != '=')
         return nullptr;
@@ -293,22 +280,20 @@ Tree_node* GetIf () {
 
     SkipSpace ();
 
-    if (strncmp (CurChar, "volta", 5) != 0)
+    if (CurTok -> type != TOp || CurTok -> data.Odata != OP_volta)
         return nullptr;
-
-    CurChar += 5;
     
     Tree_node* val = NewNode ();
+
+    CurTok++;
 
     val -> left = GetCond ();
     val -> right = NewNode ();
     val -> right -> right = GetDef;
 
-    SkipSpace ();
+    if (CurTok -> type == TOp && CurTok -> data.Odata == OP_svol) {
 
-    if (strncmp (CurChar, "svolta", 6) == 0) {
-
-        CurChar += 6;
+        CurTok++;
         val -> right -> left = GetDef;
 
     }
@@ -334,49 +319,39 @@ Tree_node* GetCond () {
 
 Tree_node* GetComp () {
 
-    SkipSpace ();
+    assert (CurTok);
 
-    Tree_node* val = nullptr;
+    if (CurTok -> type == TOp) {
 
-    if (*CurChar == '<')
-        val = NewNode ();
+        OpType comp = CurTok -> data.Odata; 
 
-    else if (*CurChar == '>')
-        val = NewNode ();
-
-    else if (*(CurChar + 1)  == '=') {
-
-        CurChar++;
-
-        if (*(CurChar - 1) == '!')
-            val = NewNode ();
-
-        else if (*(CurChar - 1) == '=')
-            val = NewNode ();
+        if (comp == OP_meno || comp == OP_piu || comp == OP_eq || comp == OP_neq)
+            return CurTok;
 
     }
 
-    else return nullptr;
-
-    CurChar++;
-
-    return val;
+    return nullptr;
 
 }
 
 Tree_node* GetE () {
 
-    SkipSpace ();
+    assert (CurTok)
+
+    if (CurTok -> type != TOp && CurTok -> type != TNum)
+        return nullptr;
 
     Tree_node* val1 = GetT ();
 
     Tree_node* val = val1;
 
+    
+
     while (*CurChar == '+' || *CurChar == '-') {
 
         char op = *CurChar;
 
-        CurChar++;
+        CurTok++;
 
         Element_t elem = {};
 
@@ -389,10 +364,8 @@ Tree_node* GetE () {
 
         Tree_node* val2 = GetT ();
 
-        val -> left = val1;
-        val1 -> parent = val; 
-        val -> right = val2;
-        val2 -> parent = val;
+        LinkNodes (val, val1, val2);
+
         val1 = val;
 
     }
@@ -403,8 +376,6 @@ Tree_node* GetE () {
 
 Tree_node* GetT () {
 
-    SkipSpace ();
-
     Tree_node* val1 = GetPow ();
     Tree_node* val = val1;
  
@@ -412,7 +383,7 @@ Tree_node* GetT () {
 
         char op = *CurChar;
 
-        CurChar++;
+        CurTok++;
 
         Element_t elem = {};
 
@@ -425,58 +396,22 @@ Tree_node* GetT () {
 
         Tree_node* val2 = GetPow ();
 
-        val -> left = val1;
-        val1 -> parent = val; 
-        val -> right = val2;
-        val2 -> parent = val;
+        LinkNodes (val, val1, val2);
+
         val1 = val;
 
     }
 
     return val;
 
-
-}
-
-Tree_node* GetPow () {
-
-    SkipSpace ();
-
-    Tree_node* val1 = GetP ();
-    Tree_node* val = val1;
- 
-    while (*CurChar == '^') {
-
-        char op = *CurChar;
-
-        CurChar++;
-
-        Element_t elem = {};
-        elem.Fdata = type_Pow;
-
-        val = NewNode (elem, TFunc);
-
-        Tree_node* val2 = GetP ();
-
-        val -> left = val1;
-        val1 -> parent = val; 
-        val -> right = val2;
-        val2 -> parent = val;
-        val1 = val;
-
-    }
-
-    return val;
 
 }
 
 Tree_node* GetP () {
 
-    SkipSpace ();
-
     if (*CurChar == '(') {
 
-        CurChar++;
+        CurTok++;
         Tree_node* val = GetE ();
 
         if (*CurChar != ')') {
@@ -487,7 +422,7 @@ Tree_node* GetP () {
 
         }
 
-        CurChar++;
+        CurTok++;
         return val;
 
     }
@@ -500,6 +435,201 @@ Tree_node* GetP () {
 }
 
 Tree_node* GetN () {
+
+    if (CurTok -> NodeType != TNum)
+        return nullptr;
+
+    CurTok++;
+
+    return (CurTok - 1);
+
+}
+
+Tree_node* GetId () {
+
+    if (CurTok -> type != TId)
+        return nullptr;
+
+    CurTok++;
+
+    return CurTok - 1;
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+bool isspec (char ch) {
+
+    if (ch == '=' || ch == '+' || ch == '-' || ch == '!' || ch == '*' || ch == '/' || ch == '|' || ch == '$' || ch == ':' || ch == '%' || ch == ']' || ch == '[')
+        return true;
+
+    return false;
+
+}
+
+Tree_node** Tokenization (char* text) {
+
+    Tree_node** Tokens = (Tree_node**) calloc (Tree_node*, //TODO);
+
+    CurChar = text;
+
+    int CurToken = 0;
+
+    while (*CurChar != EOF) {
+
+        SkipSpace ();
+
+        if (isalpha (*CurChar) || *CurChar == '_') {
+
+            Tokens[CurToken] = TokWord ();
+            CurToken++;
+
+        }
+        
+        else
+
+        if (isdigit (*CurChar)) {
+
+            Tokens[CurToken] = TokNum ();
+            CurToken++;
+
+        }
+
+        else
+
+        if (isspec (*CurChar)) {
+
+            Tokens[CurTok] = TokSpec ();
+            CurToken++;
+
+        }
+
+        SkipSpace ();
+
+    }
+
+    CurTok = Tokens;
+
+    return Tokens;
+
+}
+
+Tree_node* TokWord () {
+
+    Tree_node* node = nullptr;
+
+    char* word = GetWord ();
+    len = strlen (word);
+
+    switch (*word) {
+
+    case 's': {
+
+        if (strncmp (word, op[OP_sin], len) == 0)
+            node = NewNode (OP_sin, TOp);
+
+        else if (strncmp (word, op[OP_svol], len) == 0)
+            node = NewNode (OP_svol, TOp);
+
+        break;
+
+    }
+
+    case 'c': {
+
+        if (strncmp (word, op[OP_cos], len) == 0)
+            node = NewNode (OP_cos, TOp);
+
+        break;
+
+    }
+
+    case 'm': {
+
+        if (strncmp (word, op[OP_meno], len) == 0)
+            node = NewNode (OP_meno, TOp);
+
+        break;
+
+    }
+
+    case 'p': {
+
+        if (strncmp (word, op[OP_piu], len) == 0)
+            node = NewNode (OP_piu, TOp);
+
+        break;
+        
+    }
+
+    case 'v': {
+
+        if (strncmp (word, op[OP_vol], len) == 0)
+            node = NewNode (OP_vol, TOp);
+
+        break;
+
+    }
+
+    case 'l': {
+
+        if (strncmp (word, "legato", len))
+            node = NewNode (D_leg, TDec);
+
+        break;
+
+    }
+
+    case 'n': {
+
+        if (strncmp (word, "nota", len))
+            node = NewNode (D_nota, TDec);
+
+        break;
+
+    }
+
+    if (node == nullptr)
+        node = NewNode (word, TId);
+
+    free (word);
+
+    return node;
+
+}
+
+char* GetWord () {
+
+    SkipSpace ();
+
+    char* val = (char*) calloc (256, sizeof (char));
+    int curSymb = 0;
+
+    if (('a' <= *CurChar && *CurChar <= 'z') || ('A' <= *CurChar && *CurChar <= 'Z') || *CurChar == '_') {
+
+        val[curSymb] = *CurChar;
+        curSymb++;
+        CurChar++;
+
+    }
+
+    else
+        return 0;
+
+    while (('a' <= *CurChar && *CurChar <= 'z') || ('A' <= *CurChar && *CurChar <= 'Z') || ('0' <= *CurChar && *CurChar <= '9') || *CurChar == '_') {
+
+        val[curSymb] = *CurChar;
+        curSymb++;
+        CurChar++;
+
+    }
+
+    return val;
+
+}
+
+Tree_node* TokNum () {
 
     SkipSpace ();
 
@@ -516,7 +646,7 @@ Tree_node* GetN () {
 
         printf ("Error: invalid syntax near %.10s: expected number\n", CurChar);
         printf ("                           ^\n");
-        return 0;
+        return nullptr;
 
     }
 
@@ -570,59 +700,164 @@ double GetMt () {
 
 }
 
-Tree_node* GetId () {
+Tree_node* TokSpec () {
 
-    SkipSpace ();
+    Tree_node* node = nullptr;
 
-    char* val = (char*) calloc (256, sizeof (char));
-    int curSymb = 0;
+    switch (*CurChar) {
 
-    if (('a' <= *CurChar && *CurChar <= 'z') || ('A' <= *CurChar && *CurChar <= 'Z') || *CurChar == '_') {
+        case '=': {
 
-        val[curSymb] = *CurChar;
-        curSymb++;
-        CurChar++;
+            if (*(CurChar+1) == '=')
+                node = NewNode (OP_eq, TOp);
+_
+            else node = NewNode (OP_ass, TOp);
 
-    }
+            break;
 
-    else {
+        }
 
-        printf ("Error: invalid syntax near %.10s: expected number\n", CurChar);
-        printf ("                           ^\n");
-        return 0;
+        case '$' : { 
 
-    }
+            CurChar++; 
+            node = TokNote (); 
+            break; 
+        
+        }
 
-    while (('a' <= *CurChar && *CurChar <= 'z') || ('A' <= *CurChar && *CurChar <= 'Z') || ('0' <= *CurChar && *CurChar <= '9') || *CurChar == '_') {
+        case '+' : {
+ 
+            CurChar++;
+            node = NewNode (OP_add, TOp); 
+            break; 
 
-        val[curSymb] = *CurChar;
-        curSymb++;
-        CurChar++;
+        }
 
-    }
+        case '-' : { 
 
-    Element_t type = FuncDef (val);
-
-    free (val);
+            CurChar++;
+            node = NewNode (OP_sub, TOp); 
+            break; 
     
-    if (type.Fdata == type_Var)
-        return NewNode (type, TVar);
-    
-    Tree_node* value = NewNode (type, TFunc);
-    value -> right = GetP ();
+        }
 
-    return value;
+        case '*' : { 
+
+            CurChar++;
+            node = NewNode (OP_mul, TOp); 
+            break; 
+
+        }
+
+        case '/' : { 
+
+            CurChar++;
+            node = NewNode (OP_div, TOp); 
+            break; 
+
+        }
+
+        case '%' : {
+
+            CurChar++;
+            node = NewNode (OP_mod, TOp);
+            break;
+
+        }
+
+        case '|' : { 
+
+            if (*(CurChar + 1) == '|')
+                if (*(CurChar + 2) == ':') {
+
+                    node = NewNode (OP_whl, TOp);
+                    CurChar += 3;
+
+                }
+
+                else {
+
+                    node = NewNode (OP_dbar, TOp);
+                    CurChar += 2;
+                
+                }
+
+            else {
+
+                node = NewNode (OP_bar, TOp);
+                CurChar++;
+
+            }
+
+            break;
+
+         }
+
+        case ':' : { 
+
+            if ((*(CurChar + 1) != '|') || (*(CurChar +2) != '|'))
+                return nullptr;
+
+            node = NewNode (OP_clwhl, TOp);
+            CurChar += 3; 
+
+            break;
+
+        }
+
+        case ']' : {
+
+            CurChar++;
+            node = NewNode (OP_clbr, TOp);    
+            break;
+
+        }
+
+        case '[' : {
+
+            CurChar++;
+            node = NewNode (OP_opbr, TOp);
+            break;
+
+        }
+
+    }
+
+    return node;
 
 }
 
-Tree_node** Tokenization (char* text) {
+Tree_node* TokNote () {
 
-    Tree_node** Tokens = (Tree_node**) calloc (Tree_node*, //TODO);
+    int val = 0;
 
-    
+    if ('H' < *CurChar || *CurChar < 'A')
+        return nullptr;
 
+    val += (*CurChar - 'A') * 100;
 
+    CurChar++;
 
-    return Tokens;
+    if (*CurChar == 'b') {
 
+        val += 10;
+        CurChar++;
+
+    }
+
+    else if (*CurChar == '#') {
+
+        val += 20;
+        CurChar++;
+
+    }
+
+    if (!isdigit (*CurChar))
+        return nullptr;
+
+    val += *CurChar - '0';
+    CurChar++;
+
+    return NewNode (val, TNote);
+        
 }

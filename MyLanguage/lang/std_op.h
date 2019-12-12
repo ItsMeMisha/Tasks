@@ -11,6 +11,15 @@ const char* op[] = {
     "piu", //9
     "!=", //10
     "==", //11
+    "|", //12
+    "||", //13
+    "=", //14
+    "||:", //15
+    ":||", //16
+    "volta", //17
+    "secvolta", //18
+    "]", //19
+    "[" //20
 
 };
 
@@ -28,6 +37,15 @@ enum OpType {
     OP_meno = 8,
     OP_piu  = 9,
     OP_neq  = 10,
-    OP_eq   = 11
+    OP_eq   = 11,
+    OP_bar  = 12,
+    OP_dbar = 13,
+    OP_ass  = 14,
+    OP_whl  = 15,
+    OP_clwhl= 16,
+    OP_vol  = 17,
+    OP_svol = 18,
+    OP_clbr = 19,
+    OP_opbr = 20
 
 };
