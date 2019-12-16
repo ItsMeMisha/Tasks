@@ -8,11 +8,13 @@
     #define __TREE_T__
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <malloc.h>
 #include <assert.h>
 #include <string.h>
 #include "enum_type.h"
+#include "std_op.h"
 
 #define _DEBUG
 
@@ -64,7 +66,6 @@ struct Tree_node {
     Tree_node* right;
     NodeType type;
     Tone_t tone;
-    int priority;
 
 };
 
@@ -105,7 +106,7 @@ void SkipSpace                    (FILE* file);
 
 Element_t FuncDef (const char* elem);
 bool CheckNumType                                   (Tree_node* node, const char* Sdata);
-void DefineNodeType                                 (Tree_node* node, const char* Sdata);
+//void DefineNodeType                                 (Tree_node* node, const char* Sdata);
 Tree_node* ReadInfixNode          (FILE* file,       Tree* tree, Tree_node* prenode);
 void ReadInfixTree                (FILE* file,       Tree* tree);   
 void PrintInfixNode               (FILE* file,       Tree_node* node);
@@ -168,7 +169,7 @@ bool ParentsCheck (const Tree_node* branch, const Tree* tree, const int deep) {
 
 bool LinkNodes (Tree_node* _parent, Tree_node* _left, Tree_node* _right) {
 
-    assert (parent);
+    assert (_parent);
 
     _parent -> left = _left;
     _parent -> right = _right;
@@ -177,7 +178,7 @@ bool LinkNodes (Tree_node* _parent, Tree_node* _left, Tree_node* _right) {
         _left -> parent = _parent;
 
     if (_right != nullptr)
-        _rightn -> parent = _parent;
+        _right -> parent = _parent;
 
     return true;
 
@@ -192,13 +193,8 @@ Tree_node* NewNode (const Tone_t elem, NodeType Type, Tree_node* Left, Tree_node
         return nullptr;
 
     node -> type = Type;
-    node -> priority = 0;
 
-    node -> left = Left;
-    node -> right = Right;
-    
-    Left -> parent = node;
-    Right -> parent = node;
+    LinkNodes (node, Left, Right);
 
     node -> tone = elem;
 
@@ -216,28 +212,9 @@ Tree_node* NewNode (const OpType elem, NodeType Type, Tree_node* Left, Tree_node
     if (node == nullptr)
         return nullptr;
 
-    int prior = 0;
-
-    if (Type == TFunc) {
-
-        #define NODE_TYPE(name, signature, num, priority, code) \
-            if (elem == type_##name) \
-                prior = priority;
-
-        #include "types.h"
-
-        #undef NODE_TYPE
-
-    }
-
     node -> type = Type;
-    node -> priority = prior;
 
-    node -> left = Left;
-    node -> right = Right;
-    
-    Left -> parent = node;
-    Right -> parent = node;
+    LinkNodes (node, Left, Right);
 
     return node;
 
@@ -254,13 +231,8 @@ Tree_node* NewNode (const double elem, NodeType Type, Tree_node* Left, Tree_node
         return nullptr;
 
     node -> type = Type;
-    node -> priority = 0;
 
-    node -> left = Left;
-    node -> right = Right;
-    
-    Left -> parent = node;
-    Right -> parent = node;
+    LinkNodes (node, Left, Right);
 
     return node;
 
@@ -269,7 +241,7 @@ Tree_node* NewNode (const double elem, NodeType Type, Tree_node* Left, Tree_node
 Tree_node* NewNode (const char* elem, NodeType Type, Tree_node* Left, Tree_node* Right) {
 
     Element_t buf = {};
-    buf.Sdata = elem;
+    sscanf (elem, "%ms", &(buf.Sdata));
 
     Tree_node* node = __NewNode (buf);
 
@@ -277,13 +249,8 @@ Tree_node* NewNode (const char* elem, NodeType Type, Tree_node* Left, Tree_node*
         return nullptr;
 
     node -> type = Type;
-    node -> priority = 0;
 
-    node -> left = Left;
-    node -> right = Right;
-    
-    Left -> parent = node;
-    Right -> parent = node;
+    LinkNodes (node, Left, Right);
 
     return node;
 
@@ -300,13 +267,8 @@ Tree_node* NewNode (const DecType elem, NodeType Type, Tree_node* Left, Tree_nod
         return nullptr;
 
     node -> type = Type;
-    node -> priority = 0;
 
-    node -> left = Left;
-    node -> right = Right;
-    
-    Left -> parent = node;
-    Right -> parent = node;
+    LinkNodes (node, Left, Right);
 
     return node;
 
@@ -412,7 +374,6 @@ void CopyBranch (Tree_node* SourceBranch, Tree_node* OutBranch, Tree* OutTree) {
 
     OutBranch -> data = SourceBranch -> data;
     OutBranch -> type = SourceBranch -> type;
-    OutBranch -> priority = SourceBranch -> priority;
 
     return;
     
@@ -432,7 +393,6 @@ Tree_node* CopyOfBranch (Tree_node* SourceBranch) {
 
     OutBranch -> data = SourceBranch -> data;
     OutBranch -> type = SourceBranch -> type;
-    OutBranch -> priority = SourceBranch -> priority;
 
     return OutBranch;
     
@@ -536,11 +496,11 @@ Element_t FuncDef (const char* elem) {
 
     Element_t ftype = {};
 
-    for (int i  = 0; i < NumOfFunc; i++)
+    for (int i  = 0; i < NumOfOp; i++)
 
-        if (strncmp (elem, func[i], MaxIdName) == 0) {
+        if (strncmp (elem, op[i], MaxIdName) == 0) {
 
-            ftype.Fdata = (FuncType) i;
+            ftype.Odata = (OpType) i;
             break;
     
         }
@@ -560,7 +520,6 @@ bool CheckNumType (Tree_node* node, const char* Sdata) {
 
         node -> data.Ndata = atof (Sdata);
         node -> type = TNum;
-        node -> priority = 0;
 
     }
 
@@ -571,7 +530,7 @@ bool CheckNumType (Tree_node* node, const char* Sdata) {
 
 }
 
-void DefineNodeType (Tree_node* node, const char* Sdata) {
+/* void DefineNodeType (Tree_node* node, const char* Sdata) {
 
     assert (node);
 
@@ -580,9 +539,8 @@ void DefineNodeType (Tree_node* node, const char* Sdata) {
             else  if (type_##name == type_Num)                        \
                 CheckNumType (node, Sdata);                           \
             else                                                      \
-            if (strncmp (Sdata, signature, MaxComLength) == 0){       \
-                node -> type = TFunc;                                 \
-                node -> priority = prior; }
+            if (strncmp (Sdata, signature, MaxComLength) == 0)        \
+                node -> type = TFunc;                                 
 
     #include "types.h" ;
 
@@ -591,7 +549,7 @@ void DefineNodeType (Tree_node* node, const char* Sdata) {
 
     return;
 
-}
+} */
 
 Tree_node* ReadInfixNode (FILE* file, Tree* tree, Tree_node* prenode) {
 
@@ -616,7 +574,7 @@ Tree_node* ReadInfixNode (FILE* file, Tree* tree, Tree_node* prenode) {
 
     fscanf (file, "%m[^ ()]", &DataBuf);
 
-    DefineNodeType (node, DataBuf); 
+    //DefineNodeType (node, DataBuf); 
 
     SkipSpace (file);
 
@@ -675,7 +633,7 @@ void PrintInfixNode (FILE* file, Tree_node* node) {
 
     PrintInfixNode (file, node -> left);
 
-    Print (file, node -> data.Fdata);
+    Print (file, node -> data.Odata);
 
     PrintInfixNode (file, node -> right);
 
@@ -806,7 +764,7 @@ void DrawNode (FILE* file, const Tree_node* node) {
 
     if (node -> left != nullptr) {
 
-        fprintf (file , "\tN%x[fillcolor=blue, label = \"{{%p | %d} | {%d | %d} | {%p |%p}}\"]\n", node -> left, node -> left, node -> left -> priority, node -> left -> data.Fdata, node -> left -> type, node -> left -> left, node -> left -> right);
+        fprintf (file , "\tN%x[fillcolor=blue, label = \"{{%p | %d} | {%d | %d} | {%p |%p}}\"]\n", node -> left, node -> left, node -> left -> data.Odata, node -> left -> type, node -> left -> left, node -> left -> right);
         fprintf (file, "N%x -> N%x\n", node, node -> left);
         DrawNode (file, node -> left);
 
@@ -814,7 +772,7 @@ void DrawNode (FILE* file, const Tree_node* node) {
     
     if (node -> right != nullptr) {
 
-        fprintf (file , "\tN%x[fillcolor=green, label = \"{{%p | %d} | {%d | %d} | {%p |%p}}\"]\n", node -> right, node -> right, node -> right -> priority, node -> right -> data.Fdata, node -> right -> type, node -> right -> left, node -> right -> right);
+        fprintf (file , "\tN%x[fillcolor=green, label = \"{{%p | %d} | {%d | %d} | {%p |%p}}\"]\n", node -> right, node -> right, node -> right -> data.Odata, node -> right -> type, node -> right -> left, node -> right -> right);
         fprintf (file, "N%x -> N%x\n", node, node -> right);
         DrawNode (file, node -> right);
 
@@ -836,7 +794,7 @@ void DrawTree (FILE* file, const Tree* tree) {
 
     if (tree -> root != nullptr) {
 
-        fprintf (file , "\tN%x[fillcolor=red, label = \"{{%p | %d} | {%d | %d} | {%p |%p}}\"]\n", tree -> root, tree -> root, tree -> root -> priority, tree -> root -> data.Fdata, tree -> root -> type, tree -> root -> left, tree -> root -> right);
+        fprintf (file , "\tN%x[fillcolor=red, label = \"{{%p | %d} | {%d | %d} | {%p |%p}}\"]\n", tree -> root, tree -> root, tree -> root -> data.Odata, tree -> root -> type, tree -> root -> left, tree -> root -> right);
 
         DrawNode (file, tree -> root);
 
@@ -876,7 +834,7 @@ void DrawEasyNode (FILE* file, const Tree_node* node) {
 
     if (node -> left != nullptr) {
 
-        fprintf (file , "\tN%x[fillcolor=blue, label = \"%d\"]\n", node -> left, node -> left -> data.Fdata);
+        fprintf (file , "\tN%x[fillcolor=blue, label = \"%d\"]\n", node -> left, node -> left -> data.Odata);
         fprintf (file, "N%x -> N%x\n", node, node -> left);
         DrawEasyNode (file, node -> left);
 
@@ -884,7 +842,7 @@ void DrawEasyNode (FILE* file, const Tree_node* node) {
     
     if (node -> right != nullptr) {
 
-        fprintf (file , "\tN%x[fillcolor=green, label = \"%d\"]\n", node -> right, node -> right -> data.Fdata);
+        fprintf (file , "\tN%x[fillcolor=green, label = \"%d\"]\n", node -> right, node -> right -> data.Odata);
         fprintf (file, "N%x -> N%x\n", node, node -> right);
         DrawEasyNode (file, node -> right);
 
@@ -906,7 +864,7 @@ void DrawEasyTree (FILE* file, const Tree* tree) {
 
     if (tree -> size > 0) {
 
-        fprintf (file , "\tN%x[fillcolor=red, label = \"%d\"]\n", tree -> root, tree -> root -> data.Fdata);
+        fprintf (file , "\tN%x[fillcolor=red, label = \"%d\"]\n", tree -> root, tree -> root -> data.Odata);
         DrawEasyNode (file, tree -> root);
 
     }

@@ -19,21 +19,24 @@ const char* op[] = {
     "volta", //17
     "secvolta", //18
     "]", //19
-    "[" //20
+    "[", //20
+    "DS", //21
+    "," //22
 
 };
 
-const int NumOfOp = 11;
+const int NumOfOp = 23;
 
 enum OpType {
 
+    OP_void = 0,
     OP_add  = 1,
     OP_sub  = 2,
     OP_mul  = 3,
     OP_div  = 4,
     OP_mod  = 5,
     OP_sin  = 6,
-    OP_cos  = 7
+    OP_cos  = 7,
     OP_meno = 8,
     OP_piu  = 9,
     OP_neq  = 10,
@@ -46,6 +49,8 @@ enum OpType {
     OP_vol  = 17,
     OP_svol = 18,
     OP_clbr = 19,
-    OP_opbr = 20
+    OP_opbr = 20,
+    OP_ds   = 21,
+    OP_com  = 22
 
 };

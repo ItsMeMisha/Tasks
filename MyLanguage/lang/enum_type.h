@@ -16,12 +16,14 @@ enum NodeType {
     TOp   = 3,
     TNote = 4,
     TDec  = 5,
-    TId   = 6
+    TId   = 6,
+    TCon  = 7
 
 }; 
 
 enum DecType {
 
+    D_dec  = 0,
     D_nota = 1,
     D_leg  = 2
 
