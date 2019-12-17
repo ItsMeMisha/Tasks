@@ -84,7 +84,7 @@ AllFuncs* ConstructFuncs (AllFuncs* funcs) {
 
     funcs -> func = (function**) calloc (sizeof (function*), FirstMaxSize);
 
-    if (funcs -> func == nullptr);
+    if (funcs -> func == nullptr)
         return nullptr;
 
     return funcs;
@@ -101,7 +101,7 @@ bool AddFunc (AllFuncs* funcs, const char* Name, const int ArgsNum) {
 
     funcs -> func[funcs -> size] = NewFunc (Name, ArgsNum);
 
-    if (funcs -> func[funcs -> size] == nullptr);
+    if (funcs -> func[funcs -> size] == nullptr)
         return false;
 
     funcs -> size++; 
@@ -161,7 +161,7 @@ AvVars* ConstructAvVars (AvVars* vars, const int Shift, Vars* glob) {
     if (vars == nullptr)
         vars = (AvVars*) calloc (sizeof (AvVars), 1);
 
-    if (glob = nullptr)
+    if (glob == nullptr)
         glob = ConstructVars (glob);
 
     vars -> gVars = glob;
@@ -180,12 +180,14 @@ AvVars* ConstructAvVars (AvVars* vars, const int Shift, Vars* glob) {
 Vars* ConstructVars (Vars* vars) {
 
     if (vars == nullptr)
-        vars = (Vars*) calloc (sizeof (Vars), 1);
+        vars  = (Vars*) calloc (sizeof (Vars), 1);
 
     vars -> size = 0;
     vars -> MaxSize = FirstMaxSize;
 
     vars -> var = (var_t**) calloc (sizeof (var_t*), 1);
+
+    *(vars -> var) = (var_t*) calloc (sizeof (var_t), FirstMaxSize);
 
     return vars;
 
@@ -201,7 +203,7 @@ bool AddVar (Vars* vars, const char* Name, const int Pos) {
 
     vars -> var[vars -> size] = NewVar (Name, Pos);
 
-    if (vars -> var[vars -> size] == nullptr);
+    if (vars -> var[vars -> size] == nullptr)
         return false;
 
     vars -> size++; 
@@ -229,9 +231,12 @@ int FindVar (Vars* vars, const char* Name) {
 
     assert (vars);
 
-    for (int i = 0; i < vars -> size; i++)
+    for (int i = 0; i < vars -> size; i++) {
+     
         if (strncmp (Name, vars -> var[i] -> name, strlen (vars -> var[i] -> name)) == 0)
             return i;
+
+    }
 
     return -1;
 

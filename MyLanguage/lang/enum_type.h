@@ -25,7 +25,8 @@ enum DecType {
 
     D_dec  = 0,
     D_nota = 1,
-    D_leg  = 2
+    D_leg  = 2,
+    D_op   = 3
 
 };
 

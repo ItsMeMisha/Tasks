@@ -1,5 +1,10 @@
+#ifndef __STD_OP__
+
+    #define __STD_OP__
+
 const char* op[] = {
 
+    "", //0
     "+", //1
     "-", //2
     "*", //3
@@ -21,11 +26,14 @@ const char* op[] = {
     "]", //19
     "[", //20
     "DS", //21
-    "," //22
+    ",", //22
+    "sqrt", //23
+    "leggere", //24
+    "suonare" //25
 
 };
 
-const int NumOfOp = 23;
+const int NumOfOp = 26;
 
 enum OpType {
 
@@ -51,6 +59,11 @@ enum OpType {
     OP_clbr = 19,
     OP_opbr = 20,
     OP_ds   = 21,
-    OP_com  = 22
+    OP_com  = 22,
+    OP_sqrt = 23,
+    OP_read = 24,
+    OP_prnt = 25
 
 };
+
+#endif
