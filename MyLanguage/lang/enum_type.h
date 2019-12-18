@@ -30,4 +30,15 @@ enum DecType {
 
 };
 
+char* DecNames[] = {
+
+    "D", //0
+    "V", //1
+    "F", //2
+    "O", //3
+
+};
+
+const int DecNum = 4;
+
 #endif

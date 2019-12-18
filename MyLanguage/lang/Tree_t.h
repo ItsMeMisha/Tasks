@@ -43,6 +43,7 @@ typedef union {
 
 } Element_t;
 
+const char EmptySymb = '@';
 const int MaxStrBufSize = 256;
 const char DumpFile[] = "tree.dot";
 
@@ -101,16 +102,19 @@ bool DeleteBranch           (Tree* tree, Tree_node* branch);
 void CutBrunchWithoutLeaf   (Tree* tree, Tree_node* branch, Tree_node* leaf);
 
 void SkipSpace                    (FILE* file);
-/*void PrintPreNode                 (FILE* file,       Tree_node* node, int deep = 0);
+void PrintPreNode                 (FILE* file,       Tree_node* node);
 void PrintPreTree                 (FILE* file,       Tree* tree);
 void ReadLeft                     (FILE* file,       Tree* tree, Tree_node* node);
 void ReadRight                    (FILE* file,       Tree* tree, Tree_node* node); 
 void ReadPreNode                  (FILE* file,       Tree* tree, Tree_node* node);
-void ReadPreTree                  (FILE* file,       Tree* tree); */
+void ReadPreTree                  (FILE* file,       Tree* tree); 
 
 Element_t FuncDef (const char* elem);
 bool CheckNumType                                   (Tree_node* node, const char* Sdata);
-//void DefineNodeType                                 (Tree_node* node, const char* Sdata);
+void DefineNode                                     (Tree_node* node);
+void DefDec                                         (Tree_node* node);
+void DefOp                                          (Tree_node* node);
+void DefNum                                         (Tree_node* node);
 Tree_node* ReadInfixNode          (FILE* file,       Tree* tree, Tree_node* prenode);
 void ReadInfixTree                (FILE* file,       Tree* tree);   
 void PrintInfixNode               (FILE* file,       Tree_node* node);
@@ -120,6 +124,7 @@ void Print (FILE* file, const char* item);
 void Print (FILE* file, const int item);
 void Print (FILE* file, const char item);
 void Print (FILE* file, const double item);
+void Print (FILE* file, Tree_node* node);
 void PrintNodeData (FILE* file, Tree_node* node);
 
 bool CheckConnection                        (const Tree* tree, Tree_node* branch); 
@@ -500,37 +505,27 @@ void SkipSpace (FILE* file) {
 
 }
 
-/* void PrintPreNode (FILE* file, Tree_node* node, int deep) {
+void PrintPreNode (FILE* file, Tree_node* node) {
 
     assert (file);
     assert (node);
-    assert (deep >= 0);
 
-    for (int i = 0; i < deep; ++i)
-        fprintf (file, "\t");
- 
-    deep++;
-    fprintf (file, "{\"");
-    Print (file, node -> data);
-    fprintf (file, "\"");
+    fprintf (file, "{");
+    Print (file, node);
 
-   
     if (node -> left != nullptr || node -> right != nullptr) {
 
         fprintf (file, "\n");
 
         if (node -> left != nullptr)
-            PrintPreNode (file, node -> left, deep);
+            PrintPreNode (file, node -> left);
         else 
-            fprintf (file, "@");
+            fprintf (file, "%c", EmptySymb);
 
         if (node -> right != nullptr)
-            PrintPreNode (file, node -> right, deep);
+            PrintPreNode (file, node -> right);
         else 
-            fprintf (file, "@");
-
-        for (int i = 0; i < deep - 1; ++i)
-            fprintf (file, "\t");
+            fprintf (file, "%c", EmptySymb);
 
     }
 
@@ -558,13 +553,13 @@ void ReadLeft (FILE* file, Tree* tree, Tree_node* node) {
     ASSERTTREE (tree);
     
     SkipSpace (file);
-    if (fgetc (file) == '@')
+    if (fgetc (file) == EmptySymb)
         node -> left = nullptr;
 
     else {
  
         fseek (file, -1, SEEK_CUR);
-        AddLeftLeaf (tree, node, 0);
+        AddLeftLeaf (tree, node, {});
         ReadPreNode (file, tree, node -> left);
         ASSERTTREE (tree);
 
@@ -581,7 +576,7 @@ void ReadRight (FILE* file, Tree* tree, Tree_node* node) {
     ASSERTTREE (tree);
 
     SkipSpace (file);
-    if (fgetc (file) == '@')
+    if (fgetc (file) == EmptySymb)
         node -> right = nullptr;
 
     else {
@@ -595,7 +590,7 @@ void ReadRight (FILE* file, Tree* tree, Tree_node* node) {
 
         }
 
-        AddRightLeaf (tree, node, 0);
+        AddRightLeaf (tree, node, {});
         ReadPreNode (file, tree, node -> right);
         ASSERTTREE (tree);
 
@@ -612,7 +607,8 @@ void ReadPreNode (FILE* file, Tree* tree, Tree_node* node) {
     assert (node);
 
     SkipSpace (file);
-    fscanf (file, "\"%m[^\"]\"", &(node -> data));
+    fscanf (file, "%m[^{}]", &(node -> data.Sdata));
+    DefineNode (node);
     char bracket = 0;
 
     SkipSpace (file);
@@ -650,13 +646,13 @@ void ReadPreTree (FILE* file, Tree* tree) {
 
     }
 
-    AddRoot (tree, 0);
+    AddRoot (tree, {});
 
     ReadPreNode (file, tree, tree -> root);
 
     return;
 
-}*/
+}
 
 Element_t FuncDef (const char* elem) {
 
@@ -696,26 +692,74 @@ bool CheckNumType (Tree_node* node, const char* Sdata) {
 
 }
 
-/* void DefineNodeType (Tree_node* node, const char* Sdata) {
+void DefineNode (Tree_node* node) {
 
     assert (node);
 
-    #define NODE_TYPE(name, signature, num, prior, code)              \
-            if (type_##name == type_NoType);                          \
-            else  if (type_##name == type_Num)                        \
-                CheckNumType (node, Sdata);                           \
-            else                                                      \
-            if (strncmp (Sdata, signature, MaxComLength) == 0)        \
-                node -> type = TFunc;                                 
+    switch (*(node -> data.Sdata)) {
 
-    #include "types.h" ;
+        case 'I': node -> type = TId; break;
 
+        case 'D': node -> type = TDec; DefDec (node); break;
 
-    #undef NODE_TYPE
+        case 'O': node -> type = TOp; DefOp  (node); break;
+
+        case 'N': node -> type = TNum; DefNum (node); break;
+
+        case 'C': node -> type = TCon; break;
+
+    }
+    
+    return;
+
+}
+
+void DefDec (Tree_node* node) {
+
+    char symb = *(node -> data.Sdata + 2);
+
+    for (int i = 0; i < DecNum; i++)
+    
+        if (symb == *DecNames[i]) {
+            
+            free (node -> data.Sdata);
+            node -> data.Ddata = (DecType) i;
+            break;
+
+        } 
 
     return;
 
-} */
+}
+
+void DefOp (Tree_node* node) {
+
+    char* symb = node -> data.Sdata + 2;
+
+    for (int i = 0; i < NumOfOp; i++)
+    
+        if (strncmp (symb, op[i], strlen (symb) + 1) == 0) {
+            
+            free (node -> data.Sdata);
+            node -> data.Odata = (OpType) i;
+            break;
+
+        } 
+
+    return;
+
+}
+
+void DefNum (Tree_node* node) {
+
+    double numBuf = atof (node -> data.Sdata + 2);
+
+    free (node -> data.Sdata);
+    node -> data.Ndata = numBuf;
+
+    return;
+
+}
 
 Tree_node* ReadInfixNode (FILE* file, Tree* tree, Tree_node* prenode) {
 
@@ -848,24 +892,34 @@ void Print (FILE* file, const double item) {
 
 }
 
-/*void Print (FILE* file, Tree_node* node) {
+void Print (FILE* file, Tree_node* node) {
 
     switch (node -> type) {
 
     case TOp: fprintf (file, "O:%s", op[node -> data.Odata]); break;
 
-    case TDec: if (fprintf (file, "%d", node -> data.Ddata); break;
+    case TDec: fprintf (file, "D:%s", DecNames[node -> data.Ddata]); break;
 
-    case TId: fprintf (file, "%s", node -> data.Sdata); break;
+    case TId: { 
 
-    default: fprintf (file, "%lg", node -> data.Ndata); break;
+        if (strncmp (node -> data.Sdata, "MainTheme", 10) == 0)
+            fprintf (file, "I:main");
+
+        else fprintf (file, "I:%s", node -> data.Sdata); 
+
+        break;
+
+    }
+
+    case TCon: fprintf (file, "C:C"); break;
+
+    default: fprintf (file, "N:%lg", node -> data.Ndata); break;
 
     }
 
     return;
    
-
-}*/
+}
 
 void PrintNodeData (FILE* file, Tree_node* node) {
 
@@ -873,9 +927,18 @@ void PrintNodeData (FILE* file, Tree_node* node) {
 
     case TOp: fprintf (file, "%s", op[node -> data.Odata]); break;
 
-    case TDec: fprintf (file, "%d", node -> data.Ddata); break;
+    case TDec: fprintf (file, "%s", DecNames[node -> data.Ddata]); break;
 
-    case TId: fprintf (file, "%s", node -> data.Sdata); break;
+    case TId: { 
+
+        if (strncmp (node -> data.Sdata, "MainTheme", 10) == 0)
+            fprintf (file, "main");
+
+        else fprintf (file, "%s", node -> data.Sdata); 
+
+        break;
+
+    }
 
     default: fprintf (file, "%lg", node -> data.Ndata); break;
 
