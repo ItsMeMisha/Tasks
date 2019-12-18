@@ -4,12 +4,10 @@
 #include <string.h>
 #include <sys/stat.h>
 #include "Tree_t.h"
+#include "tokens.h"
+#include <assert.h>
 
-const size_t TokensNum = 10000;
-const char* CurChar = "";
 Tree_node** CurTok = nullptr;
-
-void SkipSpace ();
 
 Tree* GetTree (const char* fileName, Tree* tree);
 
@@ -20,6 +18,9 @@ Tree_node* GetFId  ();
 Tree_node* GetVarlist ();
 Tree_node* GetDef  ();
 Tree_node* GetOp   ();
+Tree_node* GetRead ();
+Tree_node* GetPrnt ();
+Tree_node* GetDS   ();
 Tree_node* GetVar  ();
 Tone_t     GetTone ();
 Tree_node* GetVId  ();
@@ -30,27 +31,11 @@ Tree_node* GetCond ();
 Tree_node* GetComp ();
 Tree_node* GetE    ();
 Tree_node* GetT    ();
+Tree_node* GetF    ();
 Tree_node* GetP    ();
 Tree_node* GetN    ();
-double     GetMt   ();
 Tree_node* GetId   ();
-
-bool isspec (char ch);
-Tree_node** Tokenization (const char* text);
-Tree_node*  TokWord ();
-char*       GetWord ();
-Tree_node*  TokNum  ();
-Tree_node*  TokSpec ();
-Tree_node*  TokNote ();
-
-void SkipSpace () {
-
-    while (*CurChar == ' ' || *CurChar == '\n' || *CurChar == '\r' || *CurChar == '\t')
-        CurChar++;
-
-    return;
-
-}
+Tree_node* GetArglist ();
 
 Tree* GetTree (const char* fileName, Tree* tree) {
 
@@ -67,6 +52,8 @@ Tree* GetTree (const char* fileName, Tree* tree) {
     Tree_node** Tokens = Tokenization (Content);
     free (Content);
 
+    int i = 0;
+
     tree -> root = GetG (Tokens);
     free (Tokens);
 
@@ -80,22 +67,16 @@ Tree_node* GetG (Tree_node** Tokens) {
 
     Tree_node* val = GetD ();
 
-    while (val != nullptr) {
+    Tree_node* TreeBeg = val;
+
+    while (*CurTok != nullptr) {
 
         val -> left = GetD ();
         val = val -> left;
 
     }
 
-/*    if (*CurChar != '\0') {
-
-        printf ("Error: invalid syntax near %.10s\n", CurChar);
-        printf ("                           ^\n");
-        return 0;
-
-    } */
-
-    return val;
+    return TreeBeg;
 
 }
 
@@ -143,7 +124,7 @@ Tree_node* GetFunc () {
     if (val -> right == nullptr)
         return nullptr;
 
-    LinkNodes (val, GetVarlist (), val -> right);
+    LinkNodes (val, GetVarlist (), nullptr);
 
     if ((*CurTok) -> data.Odata != OP_dbar || (*CurTok) -> type != TOp)
         return nullptr;
@@ -187,27 +168,37 @@ Tree_node* GetVarlist () {
 
     CurTok++;
 
-    if ((*CurTok) -> type == TOp && (*CurTok) -> data.Odata == OP_clbr)
+    if ((*CurTok) -> type  == TOp && (*CurTok) -> data.Odata == OP_clbr) { 
+
+        CurTok++;
         return nullptr;
 
-    while ((*CurTok) -> type == TId || (*CurTok) -> type == TNum) {
+    }
+ 
+    while ((*CurTok) -> type == TId) {
 
         LinkNodes (val, nullptr, *CurTok);
-        
+
         CurTok++;
+
+        if (((*CurTok -1) -> tone = GetTone ()) == 0)
+            return nullptr;
 
         if ((*CurTok) -> type == TOp && (*CurTok) -> data.Odata == OP_com) {
 
-            LinkNodes (val, *CurTok, val -> right);
+            LinkNodes (val, *CurTok, nullptr);
             val = val -> left;
             CurTok++;
 
         }
-            
+
+          
     }
 
     if ((*CurTok) -> type != TOp || (*CurTok) -> data.Odata != OP_clbr)
         return nullptr;
+
+    CurTok++;
 
     return listbegin;
 
@@ -217,32 +208,47 @@ Tree_node* GetDef () {
 
     assert (*CurTok);
 
-    CurTok++;
-    assert (*CurTok);
+    Tree_node* val = NewNode (D_op, TDec);
+    Tree_node* defBeg = val;
 
-    Tree_node* val = nullptr;
 
-    while ((((*CurTok) -> data.Odata != OP_clwhl && (*CurTok) -> data.Odata != OP_dbar) && ((*CurTok) -> type == TOp)) || (*CurTok) -> type == TDec) {
+    while ((((*CurTok) -> data.Odata != OP_clwhl && (*CurTok) -> data.Odata != OP_dbar) && ((*CurTok) -> type == TOp)) || (*CurTok) -> type == TDec || (*CurTok) -> type == TId) {
 
         if (((*CurTok) -> type == TDec) && ((*CurTok) -> data.Ddata == D_nota)) {
 
-            val = NewNode (D_dec, TDec);
+            val -> data.Ddata = D_op;
             LinkNodes (val, nullptr, GetVar ());
 
+            if ((*CurTok) -> type != TOp || (*CurTok) -> data.Odata != OP_bar)
+                return nullptr;
+
+            CurTok++;
+ 
         }
 
-        else 
-
-        LinkNodes (val, NewNode (D_dec, TDec), GetOp ());
+        else LinkNodes (val, nullptr, GetOp ());
 
         if (val -> right == nullptr)
             return nullptr;
+       
+        LinkNodes (val, NewNode (D_op, TDec), nullptr);
 
         val = val -> left;
 
     }
-//TODO
-    return val;
+
+    if (val -> parent != nullptr) {
+
+        val -> parent -> left = nullptr;
+        free (val);
+
+    }
+
+    if ((*CurTok) -> type != TOp || ((*CurTok) -> data.Odata != OP_clwhl && (*CurTok) -> data.Odata != OP_dbar))
+        return nullptr;
+    CurTok++; 
+
+    return defBeg;
 
 }
 
@@ -250,28 +256,188 @@ Tree_node* GetOp () {
 
     Tree_node* val = nullptr;
 
-    if ((val = GetVId ()) != nullptr) {
+    if ((val = GetId ()) != nullptr) {
 
-        assert (*CurTok);
+        if ((*CurTok) -> type == TOp && (*CurTok) -> data.Odata == OP_opbr) {
 
-        if ((*CurTok) -> type != TOp && (*CurTok) -> data.Odata != OP_ass)
-            return nullptr;
- 
+            LinkNodes (val, GetArglist (), nullptr);
+
+            if (val -> left == nullptr)
+                return nullptr;
+
+            if ((*CurTok) -> type != TOp || (*CurTok) -> data.Odata != OP_bar)
+                return nullptr;
+
+            CurTok++;
+
+        } else {
+
+            assert (*CurTok);
+
+            if ((*CurTok) -> type != TOp && (*CurTok) -> data.Odata != OP_ass)
+                return nullptr;
+        
+            (*CurTok) -> left = val;
+            val = *CurTok;
+            val -> right = GetInit (); 
+    
+            if ((*CurTok) -> type != TOp || (*CurTok) -> data.Odata != OP_bar)
+                return nullptr;
+
+            CurTok++;
+
+        }
+        
     }
 
-    else if ((val = GetFId ()) != nullptr) {
+    else if ((val = GetWhile ()) != nullptr);
 
-        LinkNodes (val, GetVarlist (), nullptr);
+    else if ((val = GetIf ()) != nullptr);
 
-        if (val -> left == nullptr)
-            return nullptr;
+    else if ((val = GetDS ()) != nullptr);
 
-    }
+    else if ((val = GetRead ()) != nullptr);
 
-    else if ((val = GetWhile ()) == nullptr);
-
-    else if ((val = GetIf ()) == nullptr)
+    else if ((val = GetPrnt ()) == nullptr)
         return nullptr; 
+
+    return val;
+
+}
+
+Tree_node* GetRead () {
+
+    assert (*CurTok);
+
+    if ((*CurTok) -> type != TOp || (*CurTok) -> data.Odata != OP_read)
+        return nullptr;
+
+    Tree_node* val = *CurTok;
+    CurTok++;
+
+    LinkNodes (val, nullptr, GetId());
+
+    if (val -> right == nullptr)
+        return nullptr;
+
+    if ((*CurTok) -> type == TOp && (*CurTok) -> data.Odata == OP_bar) {
+
+        CurTok++;
+        return val;
+
+    }        
+
+    return val;
+
+}
+
+Tree_node* GetPrnt () {
+
+    assert (*CurTok);
+
+    if ((*CurTok) -> type != TOp || (*CurTok) -> data.Odata != OP_prnt)
+        return nullptr;
+
+    Tree_node* val = *CurTok;
+    CurTok++;
+
+    LinkNodes (val, nullptr, GetE());
+
+    if (val -> right == nullptr)
+        return nullptr;
+
+    if ((*CurTok) -> type == TOp && (*CurTok) -> data.Odata == OP_bar) {
+
+        CurTok++;
+        return val;
+
+    }        
+
+    return val;
+
+}
+
+Tree_node* GetArglist () {
+
+    assert (*CurTok);
+
+    Tree_node* val = *CurTok;
+
+    if (val -> type != TOp || val -> data.Odata != OP_opbr)
+        return nullptr;
+
+    Tree_node* listbegin = val;
+
+    listbegin -> data.Odata = OP_com;
+
+    CurTok++;
+
+    if ((*CurTok) -> type  == TOp && (*CurTok) -> data.Odata == OP_clbr) { 
+
+        CurTok++;
+        return nullptr;
+
+    }
+
+    while ((val -> right = GetE ()) != nullptr) {
+
+        if ((*CurTok) -> type == TOp && ((*CurTok) -> data.Odata == OP_com) || (*CurTok) -> data.Odata == OP_clbr) {
+
+            LinkNodes (val, *CurTok, nullptr);
+            val = val -> left;
+
+            if ((*CurTok) -> data.Odata == OP_clbr)
+                break;
+
+            else CurTok++;
+
+        }
+
+        else break;
+            
+    }
+
+    if (val -> parent != nullptr) {
+
+        val = val -> parent;
+        val -> left = nullptr;
+
+    }
+
+    if ((*CurTok) -> type != TOp || (*CurTok) -> data.Odata != OP_clbr)
+        return nullptr;
+
+    CurTok++;
+
+    return listbegin;
+
+}
+
+Tree_node* GetDS () {
+
+    assert (*CurTok);
+
+    if ((*CurTok) -> type != TOp || (*CurTok) -> data.Odata != OP_ds)
+        return nullptr;
+
+    Tree_node* val = *CurTok;
+    CurTok++;
+
+    if ((*CurTok) -> type == TOp && (*CurTok) -> data.Odata == OP_bar) {
+
+        CurTok++;
+        return val;
+
+    }        
+
+    LinkNodes (val, nullptr, GetE());
+
+    if ((*CurTok) -> type == TOp && (*CurTok) -> data.Odata == OP_bar) {
+
+        CurTok++;
+        return val;
+
+    }        
 
     return val;
 
@@ -295,7 +461,7 @@ Tree_node* GetVar () {
     if ((val -> tone = GetTone ()) == 0)
         return nullptr;
 
-    LinkNodes (val, GetInit (), val -> right);
+    LinkNodes (val, GetInit (), nullptr);
 
     if (val -> left == nullptr)
         return nullptr;
@@ -307,6 +473,11 @@ Tree_node* GetVar () {
 Tone_t GetTone () {
 
     assert (*CurTok);
+
+    if ((*CurTok) -> type != TOp || (*CurTok) -> data.Odata != OP_ass)
+        return 0;
+
+    CurTok++;
 
     if ((*CurTok) -> type != TNote)
         return 0;
@@ -347,24 +518,19 @@ Tree_node* GetWhile () {
 
     assert (*CurTok);
 
-    if ((*CurTok) -> type == TOp && (*CurTok) -> data.Odata == OP_whl)
+    if ((*CurTok) -> type != TOp || (*CurTok) -> data.Odata != OP_whl)
         return nullptr;
 
     Tree_node* val = *CurTok;
 
+    CurTok++;
+
     LinkNodes (val, GetCond (), nullptr);
 
-    if ((*CurTok) -> data.Odata != OP_dbar || (*CurTok) -> type != TOp)
+    LinkNodes (val, nullptr, GetDef ());
+
+    if ((*(CurTok - 1)) -> type != TOp || (*(CurTok - 1)) -> data.Odata != OP_clwhl)
         return nullptr;
-
-    CurTok++;
-
-    LinkNodes (val, val -> left, GetDef ());
-
-    if ((*CurTok) -> type != TOp || (*CurTok) -> data.Odata == OP_clwhl)
-        return nullptr;
-
-    CurTok++;
 
     return val;
 
@@ -379,9 +545,10 @@ Tree_node* GetIf () {
     
     Tree_node* val = *CurTok;
     CurTok++;
+
     LinkNodes (val, GetCond (), nullptr);
 
-    LinkNodes (val, val -> left, NewNode (OP_vol, TCon));
+    LinkNodes (val, nullptr, NewNode (OP_vol, TCon));
 
     if ((*CurTok) -> data.Odata != OP_dbar || (*CurTok) -> type != TOp)
         return nullptr;
@@ -393,7 +560,12 @@ Tree_node* GetIf () {
     if ((*CurTok) -> type == TOp && (*CurTok) -> data.Odata == OP_svol) {
 
         CurTok++;
-        LinkNodes (val -> right, GetDef (), val -> right -> right);
+        if ((*CurTok) -> data.Odata != OP_dbar || (*CurTok) -> type != TOp)
+            return nullptr;
+
+            CurTok++;
+
+        LinkNodes (val -> right, GetDef (), nullptr);
 
     }
 
@@ -404,10 +576,20 @@ Tree_node* GetIf () {
 Tree_node* GetCond () {
 
     assert (*CurTok);
+    
+    if ((*CurTok) -> type != TOp || (*CurTok) -> data.Odata != OP_opbr)
+        return nullptr;
+
+    CurTok++;
 
     Tree_node* val1 = GetE ();
     Tree_node* val = GetComp ();
     Tree_node* val2 = GetE ();
+
+    if ((*CurTok) -> type != TOp || (*CurTok) -> data.Odata != OP_clbr)
+        return nullptr;
+
+    CurTok++;
 
     LinkNodes (val, val1, val2);
 
@@ -440,12 +622,23 @@ Tree_node* GetE () {
 
     assert (*CurTok);
 
-    if ((*CurTok) -> type != TOp && (*CurTok) -> type != TNum)
-        return nullptr;
-
     Tree_node* val1 = GetT ();
 
     Tree_node* val = val1;
+
+    if (val == nullptr) {
+
+        if ((*CurTok) -> type == TOp && (*CurTok) -> data.Odata == OP_sub) {
+
+            CurTok++;
+            val1 = GetT ();
+            val = NewNode (OP_mul, TOp);
+            val -> left = NewNode ((double)(-1), TNum);
+            val -> right = val1;
+           
+        } else return nullptr;
+
+    }
 
     assert (*CurTok);
 
@@ -469,7 +662,7 @@ Tree_node* GetE () {
 
 Tree_node* GetT () {
 
-    Tree_node* val1 = GetP ();
+    Tree_node* val1 = GetF ();
     Tree_node* val = val1;
 
     assert (*CurTok);
@@ -490,6 +683,31 @@ Tree_node* GetT () {
 
     return val;
 
+}
+
+Tree_node* GetF () {
+
+    assert (*CurTok);
+
+    if ((*CurTok) -> type == TOp) {
+
+        OpType Odat = (*CurTok) -> data.Odata;
+
+        if (Odat == OP_cos || Odat == OP_sin || Odat == OP_sqrt) {
+
+            Tree_node* val = *CurTok;
+            CurTok++;
+            LinkNodes (val, nullptr, GetP ());
+
+            return val;
+
+        }
+
+        else return GetP ();
+
+    }
+
+    return GetP ();
 
 }
 
@@ -497,7 +715,7 @@ Tree_node* GetP () {
 
     assert (*CurTok);
 
-    if ((*CurTok) -> data.Odata == OP_opbr) {
+    if ((*CurTok) -> type == TOp && (*CurTok) -> data.Odata == OP_opbr) {
 
         CurTok++;
         Tree_node* val = GetE ();
@@ -549,427 +767,3 @@ Tree_node* GetId () {
 }
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-
-bool isspec (char ch) {
-
-    if (ch == '=' || ch == '+' || ch == '-' || ch == '!' || ch == '*' || ch == '/' || ch == '|' || ch == '$' || ch == ':' || ch == '%' || ch == ']' || ch == '[' || ch == ',')
-        return true;
-
-    return false;
-
-}
-
-Tree_node** Tokenization (const char* text) {
-
-    Tree_node** Tokens = (Tree_node**) calloc (sizeof (Tree_node*), TokensNum);
-
-    CurChar = text;
-
-    int CurToken = 0;
-
-    while (*CurChar != EOF) {
-
-        SkipSpace ();
-    
-        if (isalpha (*CurChar) || *CurChar == '_') {
-
-            Tokens[CurToken] = TokWord ();
-            CurToken++;
-
-        }
-        
-        else
-
-        if (isdigit (*CurChar)) {
-
-            Tokens[CurToken] = TokNum ();
-            CurToken++;
-
-        }
-
-        else
-
-        if (isspec (*CurChar)) {
-
-            Tokens[CurToken] = TokSpec ();
-            CurToken++;
-
-        }
-
-    }
-
-    return Tokens;
-
-}
-
-Tree_node* TokWord () {
-
-    Tree_node* node = nullptr;
-
-    char* word = GetWord ();
-    int len = strlen (word);
-
-    switch (*word) {
-
-    case 's': {
-
-        if (strncmp (word, op[OP_sin], len) == 0)
-            node = NewNode (OP_sin, TOp);
-
-        else if (strncmp (word, op[OP_svol], len) == 0)
-            node = NewNode (OP_svol, TOp);
-
-        break;
-
-    }
-
-    case 'c': {
-
-        if (strncmp (word, op[OP_cos], len) == 0)
-            node = NewNode (OP_cos, TOp);
-
-        break;
-
-    }
-
-    case 'm': {
-
-        if (strncmp (word, op[OP_meno], len) == 0)
-            node = NewNode (OP_meno, TOp);
-
-        break;
-
-    }
-
-    case 'p': {
-
-        if (strncmp (word, op[OP_piu], len) == 0)
-            node = NewNode (OP_piu, TOp);
-
-        break;
-        
-    }
-
-    case 'v': {
-
-        if (strncmp (word, op[OP_vol], len) == 0)
-            node = NewNode (OP_vol, TOp);
-
-        break;
-
-    }
-
-    case 'D': {
-
-        if (strncmp (word, op[OP_ds], len) == 0)
-            node = NewNode (OP_ds, TOp);
-
-        break;
-
-    }
-
-    case 'l': {
-
-        if (strncmp (word, "legato", len) == 0)
-            node = NewNode (D_leg, TDec);
-
-       break;
-
-    }
-
-    case 'n': {
-
-        if (strncmp (word, "nota", len) == 0)
-            node = NewNode (D_nota, TDec);
-
-        break;
-
-    }
-
-    }
-
-    if (node == nullptr) 
-        node = NewNode (word, TId);
-
-    free (word);
-
-    return node;
-
-}
-
-char* GetWord () {
-
-    SkipSpace ();
-
-    char* val = (char*) calloc (256, sizeof (char));
-    int curSymb = 0;
-
-    if (('a' <= *CurChar && *CurChar <= 'z') || ('A' <= *CurChar && *CurChar <= 'Z') || *CurChar == '_') {
-
-        val[curSymb] = *CurChar;
-        curSymb++;
-        CurChar++;
-
-    }
-
-    else
-        return 0;
-
-    while (('a' <= *CurChar && *CurChar <= 'z') || ('A' <= *CurChar && *CurChar <= 'Z') || ('0' <= *CurChar && *CurChar <= '9') || *CurChar == '_') {
-
-        val[curSymb] = *CurChar;
-        curSymb++;
-        CurChar++;
-
-    }
-
-    return val;
-
-}
-
-Tree_node* TokNum () {
-
-    SkipSpace ();
-
-    double val = 0;
-
-    if ('0' <= *CurChar && *CurChar <= '9') {
-
-        val = *CurChar - '0';
-        CurChar++;
-
-    }
-
-    else {
-
-        printf ("Error: invalid syntax near %.10s: expected number\n", CurChar);
-        printf ("                           ^\n");
-        return nullptr;
-
-    }
-
-    while ('0' <= *CurChar && *CurChar <= '9') {
-
-        val = val * 10 + *CurChar - '0';
-        CurChar++;
-
-    }
-
-    double num = val + GetMt();
-    
-    return NewNode (num, TNum);
-
-}
-
-double GetMt () {
-
-    double val = 0;
-    double div = 10;
-
-    if (*CurChar != '.')
-          return 0;
-
-    if ('0' <= *CurChar && *CurChar <= '9') {
-
-        val = (*CurChar - '0') / div;
-        div *= 10;
-        CurChar++;
-
-    }
-
-    else {
-
-        printf ("Error: invalid syntax near %.10s: expected number\n", CurChar);
-        printf ("                           ^\n");
-        return 0;
-
-    }
-
-    while ('0' <= *CurChar && *CurChar <= '9') {
-
-        val = val + (*CurChar - '0') / div;
-        div *= 10;
-        CurChar++;
-
-    }
-    
-    return val;
-
-}
-
-Tree_node* TokSpec () {
-
-    Tree_node* node = nullptr;
-
-    switch (*CurChar) {
-
-        case '=': {
-
-            CurChar++;
-
-            if (*CurChar == '=') {
-
-                node = NewNode (OP_eq, TOp);
-                CurChar++;
-
-            }
-
-            else node = NewNode (OP_ass, TOp);
-
-            break;
-
-        }
-
-        case '$' : { 
-
-            CurChar++; 
-            node = TokNote (); 
-            break; 
-        
-        }
-
-        case '+' : {
- 
-            CurChar++;
-            node = NewNode (OP_add, TOp); 
-            break; 
-
-        }
-
-        case '-' : { 
-
-            CurChar++;
-            node = NewNode (OP_sub, TOp); 
-            break; 
-    
-        }
-
-        case '*' : { 
-
-            CurChar++;
-            node = NewNode (OP_mul, TOp); 
-            break; 
-
-        }
-
-        case '/' : { 
-
-            CurChar++;
-            node = NewNode (OP_div, TOp); 
-            break; 
-
-        }
-
-        case '%' : {
-
-            CurChar++;
-            node = NewNode (OP_mod, TOp);
-            break;
-
-        }
-
-        case '|' : { 
-
-            if (*(CurChar + 1) == '|')
-                if (*(CurChar + 2) == ':') {
-
-                    node = NewNode (OP_whl, TOp);
-                    CurChar += 3;
-
-                }
-
-                else {
-
-                    node = NewNode (OP_dbar, TOp);
-                    CurChar += 2;
-                
-                }
-
-            else {
-
-                node = NewNode (OP_bar, TOp);
-                CurChar++;
-
-            }
-
-            break;
-
-         }
-
-        case ':' : { 
-
-            if ((*(CurChar + 1) != '|') || (*(CurChar +2) != '|'))
-                return nullptr;
-
-            node = NewNode (OP_clwhl, TOp);
-            CurChar += 3; 
-
-            break;
-
-        }
-
-        case ']' : {
-
-            CurChar++;
-            node = NewNode (OP_clbr, TOp);    
-            break;
-
-        }
-
-        case '[' : {
-
-            CurChar++;
-            node = NewNode (OP_opbr, TOp);
-            break;
-
-        }
-
-        case ',': {
-
-            CurChar++;
-            node = NewNode (OP_com, TOp);
-            break;
-
-        }
-
-    }
-
-    return node;
-
-}
-
-Tree_node* TokNote () {
-
-    int val = 0;
-
-    if ('H' < *CurChar || *CurChar < 'A')
-        return nullptr;
-
-    val += (*CurChar - 'A') * 100;
-
-    CurChar++;
-
-    if (*CurChar == 'b') {
-
-        val += 10;
-        CurChar++;
-
-    }
-
-    else if (*CurChar == '#') {
-
-        val += 20;
-        CurChar++;
-
-    }
-
-    if (!isdigit (*CurChar))
-        return nullptr;
-
-    val += *CurChar - '0';
-    CurChar++;
-
-    return NewNode (val, TNote);
-        
-}

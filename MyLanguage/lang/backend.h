@@ -81,7 +81,7 @@ void PrAsmFunc (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) 
 
     if (Cur -> right != nullptr && Cur -> right -> type == TId);
         fprintf (file, "\n:%s\n", Cur -> right -> data.Sdata);
-    fprintf (file, "pop fx\n");
+    fprintf (file, "pop Fx\n");
 
     int argsNum = 0;
 
@@ -125,6 +125,8 @@ int CountWriteArgs (AvVars* vars, Tree_node* Vlist) {
 
 void PrAsmDef (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) {
 
+    FILE* file = SupInf -> file;
+
     while (Cur != nullptr && Cur -> right != nullptr) {
 
         if (Cur -> right -> type == TDec && Cur -> data.Ddata == D_nota)
@@ -159,7 +161,12 @@ void PrAsmDef (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) {
             if (FindFunc (funcs, Cur -> right -> data.Sdata) < 0)
                 return;
 
-            else PrAsmCall (vars, Cur -> right, funcs, SupInf);
+            else {
+
+                PrAsmCall (vars, Cur -> right, funcs, SupInf);
+                fprintf (file, "pop ax\n");
+
+            }
                    
         } 
 
@@ -401,7 +408,7 @@ void PrAsmAs (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) {
     PrAsmExp (vars, Cur -> right, funcs, SupInf);
 
     int pos = -1;
-    
+
     if ((pos = FindVar (vars -> fVars, Cur -> left -> data.Sdata)) < 0) {
 
         if ((pos = FindVar (vars -> gVars, Cur -> left -> data.Sdata)) < 0)
@@ -424,15 +431,16 @@ void PrAsmCall (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) 
 
     FILE* file = SupInf -> file;
 
-    fprintf (file, "push %d\npop sx\n", vars -> shift + vars -> fVars -> size);
-
     fprintf (file, "push Fx\n");
 
     if (Cur -> left != nullptr)
         PrAsmPushVlist (vars, Cur -> left, funcs, SupInf);
 
+    fprintf (file, "push %d\npush sx\nadd\npop sx\n", vars -> fVars -> size);
+
     fprintf (file, "call :%s\n", Cur -> data.Sdata);
     fprintf (file, "pop ax\npop Fx\npush ax\n");
+    fprintf (file, "push sx\npush %d\nsub\npop sx\n", vars -> fVars -> size);  
 
     return;
 
@@ -488,13 +496,13 @@ void PrAsmCond (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) 
 
     switch (Cur -> data.Odata) {
 
-        case OP_meno: fprintf (file, "ja "); break;
+        case OP_meno: fprintf (file, "jbe "); break;
 
-        case OP_piu: fprintf (file, "jb "); break;
+        case OP_piu: fprintf (file, "jae "); break;
 
-        case OP_eq: fprintf (file, "je "); break;
+        case OP_eq: fprintf (file, "jne "); break;
 
-        case OP_neq: fprintf (file, "jne "); break;
+        case OP_neq: fprintf (file, "je "); break;
 
         default: fprintf (file, "pop\npop\n"); return;
 
