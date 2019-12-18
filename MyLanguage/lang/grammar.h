@@ -1,3 +1,7 @@
+#ifndef __GRAMMAR__
+
+    #define __GRAMMAR__
+
 #include <stdio.h>
 #include <malloc.h>
 #include <ctype.h>
@@ -6,6 +10,8 @@
 #include "Tree_t.h"
 #include "tokens.h"
 #include <assert.h>
+
+#define Error printf ("Error: line %d\n", __LINE__)
 
 Tree_node** CurTok = nullptr;
 
@@ -44,18 +50,24 @@ Tree* GetTree (const char* fileName, Tree* tree) {
     char* Content = (char*) calloc (fileInfo.st_size + 1, sizeof (char));
     FILE* file = fopen (fileName, "r");
 
-    if (fread (Content, sizeof (char), fileInfo.st_size, file) == 0)
-        printf ("Ah shit!\n");;
+    if (fread (Content, sizeof (char), fileInfo.st_size, file) == 0) {
+
+        printf ("Cannot read file\n");
+        return nullptr;
+
+    }
 
     Content[fileInfo.st_size -1] = EOF;
 
     Tree_node** Tokens = Tokenization (Content);
     free (Content);
+    fclose (file);
 
     int i = 0;
 
     tree -> root = GetG (Tokens);
     free (Tokens);
+
 
     return tree;
 
@@ -256,17 +268,25 @@ Tree_node* GetOp () {
 
     Tree_node* val = nullptr;
 
-    if ((val = GetId ()) != nullptr) {
+    if ((val = GetFId ()) != nullptr) {
 
         if ((*CurTok) -> type == TOp && (*CurTok) -> data.Odata == OP_opbr) {
 
             LinkNodes (val, GetArglist (), nullptr);
 
-            if (val -> left == nullptr)
+            if (val -> left == nullptr) {
+
+                Error;
                 return nullptr;
 
-            if ((*CurTok) -> type != TOp || (*CurTok) -> data.Odata != OP_bar)
+            }
+
+            if ((*CurTok) -> type != TOp || (*CurTok) -> data.Odata != OP_bar) {
+
+                Error;
                 return nullptr;
+
+            }
 
             CurTok++;
 
@@ -298,8 +318,12 @@ Tree_node* GetOp () {
 
     else if ((val = GetRead ()) != nullptr);
 
-    else if ((val = GetPrnt ()) == nullptr)
+    else if ((val = GetPrnt ()) == nullptr) {
+
+        Error;
         return nullptr; 
+
+    }
 
     return val;
 
@@ -363,8 +387,12 @@ Tree_node* GetArglist () {
 
     Tree_node* val = *CurTok;
 
-    if (val -> type != TOp || val -> data.Odata != OP_opbr)
+    if (val -> type != TOp || val -> data.Odata != OP_opbr) {
+
+        Error;
         return nullptr;
+
+    }
 
     Tree_node* listbegin = val;
 
@@ -373,7 +401,7 @@ Tree_node* GetArglist () {
     CurTok++;
 
     if ((*CurTok) -> type  == TOp && (*CurTok) -> data.Odata == OP_clbr) { 
-
+        Error;
         CurTok++;
         return nullptr;
 
@@ -393,7 +421,7 @@ Tree_node* GetArglist () {
 
         }
 
-        else break;
+        else {Error; break;}
             
     }
 
@@ -404,8 +432,11 @@ Tree_node* GetArglist () {
 
     }
 
-    if ((*CurTok) -> type != TOp || (*CurTok) -> data.Odata != OP_clbr)
+    if ((*CurTok) -> type != TOp || (*CurTok) -> data.Odata != OP_clbr) {
+        Error;
         return nullptr;
+
+    }
 
     CurTok++;
 
@@ -636,7 +667,7 @@ Tree_node* GetE () {
             val -> left = NewNode ((double)(-1), TNum);
             val -> right = val1;
            
-        } else return nullptr;
+        } else {Error; return nullptr;}
 
     }
 
@@ -723,7 +754,7 @@ Tree_node* GetP () {
 
         if ((*CurTok) -> data.Odata != OP_clbr) {
 
-            printf ("Error: unexpected token '%s', expected ')' \n",op[(*CurTok) -> data.Odata]);  
+            printf ("Error: unexpected token '%s', expected ']' \n",op[(*CurTok) -> data.Odata]);  
             return nullptr;
 
         }
@@ -760,10 +791,15 @@ Tree_node* GetId () {
     if ((*CurTok) -> type != TId)
         return nullptr;
 
+    Tree_node* val = *CurTok;
+
     CurTok++;
 
-    return *(CurTok - 1);
+    if ((*CurTok) -> type == TOp && (*CurTok) -> data.Odata == OP_opbr)
+        LinkNodes (val, GetArglist (), nullptr);
+
+    return val;
 
 }
 
-
+#endif

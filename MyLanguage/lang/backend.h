@@ -1,3 +1,7 @@
+#ifndef __BACKEND__
+
+    #define __BACKEND__
+
 #include <stdio.h>
 #include "Tree_t.h"
 #include "enum_type.h"
@@ -27,6 +31,8 @@ void PrAsmAs   (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf);
 void PrAsmCall (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf);
 void PrAsmPushVlist (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf);
 void PrAsmCond (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf);
+void PrAsmWhlCond (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf);
+void OposCond (Tree_node* node); 
 void PrAsmRead (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf);
 void PrAsmPrnt (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf);
 
@@ -93,10 +99,9 @@ void PrAsmFunc (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) 
     for (int i = 0; i < argsNum; i++)
         fprintf (file, "pop [sx + %d]\n", argsNum - i - 1);
 
+    AddFunc (funcs, Cur -> right -> data.Sdata, argsNum);
 
     PrAsmDef (funcVars, Cur -> right -> right, funcs, SupInf);
-
-    AddFunc (funcs, Cur -> right -> data.Sdata, argsNum);
 
     return;
 
@@ -134,25 +139,23 @@ void PrAsmDef (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) {
 
         else if (Cur -> right -> type == TOp) {
 
-            if (Cur -> right -> data.Odata == OP_vol)
-                PrAsmIf (vars, Cur -> right, funcs, SupInf);
+            switch (Cur -> right -> data.Odata) {
 
-            else if (Cur -> right -> data.Odata == OP_whl)
-                PrAsmWhl (vars, Cur -> right, funcs, SupInf);
+                case OP_vol: PrAsmIf (vars, Cur -> right, funcs, SupInf); break;
 
-            else if (Cur -> right -> data.Odata == OP_ass)
-                PrAsmAs (vars, Cur -> right, funcs, SupInf);
+                case OP_whl: PrAsmWhl (vars, Cur -> right, funcs, SupInf); break;
 
-            else if (Cur -> right -> data.Odata == OP_ds)
-                PrAsmRet (vars, Cur -> right, funcs, SupInf);
+                case OP_ass: PrAsmAs (vars, Cur -> right, funcs, SupInf); break;
 
-            else if (Cur -> right -> data.Odata == OP_read)
-                PrAsmRead (vars, Cur -> right, funcs, SupInf);
+                case OP_ds: PrAsmRet (vars, Cur -> right, funcs, SupInf); break;
 
-            else if (Cur -> right -> data.Odata == OP_prnt)
-                PrAsmPrnt (vars, Cur -> right, funcs, SupInf);
+                case OP_read: PrAsmRead (vars, Cur -> right, funcs, SupInf); break;
+    
+                case OP_prnt: PrAsmPrnt (vars, Cur -> right, funcs, SupInf); break;
 
-            else return;
+                default: return;
+
+            }
 
         }
  
@@ -287,7 +290,8 @@ void PrAsmExp (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) {
         if (Cur -> left != nullptr)
             PrAsmExp (vars, Cur -> left, funcs, SupInf);
 
-        if (Cur -> right != nullptr)
+        if (Cur -> right != nullptr) 
+
             PrAsmExp (vars, Cur -> right, funcs, SupInf);
 
         switch (Cur -> data.Odata) {
@@ -345,14 +349,15 @@ void PrAsmWhl (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) {
     if (Cur -> type != TOp || Cur -> data.Odata != OP_whl)
         return;
 
+    PrAsmCond (vars, Cur -> left, funcs, SupInf);
     fprintf (file, ":while%d\n", whileNum);
 
     if (Cur -> right != nullptr)
         PrAsmDef (vars, Cur -> right, funcs, SupInf);
 
-    PrAsmCond (vars, Cur -> left, funcs, SupInf);
-    fprintf (file, " :while%d\n", whileNum);
-//TODO
+    PrAsmWhlCond (vars, Cur -> left, funcs, SupInf);
+    fprintf (file, " :while%d\n:endwhile%d\n", whileNum, whileNum);
+
     return;
 
 }
@@ -486,6 +491,9 @@ void PrAsmPushVlist (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* Sup
 
 void PrAsmCond (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) {
 
+    assert (Cur);
+    assert (SupInf);
+
     FILE* file = SupInf -> file;
 
     if (Cur == nullptr || Cur -> left == nullptr || Cur -> right == nullptr)
@@ -493,6 +501,9 @@ void PrAsmCond (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) 
 
     PrAsmExp (vars, Cur -> left, funcs, SupInf);
     PrAsmExp (vars, Cur -> right, funcs, SupInf);
+
+    if (Cur -> type != TOp)
+        return;
 
     switch (Cur -> data.Odata) {
 
@@ -510,6 +521,42 @@ void PrAsmCond (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) 
 
     return;
 
+}
+
+void PrAsmWhlCond (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) {
+
+    assert (Cur);
+
+    OposCond (Cur);
+
+    PrAsmCond (vars, Cur, funcs, SupInf);
+
+    OposCond (Cur);
+
+    return;
+
+}
+
+void OposCond (Tree_node* node) {
+
+    assert (node);
+
+    if (node -> type != TOp)
+        return;
+
+    switch (node -> data.Odata) {
+
+        case OP_meno: node -> data.Odata = OP_piu; break;
+
+        case OP_piu: node -> data.Odata = OP_meno; break;
+
+        case OP_eq: node -> data.Odata = OP_neq; break;
+
+        case OP_neq: node -> data.Odata = OP_eq; break;
+
+    }
+
+    return;
 }
 
 void PrAsmRead (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) {
@@ -565,4 +612,4 @@ void PrAsmPrnt (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) 
     return;
 
 }
-
+#endif

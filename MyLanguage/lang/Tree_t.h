@@ -3,8 +3,6 @@
 
 #ifndef __TREE_T__
 
-    #include "enum_type.h"
-
     #define __TREE_T__
 
 #include <stdio.h>
@@ -82,7 +80,7 @@ void __TreeConstruct                                                 (Tree* tree
 void TreeDestruct                                                    (Tree* tree);
 
 bool ParentsCheck                     (const Tree_node* branch, const Tree* tree, const int deep = 0);
-bool LinkNodes                        (Tree_node* _parent, Tree_node* _left, Tree_node* _right);
+bool LinkNodes                        (Tree_node* _parent, Tree_node* _left = nullptr, Tree_node* _right = nullptr);
 
 Tree_node* NewNode (const double elem, NodeType Type = TNum, Tree_node* Left = nullptr, Tree_node* Right = nullptr);
 Tree_node* NewNode (const OpType elem, NodeType Type = TOp, Tree_node* Left = nullptr, Tree_node* Right = nullptr);
@@ -103,6 +101,12 @@ bool DeleteBranch           (Tree* tree, Tree_node* branch);
 void CutBrunchWithoutLeaf   (Tree* tree, Tree_node* branch, Tree_node* leaf);
 
 void SkipSpace                    (FILE* file);
+/*void PrintPreNode                 (FILE* file,       Tree_node* node, int deep = 0);
+void PrintPreTree                 (FILE* file,       Tree* tree);
+void ReadLeft                     (FILE* file,       Tree* tree, Tree_node* node);
+void ReadRight                    (FILE* file,       Tree* tree, Tree_node* node); 
+void ReadPreNode                  (FILE* file,       Tree* tree, Tree_node* node);
+void ReadPreTree                  (FILE* file,       Tree* tree); */
 
 Element_t FuncDef (const char* elem);
 bool CheckNumType                                   (Tree_node* node, const char* Sdata);
@@ -116,6 +120,7 @@ void Print (FILE* file, const char* item);
 void Print (FILE* file, const int item);
 void Print (FILE* file, const char item);
 void Print (FILE* file, const double item);
+void PrintNodeData (FILE* file, Tree_node* node);
 
 bool CheckConnection                        (const Tree* tree, Tree_node* branch); 
 bool TreeOk                                                          (Tree* tree);
@@ -171,14 +176,19 @@ bool LinkNodes (Tree_node* _parent, Tree_node* _left, Tree_node* _right) {
 
     assert (_parent);
 
-    _parent -> left = _left;
-    _parent -> right = _right;
+    if (_left != nullptr) {
 
-    if (_left != nullptr)
+        _parent -> left = _left;
         _left -> parent = _parent;
 
-    if (_right != nullptr)
+    }
+
+    if (_right != nullptr) {
+ 
+        _parent -> right = _right;
         _right -> parent = _parent;
+
+    }
 
     return true;
 
@@ -427,8 +437,6 @@ bool DeleteBranch (Tree* tree, Tree_node* branch) {
     
     free (branch);
 
-//    tree -> size--;
-
     return true;
 
 }
@@ -491,6 +499,164 @@ void SkipSpace (FILE* file) {
     return;
 
 }
+
+/* void PrintPreNode (FILE* file, Tree_node* node, int deep) {
+
+    assert (file);
+    assert (node);
+    assert (deep >= 0);
+
+    for (int i = 0; i < deep; ++i)
+        fprintf (file, "\t");
+ 
+    deep++;
+    fprintf (file, "{\"");
+    Print (file, node -> data);
+    fprintf (file, "\"");
+
+   
+    if (node -> left != nullptr || node -> right != nullptr) {
+
+        fprintf (file, "\n");
+
+        if (node -> left != nullptr)
+            PrintPreNode (file, node -> left, deep);
+        else 
+            fprintf (file, "@");
+
+        if (node -> right != nullptr)
+            PrintPreNode (file, node -> right, deep);
+        else 
+            fprintf (file, "@");
+
+        for (int i = 0; i < deep - 1; ++i)
+            fprintf (file, "\t");
+
+    }
+
+    fprintf (file, "}\n");
+    
+    return;
+
+}
+
+void PrintPreTree (FILE* file, Tree* tree) {
+
+    ASSERTTREE (tree);
+    assert (file);
+
+    PrintPreNode (file, tree -> root);
+
+    return;
+
+}
+
+void ReadLeft (FILE* file, Tree* tree, Tree_node* node) {
+    
+    assert (file);
+    assert (node);
+    ASSERTTREE (tree);
+    
+    SkipSpace (file);
+    if (fgetc (file) == '@')
+        node -> left = nullptr;
+
+    else {
+ 
+        fseek (file, -1, SEEK_CUR);
+        AddLeftLeaf (tree, node, 0);
+        ReadPreNode (file, tree, node -> left);
+        ASSERTTREE (tree);
+
+    }
+
+    return;
+
+}
+
+void ReadRight (FILE* file, Tree* tree, Tree_node* node) {
+
+    assert (file);
+    assert (node);
+    ASSERTTREE (tree);
+
+    SkipSpace (file);
+    if (fgetc (file) == '@')
+        node -> right = nullptr;
+
+    else {
+ 
+         fseek (file, -1, SEEK_CUR);
+
+         if (fgetc (file) != '{') {
+
+            tree -> errcode = CantReadTreeFromFile;
+            return;
+
+        }
+
+        AddRightLeaf (tree, node, 0);
+        ReadPreNode (file, tree, node -> right);
+        ASSERTTREE (tree);
+
+    }
+
+    return;
+
+}
+
+void ReadPreNode (FILE* file, Tree* tree, Tree_node* node) {
+
+    assert (file);
+    ASSERTTREE (tree);
+    assert (node);
+
+    SkipSpace (file);
+    fscanf (file, "\"%m[^\"]\"", &(node -> data));
+    char bracket = 0;
+
+    SkipSpace (file);
+    if ((bracket = fgetc (file)) == '{') {
+
+        ReadLeft  (file, tree, node);
+        SkipSpace (file);
+        ReadRight (file, tree, node);
+        SkipSpace (file);
+        bracket = fgetc (file);
+
+    }
+
+    if (bracket != '}') {
+
+        tree -> errcode = CantReadTreeFromFile;
+        return;
+
+    }
+    
+    return;
+
+}
+
+void ReadPreTree (FILE* file, Tree* tree) {
+
+    ASSERTTREE (tree);
+    assert (file);
+
+    SkipSpace (file);
+    if (fgetc (file) != '{') {
+
+        tree -> errcode = CantReadTreeFromFile;
+        return;
+
+    }
+
+    AddRoot (tree, 0);
+
+    ReadPreNode (file, tree, tree -> root);
+
+    return;
+
+}*/
 
 Element_t FuncDef (const char* elem) {
 
@@ -682,6 +848,42 @@ void Print (FILE* file, const double item) {
 
 }
 
+/*void Print (FILE* file, Tree_node* node) {
+
+    switch (node -> type) {
+
+    case TOp: fprintf (file, "O:%s", op[node -> data.Odata]); break;
+
+    case TDec: if (fprintf (file, "%d", node -> data.Ddata); break;
+
+    case TId: fprintf (file, "%s", node -> data.Sdata); break;
+
+    default: fprintf (file, "%lg", node -> data.Ndata); break;
+
+    }
+
+    return;
+   
+
+}*/
+
+void PrintNodeData (FILE* file, Tree_node* node) {
+
+    switch (node -> type) {
+
+    case TOp: fprintf (file, "%s", op[node -> data.Odata]); break;
+
+    case TDec: fprintf (file, "%d", node -> data.Ddata); break;
+
+    case TId: fprintf (file, "%s", node -> data.Sdata); break;
+
+    default: fprintf (file, "%lg", node -> data.Ndata); break;
+
+    }
+
+    return;
+
+}
 
 bool CheckConnection (const Tree* tree, Tree_node* branch) {
 
@@ -756,6 +958,8 @@ void __TreeDump (const Tree* tree, int line, const char* func) {
 
     fclose (fileout);
 
+    system ("dot tree.dot -T png -o tree.png");
+
     return;
 
 }
@@ -764,16 +968,24 @@ void DrawNode (FILE* file, const Tree_node* node) {
 
     if (node -> left != nullptr) {
 
-        fprintf (file , "\tN%x[fillcolor=blue, label = \"{{%p | %d} | {%d | %d} | {%p |%p}}\"]\n", node -> left, node -> left, node -> left -> data.Odata, node -> left -> type, node -> left -> left, node -> left -> right);
-        fprintf (file, "N%x -> N%x\n", node, node -> left);
+        fprintf (file , "\tN%x[fillcolor=blue, label = \"{{%p} | {", node -> left, node -> left);
+
+        PrintNodeData (file, node -> left);
+
+        fprintf (file, " | %d} | {<l> %p |<r> %p}}\"]\n", node -> left -> type, node -> left -> left, node -> left -> right);
+        fprintf (file, "<l> N%x -> N%x\n", node, node -> left);
         DrawNode (file, node -> left);
 
     }
     
     if (node -> right != nullptr) {
 
-        fprintf (file , "\tN%x[fillcolor=green, label = \"{{%p | %d} | {%d | %d} | {%p |%p}}\"]\n", node -> right, node -> right, node -> right -> data.Odata, node -> right -> type, node -> right -> left, node -> right -> right);
-        fprintf (file, "N%x -> N%x\n", node, node -> right);
+        fprintf (file , "\tN%x[fillcolor=green, label = \"{{%p} | {", node -> right, node -> right);
+    
+        PrintNodeData (file, node -> right);
+
+        fprintf (file, " | %d} | {<l> %p |<r> %p}}\"]\n", node -> right -> type, node -> right -> left, node -> right -> right);
+        fprintf (file, "<r> N%x -> N%x\n", node, node -> right);
         DrawNode (file, node -> right);
 
     }
@@ -786,7 +998,6 @@ void DrawTree (FILE* file, const Tree* tree) {
 
     assert (file);
     assert (tree);
-
     fprintf (file, "\tTree[label=\"%p | %s\"]\n", tree, tree->name);
     ErrDecode (file, tree);
 
@@ -794,7 +1005,11 @@ void DrawTree (FILE* file, const Tree* tree) {
 
     if (tree -> root != nullptr) {
 
-        fprintf (file , "\tN%x[fillcolor=red, label = \"{{%p | %d} | {%d | %d} | {%p |%p}}\"]\n", tree -> root, tree -> root, tree -> root -> data.Odata, tree -> root -> type, tree -> root -> left, tree -> root -> right);
+        fprintf (file , "\tN%x[fillcolor=red, label = \"{{%p} | {", tree -> root);
+
+        PrintNodeData (file, tree -> root);
+
+        fprintf (file, " | %d} | {<l> %p | <r> %p}}\"]\n", tree -> root -> type, tree -> root -> left, tree -> root -> right);
 
         DrawNode (file, tree -> root);
 
@@ -864,7 +1079,7 @@ void DrawEasyTree (FILE* file, const Tree* tree) {
 
     if (tree -> size > 0) {
 
-        fprintf (file , "\tN%x[fillcolor=red, label = \"%d\"]\n", tree -> root, tree -> root -> data.Odata);
+        fprintf (file , "\tN%x[fillcolor=red, label = \"%d\"]\n", tree -> root, tree -> root, tree -> root -> data.Odata);
         DrawEasyNode (file, tree -> root);
 
     }
