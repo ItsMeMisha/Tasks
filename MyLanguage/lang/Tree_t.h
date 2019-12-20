@@ -43,6 +43,7 @@ typedef union {
 
 } Element_t;
 
+const int MaxDeep = 2048;
 const char EmptySymb = '@';
 const int MaxStrBufSize = 256;
 const char DumpFile[] = "tree.dot";
@@ -112,6 +113,7 @@ void ReadPreTree                  (FILE* file,       Tree* tree);
 Element_t FuncDef (const char* elem);
 bool CheckNumType                                   (Tree_node* node, const char* Sdata);
 void DefineNode                                     (Tree_node* node);
+void DefId                                          (Tree_node* node);
 void DefDec                                         (Tree_node* node);
 void DefOp                                          (Tree_node* node);
 void DefNum                                         (Tree_node* node);
@@ -153,7 +155,12 @@ void TreeDestruct (Tree* tree) {
 
     ASSERTTREE (tree);
 
-    DeleteBranch (tree, tree -> root);
+    if (tree -> root != nullptr) {
+
+        DeleteBranch (tree, tree -> root);
+        tree -> root = nullptr;
+
+    }
 
     tree -> size    = 0;
     tree -> errcode = Allright;
@@ -164,8 +171,8 @@ void TreeDestruct (Tree* tree) {
 
 bool ParentsCheck (const Tree_node* branch, const Tree* tree, const int deep) {
 
-/*    if (deep > tree -> size)
-        return false; */
+    if (deep > MaxDeep)
+        return false; 
 
     if (branch == tree -> root)
         return true;
@@ -416,17 +423,27 @@ Tree_node* CopyOfBranch (Tree_node* SourceBranch) {
 bool DeleteBranch (Tree* tree, Tree_node* branch) {
 
     ASSERTTREE (tree);
-   
+    if (branch == nullptr)
+        return true;
+
     if (!ParentsCheck (branch, tree))
-        return false; 
+        return false;
 
-    if (branch -> left != nullptr)
+    if (branch -> left != nullptr && branch -> left != branch) {
+
         DeleteBranch (tree, branch -> left);
+        branch -> left = nullptr;
 
-    if (branch -> right != nullptr)
+    }
+
+    if (branch -> right != nullptr && branch -> right != branch) {
+
         DeleteBranch (tree, branch -> right);
+        branch -> right = nullptr;
 
-    if (branch -> parent != nullptr) {
+    }
+
+    if (branch -> parent != nullptr && branch -> parent != branch) {
 
         if (branch -> parent -> left == branch)
             branch -> parent -> left = nullptr;
@@ -439,7 +456,10 @@ bool DeleteBranch (Tree* tree, Tree_node* branch) {
     }   
 
     else tree -> root = nullptr;
-    
+
+    if (branch -> type == TId && branch -> data.Sdata != nullptr)
+        free (branch -> data.Sdata);
+
     free (branch);
 
     return true;
@@ -515,21 +535,19 @@ void PrintPreNode (FILE* file, Tree_node* node) {
 
     if (node -> left != nullptr || node -> right != nullptr) {
 
-        fprintf (file, "\n");
-
         if (node -> left != nullptr)
             PrintPreNode (file, node -> left);
         else 
-            fprintf (file, "%c", EmptySymb);
+            fprintf (file, "{%c}", EmptySymb);
 
         if (node -> right != nullptr)
             PrintPreNode (file, node -> right);
         else 
-            fprintf (file, "%c", EmptySymb);
+            fprintf (file, "{%c}", EmptySymb);
 
     }
 
-    fprintf (file, "}\n");
+    fprintf (file, "}");
     
     return;
 
@@ -547,14 +565,21 @@ void PrintPreTree (FILE* file, Tree* tree) {
 }
 
 void ReadLeft (FILE* file, Tree* tree, Tree_node* node) {
-    
+ 
     assert (file);
     assert (node);
     ASSERTTREE (tree);
     
     SkipSpace (file);
-    if (fgetc (file) == EmptySymb)
+    if (fgetc (file) == EmptySymb) {
+
         node -> left = nullptr;
+        if (fgetc (file) != '}') {
+            tree -> errcode = CantReadTreeFromFile;
+            return;
+        }
+
+    }
 
     else {
  
@@ -576,14 +601,23 @@ void ReadRight (FILE* file, Tree* tree, Tree_node* node) {
     ASSERTTREE (tree);
 
     SkipSpace (file);
-    if (fgetc (file) == EmptySymb)
+    if (fgetc (file) == EmptySymb) {
+
         node -> right = nullptr;
+        if (fgetc (file) != '}') {
+            tree -> errcode = CantReadTreeFromFile;
+            return;
+        }
+
+    }
 
     else {
  
          fseek (file, -1, SEEK_CUR);
 
-         if (fgetc (file) != '{') {
+    char c = 0; 
+
+         if ((c = fgetc (file)) != '{') {
 
             tree -> errcode = CantReadTreeFromFile;
             return;
@@ -698,7 +732,7 @@ void DefineNode (Tree_node* node) {
 
     switch (*(node -> data.Sdata)) {
 
-        case 'I': node -> type = TId; break;
+        case 'I': node -> type = TId; DefId (node); break;
 
         case 'D': node -> type = TDec; DefDec (node); break;
 
@@ -710,6 +744,25 @@ void DefineNode (Tree_node* node) {
 
     }
     
+    return;
+
+}
+
+void DefId (Tree_node* node) {
+
+    char* id = (char*) calloc (sizeof (char), MaxStrBufSize);
+    
+    sscanf (node -> data.Sdata + 2, "%s", id);
+
+    assert (id);    
+
+    free (node -> data.Sdata);
+
+    if (strncmp (id, "main", 4) == 0)
+        strncpy (id, "MainTheme", 9);
+
+    node -> data.Sdata = id;
+
     return;
 
 }
@@ -738,7 +791,7 @@ void DefOp (Tree_node* node) {
 
     for (int i = 0; i < NumOfOp; i++)
     
-        if (strncmp (symb, op[i], strlen (symb) + 1) == 0) {
+        if (strncmp (symb, std_op[i], strlen (symb) + 1) == 0) {
             
             free (node -> data.Sdata);
             node -> data.Odata = (OpType) i;
@@ -896,7 +949,7 @@ void Print (FILE* file, Tree_node* node) {
 
     switch (node -> type) {
 
-    case TOp: fprintf (file, "O:%s", op[node -> data.Odata]); break;
+    case TOp: fprintf (file, "O:%s", std_op[node -> data.Odata]); break;
 
     case TDec: fprintf (file, "D:%s", DecNames[node -> data.Ddata]); break;
 
@@ -1035,7 +1088,7 @@ void DrawNode (FILE* file, const Tree_node* node) {
 
         PrintNodeData (file, node -> left);
 
-        fprintf (file, " | %d} | {<l> %p |<r> %p}}\"]\n", node -> left -> type, node -> left -> left, node -> left -> right);
+        fprintf (file, " | %d | %d} | {<l> %p |<r> %p}}\"]\n", node -> left -> type, node -> left -> tone, node -> left -> left, node -> left -> right);
         fprintf (file, "<l> N%x -> N%x\n", node, node -> left);
         DrawNode (file, node -> left);
 
@@ -1047,7 +1100,7 @@ void DrawNode (FILE* file, const Tree_node* node) {
     
         PrintNodeData (file, node -> right);
 
-        fprintf (file, " | %d} | {<l> %p |<r> %p}}\"]\n", node -> right -> type, node -> right -> left, node -> right -> right);
+        fprintf (file, " | %d | %d} | {<l> %p |<r> %p}}\"]\n", node -> right -> type, node -> right -> tone, node -> right -> left, node -> right -> right);
         fprintf (file, "<r> N%x -> N%x\n", node, node -> right);
         DrawNode (file, node -> right);
 
@@ -1068,11 +1121,11 @@ void DrawTree (FILE* file, const Tree* tree) {
 
     if (tree -> root != nullptr) {
 
-        fprintf (file , "\tN%x[fillcolor=red, label = \"{{%p} | {", tree -> root);
+        fprintf (file , "\tN%x[fillcolor=red, label = \"{{%p} | {", tree -> root, tree -> root);
 
         PrintNodeData (file, tree -> root);
 
-        fprintf (file, " | %d} | {<l> %p | <r> %p}}\"]\n", tree -> root -> type, tree -> root -> left, tree -> root -> right);
+        fprintf (file, " | %d | %d} | {<l> %p | <r> %p}}\"]\n", tree -> root -> type, tree -> root -> tone, tree -> root -> left, tree -> root -> right);
 
         DrawNode (file, tree -> root);
 
