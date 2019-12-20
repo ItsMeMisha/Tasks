@@ -292,8 +292,8 @@ void PrAsmExp (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) {
 
         if (Cur -> data.Odata == OP_com)
             return;
-    
-        if (Cur -> left != nullptr)
+        
+        if (Cur -> left != nullptr) 
             PrAsmExp (vars, Cur -> left, funcs, SupInf);
 
         if (Cur -> right != nullptr) 
@@ -585,16 +585,7 @@ void PrAsmPrnt (AvVars* vars, Tree_node* Cur, AllFuncs* funcs, Support* SupInf) 
     if (Cur -> right == nullptr)
         return;
 
-    else if (Cur -> right -> type != TId) 
-             PrAsmExp (vars, Cur -> right, funcs, SupInf);
-
-    else if ((pos = FindVar (vars -> fVars, Cur -> right -> data.Sdata)) < 0) {
-
-        if ((pos = FindVar (vars -> gVars, Cur -> right -> data.Sdata)) < 0)
-            return;
-        else fprintf (file, "push [%d]\n", pos);
-
-    } else fprintf (file, "push [sx + %d]\n", pos);
+    PrAsmExp (vars, Cur -> right, funcs, SupInf);
 
     fprintf (file, "out\n");
 
