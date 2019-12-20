@@ -44,7 +44,7 @@ typedef union {
 } Element_t;
 
 const int MaxDeep = 2048;
-const char EmptySymb = '@';
+const char EmptySymb = '$';
 const int MaxStrBufSize = 256;
 const char DumpFile[] = "tree.dot";
 
@@ -68,6 +68,8 @@ struct Tree_node {
     Tone_t tone;
 
 };
+
+Tree_node* InvalidPtr = (Tree_node*) 0xFFFFf;
 
 struct Tree {
 
@@ -423,7 +425,7 @@ Tree_node* CopyOfBranch (Tree_node* SourceBranch) {
 bool DeleteBranch (Tree* tree, Tree_node* branch) {
 
     ASSERTTREE (tree);
-    if (branch == nullptr)
+    if (branch <= InvalidPtr)
         return true;
 
     if (!ParentsCheck (branch, tree))
@@ -538,7 +540,7 @@ void PrintPreNode (FILE* file, Tree_node* node) {
         if (node -> left != nullptr)
             PrintPreNode (file, node -> left);
         else 
-            fprintf (file, "{%c}", EmptySymb);
+            fprintf (file, "%c", EmptySymb);
 
         if (node -> right != nullptr)
             PrintPreNode (file, node -> right);
@@ -641,7 +643,7 @@ void ReadPreNode (FILE* file, Tree* tree, Tree_node* node) {
     assert (node);
 
     SkipSpace (file);
-    fscanf (file, "%m[^{}]", &(node -> data.Sdata));
+    fscanf (file, "%m[^{}#$]", &(node -> data.Sdata));
     DefineNode (node);
     char bracket = 0;
 
@@ -653,6 +655,17 @@ void ReadPreNode (FILE* file, Tree* tree, Tree_node* node) {
         ReadRight (file, tree, node);
         SkipSpace (file);
         bracket = fgetc (file);
+
+    } else if (bracket == EmptyNode) {
+
+        node -> left = nullptr;
+        if ((bracket = fgetc (file)) == '{') {  
+
+            ReadRight (file, tree, node);
+            SkipSpace (file);
+            bracket = fgetc (file);
+           
+        }
 
     }
 
@@ -788,6 +801,14 @@ void DefDec (Tree_node* node) {
 void DefOp (Tree_node* node) {
 
     char* symb = node -> data.Sdata + 2;
+
+    if (strncmp (node -> data.Sdata + 2, "C", 2) == 0) {
+
+        free (node -> data.Sdata);
+        node -> type = TCon;
+        return;
+
+    }
 
     for (int i = 0; i < NumOfOp; i++)
     
@@ -949,22 +970,22 @@ void Print (FILE* file, Tree_node* node) {
 
     switch (node -> type) {
 
-    case TOp: fprintf (file, "O:%s", std_op[node -> data.Odata]); break;
+    case TOp: fprintf (file, "O:%s#", std_op[node -> data.Odata]); break;
 
-    case TDec: fprintf (file, "D:%s", DecNames[node -> data.Ddata]); break;
+    case TDec: fprintf (file, "O:%s#", DecNames[node -> data.Ddata]); break;
 
     case TId: { 
 
         if (strncmp (node -> data.Sdata, "MainTheme", 10) == 0)
-            fprintf (file, "I:main");
+            fprintf (file, "I:main#");
 
-        else fprintf (file, "I:%s", node -> data.Sdata); 
+        else fprintf (file, "I:%s#", node -> data.Sdata); 
 
         break;
 
     }
 
-    case TCon: fprintf (file, "C:C"); break;
+    case TCon: fprintf (file, "O:C#"); break;
 
     default: fprintf (file, "N:%lg", node -> data.Ndata); break;
 
