@@ -147,6 +147,14 @@ int FindFunc (AllFuncs* funcs, const char* Name) {
 
 void DestructFuncs (AllFuncs* funcs) {
 
+    assert (funcs);
+
+    for (int i = 0; i < funcs -> size; i++)
+        free (funcs -> func[i]);
+    
+    free (funcs -> func);
+    funcs -> size = 0; 
+
     return;
 
 }
@@ -246,10 +254,10 @@ int FindVar (Vars* vars, const char* Name) {
     assert (vars);
 
     for (int i = 0; i < vars -> size; i++) {
- 
+        printf ("\r");
         if (strncmp (Name, vars -> var[i] -> name, strlen (Name) + 1) == 0) 
            return i;
-
+        
     }
 
     return -1;
@@ -258,11 +266,25 @@ int FindVar (Vars* vars, const char* Name) {
 
 void DestructVars (Vars* vars) {
 
+    assert (vars);
+
+    for (int i = 0; i < vars -> size; i++) 
+        free (vars -> var[i]);
+
+    vars -> size = 0;
     return;
 
 }
 
 void DestructAvVars (AvVars* vars) {
+
+    assert (vars);
+
+    if (vars -> gVars != nullptr)
+        DestructVars (vars -> gVars);
+
+    if (vars -> fVars != nullptr)
+        DestructVars (vars -> fVars);
 
     return;
 
