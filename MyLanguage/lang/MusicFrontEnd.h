@@ -6,6 +6,7 @@
 #include "grammar.h"
 #include "funcs_and_vars.h"
 
+Tree_node* PtrError = (Tree_node*) 0xFFFFFF;
 short counter = 0;
 
 void DefineVarTone (Tree_node* node);
@@ -29,22 +30,21 @@ void DefineVarTone (Tree_node* node) {
 
             AvVars* vars = ConstructAvVars (nullptr, 0, GVars);
             DefineFVarTone (vars, node -> right);
+
             DestructVars (vars -> fVars);
             free (vars); 
 
         }
 
-        else if (node -> right -> data.Ddata == D_nota)
+        else if (node -> right -> data.Ddata == D_nota) 
             DefineGVarTone (GVars, node -> right);
 
         node = node -> left;
         printf ("\r");
     }
-
     DestructVars (GVars);
 
     return;
-
 
 }
 
@@ -76,19 +76,27 @@ void DefineGVarTone (Vars* vars, Tree_node* node) {
 void DefineFVarTone (AvVars* vars, Tree_node* node) {
 
     assert (vars);
+
+
     
-    if (node == nullptr)
+    if (node < PtrError)
         return; 
 
     int ton = -1;
 
     if (node -> type == TId) {
 
-        if ((ton = FindVar (vars -> fVars, node -> data.Sdata)) >= 0) 
+        if ((ton = FindVar (vars -> fVars, node -> data.Sdata)) >= 0) {
+
+
             node -> tone = vars -> fVars -> var[ton] -> pos;
 
-        else if ((ton = FindVar (vars -> gVars, node -> data.Sdata)) >= 0)
+        }
+
+/*        else if ((ton = FindVar (vars -> gVars, node -> data.Sdata)) >= 0) {
+
             node -> tone = vars -> gVars -> var[ton] -> pos;
+        }*/
 
         else {
 
@@ -101,6 +109,7 @@ void DefineFVarTone (AvVars* vars, Tree_node* node) {
 
     if (node -> type == TDec && node -> data.Ddata == D_leg) {
 
+    
         DefineFVarTone (vars, node -> left);
         DefineFVarTone (vars, node -> right);
 
@@ -184,7 +193,6 @@ void PrintMusic (FILE* file, Tree* tree) {
     assert (tree -> root);
 
     DefineVarTone (tree -> root);
-
     PrMusNode (file, tree -> root);
 
     fprintf (file, "!fermata!:|");
@@ -197,6 +205,9 @@ void PrMusNode (FILE* file, Tree_node* node) {
 
     assert (node);
 
+    if (node < PtrError)
+        return;
+
     if (node -> left != nullptr)
         PrMusNode (file, node -> left);
 
@@ -206,6 +217,9 @@ void PrMusNode (FILE* file, Tree_node* node) {
     if (node -> tone > 0) {
 
         char* note = ConvertTone (node -> tone);
+    
+        if (note == nullptr)
+            return;
 
         if (counter == 0)
             fprintf (file, "[%s,%s]2 ", note, note);
