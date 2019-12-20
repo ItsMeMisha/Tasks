@@ -1,3 +1,7 @@
+#ifndef __FUNCS_AND_VARS__
+
+    #define __FUNCS_AND_VARS__
+
 #include <stdio.h>
 #include <malloc.h>
 #include <assert.h>
@@ -49,6 +53,7 @@ AllFuncs* ConstructFuncs (AllFuncs* funcs);
 bool AddFunc (AllFuncs* funcs, const char* Name, const int ArgsNum);
 bool ExpendFuncs (AllFuncs* funcs);
 int FindFunc (AllFuncs* funcs, const char* Name);
+void DestructFuncs (AllFuncs* funcs);
 
 var_t* NewVar (const char* Name, const int Pos);
 AvVars* ConstructAvVars (AvVars* vars, const int Shift, Vars* glob = nullptr);
@@ -56,6 +61,9 @@ Vars* ConstructVars (Vars* vars);
 bool AddVar (Vars* vars, const char* Name, const int Pos);
 bool ExpendVars (Vars* vars);
 int FindVar (Vars* vars, const char* Name);
+void DestructVars (Vars* vars);
+void DestructAvVars (AvVars* vars);
+
 
 ///////////////////////////////////////////////////////
 
@@ -129,11 +137,17 @@ int FindFunc (AllFuncs* funcs, const char* Name) {
 
     assert (funcs);
 
-    for (int i = 0; i < funcs -> size; i++)
-        if (strncmp (Name, funcs -> func[i] -> name, strlen (funcs -> func[i] -> name)) == 0)
+    for (int i = 0; i < funcs -> size; i++) 
+        if (strncmp (Name, funcs -> func[i] -> name, strlen (Name)) == 0)
             return i;
 
     return -1;
+
+}
+
+void DestructFuncs (AllFuncs* funcs) {
+
+    return;
 
 }
 
@@ -232,9 +246,9 @@ int FindVar (Vars* vars, const char* Name) {
     assert (vars);
 
     for (int i = 0; i < vars -> size; i++) {
-     
-        if (strncmp (Name, vars -> var[i] -> name, strlen (vars -> var[i] -> name)) == 0)
-            return i;
+ 
+        if (strncmp (Name, vars -> var[i] -> name, strlen (Name) + 1) == 0) 
+           return i;
 
     }
 
@@ -242,4 +256,16 @@ int FindVar (Vars* vars, const char* Name) {
 
 }
 
+void DestructVars (Vars* vars) {
 
+    return;
+
+}
+
+void DestructAvVars (AvVars* vars) {
+
+    return;
+
+}
+
+#endif

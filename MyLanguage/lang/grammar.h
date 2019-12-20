@@ -193,7 +193,7 @@ Tree_node* GetVarlist () {
 
         CurTok++;
 
-        if (((*CurTok -1) -> tone = GetTone ()) == 0)
+        if ((val -> right -> tone = GetTone ()) == 0)
             return nullptr;
 
         if ((*CurTok) -> type == TOp && (*CurTok) -> data.Odata == OP_com) {
@@ -272,7 +272,11 @@ Tree_node* GetOp () {
 
         if ((*CurTok) -> type == TOp && (*CurTok) -> data.Odata == OP_opbr) {
 
-            LinkNodes (val, GetArglist (), nullptr);
+            Tree_node* call = NewNode (OP_call, TOp);
+
+            LinkNodes (call, GetArglist (), val);
+
+            val = call;
 
             if (val -> left == nullptr) {
 
@@ -489,7 +493,7 @@ Tree_node* GetVar () {
     if (val -> right == nullptr)
         return nullptr;
 
-    if ((val -> tone = GetTone ()) == 0)
+    if ((val -> right -> tone = GetTone ()) == 0)
         return nullptr;
 
     LinkNodes (val, GetInit (), nullptr);
@@ -795,8 +799,13 @@ Tree_node* GetId () {
 
     CurTok++;
 
-    if ((*CurTok) -> type == TOp && (*CurTok) -> data.Odata == OP_opbr)
-        LinkNodes (val, GetArglist (), nullptr);
+    if ((*CurTok) -> type == TOp && (*CurTok) -> data.Odata == OP_opbr) {
+
+        Tree_node* call = NewNode (OP_call, TOp);
+        LinkNodes (call, GetArglist (), val);
+        val = call;
+
+    }
 
     return val;
 
