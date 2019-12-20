@@ -7,6 +7,8 @@ const char FileInDefault[] = "test.muse";
 const char FileOutDefault[] = "asmtest.mid";
 
 void ReadCmdLineOptions (char* FileInName, char* FileOutName, int argc, const char* argv[]);
+void MakeMusic (Tree* tree);
+void PrintToFile (char* fileName, Tree* tree);
 
 int main (int argc, const char* argv[]) {
 
@@ -20,17 +22,9 @@ int main (int argc, const char* argv[]) {
     TreeConstruct (&tree);
     GetTree (FileIn, &tree);
     OptimiseTree (&tree);
-    TreeDump (&tree);
 
-    FILE* out = fopen ("music.abc", "w");
-    PrintMusic (out, &tree);
-    fclose (out);
-
-    system ("abc2midi music.abc -o music.midi");
-
-    out = fopen (FileOut, "w");
-    PrintPreTree (out, &tree);
-    fclose (out);
+    PrintToFile (FileOut, &tree);
+    MakeMusic (&tree);
 
     TreeDestruct (&tree);
 
@@ -54,4 +48,29 @@ void ReadCmdLineOptions (char* FileInName, char* FileOutName, int argc, const ch
 
 }
 
+void MakeMusic (Tree* tree) {
 
+    assert (tree);
+
+    FILE* out = fopen ("music.abc", "w");
+    PrintMusic (out, tree);
+    fclose (out);
+    system ("abc2midi music.abc -o music.midi");
+
+    return;
+
+};
+
+void PrintToFile (char* fileName, Tree* tree) {
+
+    assert (fileName);
+    assert (tree);
+
+    FILE* out = fopen (fileName, "w");
+    PrintPreTree (out, tree);
+    fclose (out);
+    TreeDump (tree);
+
+    return;
+
+}
