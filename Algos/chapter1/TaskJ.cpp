@@ -8,7 +8,9 @@ struct Tshirt_t {
     short clrA;
     short clrB;
 
-    Tshirt_t (const int price = 0, const int clrA = 0, const int clrB = 0) {
+    Tshirt_t() {};
+
+    Tshirt_t (const int price, const int clrA = 0, const int clrB = 0) {
 
         this->price = price;
         this->clrA  = clrA;
@@ -56,7 +58,7 @@ struct Customer_t {
     short clr;
     int price;
 
-    Customer_t(const int price = -1, const short clr = 0) {
+    Customer_t(const int clr = 0, const short price = -1) {
 
         this->price = price;
         this->clr = clr;
@@ -79,10 +81,13 @@ public:
     int size;
     int maxHei = 1;
 
-    SkipList(const T& Neginf, const T& Posinf) : NegInf {Neginf, maxHei}, PosInf {Posinf, maxHei} {
+    SkipList(const T& Neginf, const T& Posinf) {
 
-//        maxHei = 1;
-        size = 0;
+        PosInf = new Node<T>(Posinf, maxHei);
+        NegInf = new Node<T>(Neginf, maxHei);
+
+        NegInf->forward[0] = PosInf;
+        this->size = 0;
 
     }
 
@@ -100,23 +105,20 @@ public:
 
     }
 
-    ~SkipList() {
-    
+    ~SkipList() {    
         erase ();
-        maxHei = 0;
-        NegInf.~Node<T>();
-        PosInf.~Node<T>();            
-
     }
 
 private:
 
-    Node<T> NegInf;
-    Node<T> PosInf;
+    Node<T>* NegInf;
+    Node<T>* PosInf;
 
     Node<T>* createObj (const T& elem) {
 
-        Node<T>* obj = new Node<T>(elem, this->maxHei);
+        int height = rand() % this->maxHei + 1;
+        Node<T>* obj = new Node<T>(elem, height);
+
         return obj;
 
     }
@@ -131,31 +133,34 @@ struct Node {
 
     friend SkipList<T>;
 
-    Node(const T& val, const int maxsize) : data(val){
-        this->size = rand() % maxsize + 1;        
-    };
+    Node(const T& val, const int& Size) : data(val){
 
-    ~Node() {
-        size = 0;
-        forward.~vector();
-    };
+        this->size = Size;
 
-    typename std::vector<Node<T>*> forward;
+        for (int i = 0; i < size; ++i)
+            forward.push_back (nullptr);
+
+    }
+
+    std::vector<Node<T>*> forward;
     const T& data;
     int size;
 
 };
 
 
-void SortShirts (std::vector<SkipList<Tshirt_t>> color, int n, std::vector<Tshirt_t> shirts);
-void SellStuff (std::vector<SkipList<Tshirt_t>> color, int m, std::vector<Customer_t> customer);
-void ReadTshirts (const int size, std::vector<Tshirt_t> shirts); 
-void ReadCustomers (const int num, std::vector<Customer_t> customers);
-void PrintResults (const int num, std::vector<Customer_t> customers);
+void SortShirts (std::vector<SkipList<Tshirt_t>>& color, int n, const std::vector<Tshirt_t>& shirts);
+void SellStuff (std::vector<SkipList<Tshirt_t>>& color, int m, std::vector<Customer_t>& customer);
+void ReadTshirts (const int size, std::vector<Tshirt_t>& shirts); 
+void ReadCustomers (const int num, std::vector<Customer_t>& customers);
+void PrintResults (const int num, const std::vector<Customer_t>& customers);
  
 int main () {
 
-    std::vector<SkipList<Tshirt_t>> color (3, SkipList<Tshirt_t>(NegInf, PosInf));
+    std::vector<SkipList<Tshirt_t>> color;
+
+    for (int i = 0; i < 3; i++)
+        color.push_back ({NegInf, PosInf});
 
     int n = 0;
     scanf("%d", &n);
@@ -169,25 +174,19 @@ int main () {
 
     SortShirts (color, n, shirts);
     SellStuff (color, m, customers);
-    
-    for (int i = 0; i < 3; ++i)
-        color[i].~SkipList();
 
-    shirts.~vector();
     PrintResults (m, customers);
-    customers.~vector();
-    
 
     return 0;
 
 }
 
-void SortShirts (std::vector<SkipList<Tshirt_t>> color, int n, std::vector<Tshirt_t> shirts) {
+void SortShirts (std::vector<SkipList<Tshirt_t>>& color, int n, const std::vector<Tshirt_t>& shirts) {
 
     for (int i = 0; i < n; ++i) {
-        
+      
         color[shirts[i].clrA - 1].insert (shirts[i]);
-        
+
         if (shirts[i].clrA != shirts[i].clrB)
             color[shirts[i].clrB - 1].insert (shirts[i]);
 
@@ -197,7 +196,7 @@ void SortShirts (std::vector<SkipList<Tshirt_t>> color, int n, std::vector<Tshir
 
 }
 
-void SellStuff (std::vector<SkipList<Tshirt_t>> color, int m, std::vector<Customer_t> customer) {
+void SellStuff (std::vector<SkipList<Tshirt_t>>& color, int m, std::vector<Customer_t>& customer) {
 
     Tshirt_t selled;
     short clr = 0;
@@ -225,31 +224,52 @@ void SellStuff (std::vector<SkipList<Tshirt_t>> color, int m, std::vector<Custom
 
 }
 
-void ReadTshirts (const int size, std::vector<Tshirt_t> shirts) {
+void ReadTshirts (const int size, std::vector<Tshirt_t>& shirts) {
 
-    for (int i = 0; i < size; ++i)
-        scanf ("%d", &(shirts[i].price));
+    int price = 0;
+    short clrA = 0;
+    short clrB = 0;
 
-    for (int i = 0; i < size; ++i)
-        scanf ("%hd", &(shirts[i].clrA));
+    for (int i = 0; i < size; ++i) {
 
-    for (int i = 0; i < size; ++i)
-        scanf ("%hd", &(shirts[i].clrB));
+        scanf ("%d", &price);
+        shirts.push_back(*(new Tshirt_t (price)));
+    }
+
+    for (int i = 0; i < size; ++i) {
+
+        scanf ("%hd", &clrA);
+        shirts[i].clrA = clrA;
+
+    }
+
+    for (int i = 0; i < size; ++i) {
+
+        scanf ("%hd", &clrB);
+        shirts[i].clrB = clrB;
+
+    }
 
     return;
 
 }
 
-void ReadCustomers (const int num, std::vector<Customer_t> customers) {
+void ReadCustomers (const int num, std::vector<Customer_t>& customers) {
 
-    for (int i = 0; i < num; ++i)
-        scanf ("%hd", &(customers[i].clr));
+    short clr = 0;
+
+    for (int i = 0; i < num; ++i) {
+
+        scanf ("%hd", &clr);
+        customers.push_back(*(new Customer_t (clr)));
+
+    }
         
     return;
 
 }
 
-void PrintResults (const int num, std::vector<Customer_t> customers) {
+void PrintResults (const int num, const std::vector<Customer_t>& customers) {
 
     for (int i = 0; i < num; ++i)
         printf ("%d ", customers[i].price);
@@ -263,7 +283,7 @@ void PrintResults (const int num, std::vector<Customer_t> customers) {
 template <typename T>
 void SkipList<T>::insert (const T& elem) {
 
-    if (elem <= this->NegInf.data || elem >= this->PosInf.data) { 
+    if (elem <= this->NegInf->data || elem >= this->PosInf->data) { 
         
         printf ("!!!ERROR Inserting elem out of range\n");//out of range
         return; 
@@ -274,21 +294,24 @@ void SkipList<T>::insert (const T& elem) {
 
     if (nextHei > this->maxHei) {
 
-        this->maxHei =  nextHei;
-        this->NegInf.forward.push_back(&this->PosInf);
+        this->maxHei = nextHei;
+        this->NegInf->forward.push_back(this->PosInf);
+        this->NegInf->size++;
 
     }
 
-    Node<T>* newobj = createObj (elem);    
+    Node<T>* newobj = createObj (elem);   
+
     std::vector<Node<T>*>* path = findPath (elem);
+    int psize = path->size();
 
-    for (int i = newobj->size-1; i >= 0; --i) {
+    for (int i = 0; i < newobj->size; ++i) {
 
-        newobj->forward.push_back((*path)[i]);
-        (*path)[i]->forward[i] = newobj;
+        newobj->forward[i] = (*path)[psize-i-1]->forward[i];
+        (*path)[psize-i-1]->forward[i] = newobj;
        
     }
-    
+   
     delete path;
 
     return;
@@ -300,12 +323,12 @@ std::vector<Node<T>*>* SkipList<T>::findPath (const T& elem) {
 
     std::vector<Node<T>*>* path = new std::vector<Node<T>*>;
 
-    Node<T>* cur = &NegInf;    
-    
+    Node<T>* cur = this->NegInf;  
+
     for (int height = this->maxHei-1; height >= 0; --height) {
 
         while (cur->forward[height]->data < elem)
-            cur = cur->forward[height];
+           cur = cur->forward[height];
 
         path->push_back(cur);
 
@@ -318,26 +341,47 @@ std::vector<Node<T>*>* SkipList<T>::findPath (const T& elem) {
 template <typename T>
 void SkipList<T>::remove (const T& elem) {
 
-    if (elem <= this->NegInf.data || elem >= this->PosInf.data || this->empty()) { 
+    if (elem <= this->NegInf->data || elem >= this->PosInf->data) { 
 
-        printf ("!!!ERROR Inserting elem out of range\n");//out of range
+        printf ("!!!ERROR Removing elem out of range\n");//out of range
         return; 
 
     }
 
+    if (empty())
+        return;   
+ 
+/*    std::vector<Node<T>*>* path = findPath (elem);
+    int psize = path->size();
     
-    std::vector<Node<T>*>* path = findPath (elem);
-    
-    if (path->back()->data != elem)
+    if (path->back()->forward[0]->data != elem)
         return;
 
-    Node<T>* remElem = path->back();
+    for (int i = 0; i < remElem->size; ++i)
+        (*path)[psize-i-1]->forward[i] = remElem->forward[i]; */
 
-    for (int i = remElem->size-1; i >= 0; --i)
-        (*path)[i]->forward[i] = remElem->forward[i];
-    
+    Node<T>* cur = this->NegInf;  
+    Node<T>* remElem = nullptr;
+
+    for (int height = this->maxHei-1; height >= 0; --height) {
+
+        while (cur->forward[height]->data < elem)
+           cur = cur->forward[height];
+
+        if (height == 0)
+            remElem = cur->forward[height];
+
+        if (cur->forward[height]->data == elem)
+            cur->forward[height] = cur->forward[height]->forward[height];
+
+    }  
+
+    if (remElem == nullptr)
+        return;
+
+    this->size--; 
     delete remElem;
-    delete path;
+//    delete path;
 
     return;
 
@@ -347,9 +391,9 @@ template <typename T>
 T SkipList<T>::getfront () {
 
     if (empty()) 
-        return NegInf.data;
+        return NegInf->data;
 
-    return NegInf.forward[0]->data;
+    return NegInf->forward[0]->data;
 
 }
 
@@ -359,10 +403,12 @@ void SkipList<T>::popfront () {
     if (empty())
         return;
 
-    Node<T>* popping = NegInf.forward[0];
+    Node<T>* popping = NegInf->forward[0];
 
     for (int i = 0; i < popping->size; i++)
-        this->NegInf.forward[i] =  popping->forward[i];
+        this->NegInf->forward[i] =  popping->forward[i];
+
+    this->size--;
 
     delete popping;
     
