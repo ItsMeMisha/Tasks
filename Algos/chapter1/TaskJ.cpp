@@ -131,8 +131,6 @@ private:
     Node* NegInf;
     Node* PosInf;
 
-    
-
     int newHeight (const int& maxHeight) {
 
         int newHeight = 1;
