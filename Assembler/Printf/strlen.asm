@@ -8,7 +8,7 @@ section     .text
 
 ;=================================================
 ; Counts length of the string
-; Entry:    EDI - address of the string
+; Entry:    RDI - address of the string
 ;
 ; Ret:      EAX - length of the string
 ;=================================================
@@ -18,15 +18,18 @@ _myStrlen:      push    rdi
                 push    rsi
                 push    rcx
 
-                xor     al, al
+                xor     rax, rax
                 xor     ecx, ecx
                 xor     ecx, 0          ;max ecx
-                mov     esi, edi
+                mov     rsi, rdi
                 
                 call    _myMemchr
 
-                sub     edi, esi
-                mov     eax, edi
+                cmp     rdi, 0
+                je      .end
+
+                sub     rdi, rsi
+.end:           mov     rax, rdi
 
                 pop     rcx
                 pop     rsi
@@ -49,11 +52,12 @@ _myStrlen:      push    rdi
 
 _myMemchr:      cld
                 repne   scasb
-                je     .found
+                jz     .found
 
-                xor     edi, edi
+                xor     rdi, rdi
+                inc     rdi
 .found:
-                dec     edi
+                dec     rdi
                 ret 
 
 ;=================================================

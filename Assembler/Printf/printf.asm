@@ -4,22 +4,22 @@
 
 %macro  caseESI 2
 
-        cmp     [esi], %1
+        cmp     byte [rsi], %1
         je      %2
 
 %endmacro
 
-%macro printNum
+%macro printNum 0
 
-        mov     eax, NumBuffer
+        mov     rax, NumBuffer
         call    _myPuts
 
 %endmacro
 
 %macro  printUnum 1
 
-        mov     ?, %1
-        mov     ?, NumBuffer
+        mov     r8d, %1
+        mov     ecx, NumBuffer
         call    _utoa
         printNum
         jmp     .formatEnd
@@ -28,8 +28,8 @@
 
 %macro  printSnum 1
 
-        mov     ?, %1
-        mov     ?, NumBuffer
+        mov     r8d, %1
+        mov     ecx, NumBuffer
         call    _stoa
         printNum
         jmp     .formatEnd
@@ -50,45 +50,50 @@ section         .text
 ;=================================================
 
 _myPrintf:      enter   0, 0
-                mov     rsi, [ebp + 16]      ;format string
-                mov     edi, ebp
-                add     edi, 24
+                push    rsi
+                push    rdi
+                push    rax
+                push    r8
+
+                mov     rsi, [rbp + 16]      ;format string
+                mov     rdi, rbp
+                add     rdi, 24
                 
 .loop:         
-                cmp     [esi], '%'
+                cmp     byte [rsi], '%'
                 je      .format
-                mov     al, byte [esi]
+                mov     al, byte [rsi]
                 call    _myPutc
 
-.checkEnd:      inc     esi
-                cmp     [esi], 0
+.checkEnd:      inc     rsi
+                cmp     byte [rsi], 0
                 jne     .loop
                 jmp     .end
 
-.format:        inc     esi
+.format:        inc     rsi
 
-                case    '%' .formatPerc
-                mov     rax, [edi]
+                caseESI '%', .formatPerc
+                mov     rax, [rdi]
 
-                case    's' .formatS
-                case    'S' .formatS
-                case    'c' .formatC
-                case    'C' .formatC
+                caseESI 's', .formatS
+                caseESI 'S', .formatS
+                caseESI 'c', .formatC
+                caseESI 'C', .formatC
                 
-                case    'd' .formatD
-                case    'D' .formatD
-                case    'i' .formatI
-                case    'I' .formatI
-                case    'u' .formatU
-                case    'U' .formatU
+                caseESI 'd', .formatD
+                caseESI 'D', .formatD
+                caseESI 'i', .formatI
+                caseESI 'I', .formatI
+                caseESI 'u', .formatU
+                caseESI 'U', .formatU
 
-                case    'o' .formatO
-                case    'O' .formatO
-                case    'x' .formatX
-                case    'X' .formatX
+                caseESI 'o', .formatO
+                caseESI 'O', .formatO
+                caseESI 'x', .formatX
+                caseESI 'X', .formatX
 
-.formatEnd:     add     edi, 8
-                inc     esi
+.formatEnd:     add     rdi, 8
+                inc     rsi
                 jmp     .checkEnd
 
 .formatS:       call    _myPuts
@@ -110,7 +115,13 @@ _myPrintf:      enter   0, 0
 
 .formatO:       printUnum 8d
 
-.end:           leave
+.end:           
+
+                pop     r8
+                pop     rax
+                pop     rdi
+                pop     rsi
+                leave
                 ret
 
 section         .data

@@ -10,7 +10,7 @@ section     .text
 
 ;=================================================
 ; Puts string to stdout
-; Entry:    EDI - address of the string
+; Entry:    rAX - address of the string
 ;=================================================
 
 _myPuts:        push    rax
@@ -18,9 +18,9 @@ _myPuts:        push    rax
                 push    rsi
                 push    rdx
 
+                mov     rsi, rax
                 call    _myStrlen 
-                mov     edx, eax
-                mov     esi, edi
+                mov     rdx, rax
                 mov     rdi, 1
                 mov     rax, 1
                 syscall 

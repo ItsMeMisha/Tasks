@@ -10,27 +10,29 @@ section     .text
 
 ;=================================================
 ; Turns signed number into string (calls _utoa)
-; Entry:    AX - number
-;           EDI - address of the string buffer
-;           DL - base
-; Destr:    EDI
+; Entry:    EAX - number
+;           ECX - address of the string buffer
+;           r8w - base
 ;=================================================
 
 _stoa:          push    rcx
-                mov     cx, 1
-                shl     cx, 15
-                and     cx, ax
-                cmp     cx, 0
+                push    r9
+
+                mov     r9w, 1
+                shl     r9w, 15
+                and     r9w, ax
+                cmp     r9w, 0
                 je      .turn
 
-                mov     byte [edi], '-'
-                inc     edi
-                xor     cx, cx
+                mov     byte [rcx], '-'
+                inc     ecx
+                xor     r9w, r9w
                 dec     ax
-                xor     ax, cx
+                xor     ax, r9w
 
-.turn:          pop     rcx
-                call    _utoa
+.turn:          call    _utoa
+                pop     r9
+                pop     rcx    
 
                 ret
 
@@ -42,25 +44,33 @@ _stoa:          push    rcx
 
 ;=================================================
 ; Turns signed number into string
-; Entry:    AX - number
-;           EDI - address of the string buffer
-;           DL - base
-; Destr:    EDI
+; Entry:    EAX - number
+;           ECX - address of the string buffer
+;           r8d - base
 ;=================================================
 
 _utoa:          push    rcx
-                mov     ecx, edi
+                push    rdx
+                push    r9
 
-.loop:          div     dl
-                mov     dh, ah
-                mov     ah, byte [DIGIT+ebx]
-                mov     byte [edi], ah
-                inc     edi
-                cmp     al, 0
+                mov     r9, rcx
+
+.loop:          xor     edx, edx
+                div     r8d
+                mov     ebx, edx
+                mov     dh, byte [DIGIT+rbx]
+                mov     [rcx], dh
+                inc     rcx
+                cmp     eax, 0
                 jne     .loop
-
-                dec     edi
+                
+                mov     byte [rcx], 0
+                dec     rcx
+                mov     rdx, r9
                 call    _reverse
+
+                pop     r9
+                pop     rdx
                 pop     rcx
 
                 ret
