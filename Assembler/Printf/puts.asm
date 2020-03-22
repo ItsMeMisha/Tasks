@@ -19,6 +19,7 @@ _myPuts:        push    rax
                 push    rdx
 
                 mov     rsi, rax
+                mov     rdi, rax
                 call    _myStrlen 
                 mov     rdx, rax
                 mov     rdi, 1

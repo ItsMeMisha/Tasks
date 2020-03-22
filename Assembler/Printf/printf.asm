@@ -93,7 +93,6 @@ _myPrintf:      enter   0, 0
                 caseESI 'X', .formatX
 
 .formatEnd:     add     rdi, 8
-                inc     rsi
                 jmp     .checkEnd
 
 .formatS:       call    _myPuts

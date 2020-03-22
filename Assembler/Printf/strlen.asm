@@ -20,7 +20,7 @@ _myStrlen:      push    rdi
 
                 xor     rax, rax
                 xor     ecx, ecx
-                xor     ecx, 0          ;max ecx
+                not     ecx          ;max ecx
                 mov     rsi, rdi
                 
                 call    _myMemchr
@@ -44,15 +44,15 @@ _myStrlen:      push    rdi
 
 ;=================================================
 ; Finds position of the character in the byte string
-; Entry:    EDI - address of the string
+; Entry:    RDI - address of the string
 ;           AL  - required character
-;           ECX - length of the string
-; Ret:      EDI - address of the character
+;           RCX - length of the string
+; Ret:      RDI - address of the character
 ;=================================================
 
 _myMemchr:      cld
                 repne   scasb
-                jz     .found
+                je      .found
 
                 xor     rdi, rdi
                 inc     rdi

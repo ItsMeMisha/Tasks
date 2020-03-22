@@ -7,23 +7,25 @@ section         .text
     global      _reverse
 
 ;=================================================
-; Reverses line from RCX to RDX
-; Entry:    RCX - begin of the line
-;           RDX - end of the line
+; Reverses line from RDX to RCX
+; Entry:    RDX - begin of the line
+;           RCX - end of the line
 ;=================================================
 
 _reverse:       push    rax
                 push    rdx
                 push    rcx
 
-                cmp     rcx, rdx
+                cmp     rdx, rcx
                 jae     .end
 
-.loop:          mov     al, [rcx]
-                mov     [rdx], al
-                inc     rcx
-                dec     rdx
-                cmp     rcx, rdx
+.loop:          mov     al, byte [rdx]
+                mov     ah, byte [rcx]
+                mov     [rcx], al
+                mov     [rdx], ah
+                inc     rdx
+                dec     rcx
+                cmp     rdx, rcx
                 jb      .loop
 .end:
 
