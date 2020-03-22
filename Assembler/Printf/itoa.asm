@@ -18,17 +18,18 @@ section     .text
 _stoa:          push    rcx
                 push    r9
 
-                mov     r9w, 1
-                shl     r9w, 15
-                and     r9w, ax
-                cmp     r9w, 0
+                mov     r9, 1
+                shl     r9, 63
+                and     r9, rax
+                cmp     r9, 0
                 je      .turn
 
                 mov     byte [rcx], '-'
-                inc     ecx
-                xor     r9w, r9w
-                dec     ax
-                xor     ax, r9w
+                inc     rcx
+                xor     r9, r9
+                not     r9
+                dec     rax
+                xor     rax, r9
 
 .turn:          call    _utoa
                 pop     r9
