@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <utility>
 
 template <typename T>
 class BTree {
@@ -37,14 +38,17 @@ private:
         bool isLeaf();
         Node* split(Node* parent = nullptr, const int& posInParent = 0);
         void insert(const T& elem);
-
+        Node* mergeLeafs(Node* nodeA, Node* nodeB);
     };
 
     Node* root;
     int maxT = 1 << 7; //128
     int size = 0;
 
-    
+    void eraseFromNode(const Node* node, const int indx, const Node* parent, const int childIndx);  
+    std::pair<Node*, int> findElem(const T& elem);    
+    std::pair<Node*, int> findNode(const T& elem);  //returns ptr to PARENTNODE and INDEX of CHILD
+                                                     //which contains ELEM
 
 };
 
@@ -117,6 +121,22 @@ void BTree::Node::insert(const T& elem) {
 }
 
 template <typename T>
+Node* BTree::Node::mergeLeafs(Node<T>* nodeA, Node<T>* nodeB) {
+
+    if (!nodeA->isLeaf() || !nodeB->isLeaf)
+        return nullptr;
+
+    Node* mergedNodes = new Node(*nodeA, 0, nodeA->size - 1);
+    mergedNodes->data.insert (mergedNodes->data.end(), nodeB->data.begin(), nodeB->data.end());
+    mergedNodes->children.insert (mergedNodes->children.last(), nodeB->size, nullptr);
+    mergedNodes->size += nodeB->size;
+
+    return mergedNodes
+
+}
+
+
+template <typename T>
 BTree::~BTree() {
 
 
@@ -138,12 +158,105 @@ void BTree::insert(const T& elem) {
 template <typename T>
 T BTree::findNext(const T& elem) {
 
+    Node* curNode = root;
+    int i = 0;
+
+    do {
+
+        for (i = 0; i < curNode->size && curNode->data[i] < elem; ++i);
+
+        if (curNode->data[i] == elem)
+            return elem;
+
+        if (curNode->isLeaf())
+            if (i < curNode->size)
+                return curNode->data[i];
+
+            else return curNode->data[i-1];
+
+        curNode = curNode->children[i];
+
+    } while (curNode != nullptr);
+
+}
+
+template <typename T>
+std::pair<Node*, int> BTree::findElem (const T& elem) {
+
+    Node* curNode = root;
+    int i = 0;
+
+    do {
+
+        for (i = 0; i < curNode->size && curNode->data[i] < elem; ++i);
+
+        if (curNode->data[i] == elem)
+            return std::pair<Node*, int> (curNode, i);
+
+        if (curNode->isLeaf())
+            return std::pair<Node*, int> (nullptr, 0);
+
+        curNode = curNode->children[i];
+
+    } while (curNode != nullptr);
+
+}
+
+template <typename T>
+std::pair<Node*, int> BTree::findNode (const T& elem) {
+
+    Node* parentNode = nullptr;
+    int childIndex = 0;
+    Node* curNode = root;
+    int i = 0;
+
+    do {
+
+        for (i = 0; i < curNode->size && curNode->data[i] < elem; ++i);
+
+        if (curNode->data[i] == elem)
+            return std::pair<Node*, int> (parentNode, childIndex);
+
+        if (curNode->isLeaf())
+            return std::pair<Node*, int> (nullptr, -1);
+
+        parentNode = curNode;
+        childIndex = i;
+        curNode = curNode->children[i];
+
+    } while (curNode != nullptr);
+
+}
+
+template <typename T>
+void BTree::eraseFromNode(const Node* node, const int indx, const Node* parent, const int childIndx){
+
+    if (
+
+    return;
 }
 
 template <typename T>
 void BTree::erase(const T& elem) {
 
+    std::pair<Node*, int> ParentNChild = findNode (elem);
+    if (ParentNChild.first == nullptr && ParentNChild.second == -1)
+        return;
 
+    Node* node = nullptr;
+
+    if (ParentNChild.first == nullptr)
+        node = parent;
+    else
+        node = ParentNChild.first->children[ParentNChild.second];
+
+    int indx = 0;
+    for (indx; indx < node -> size && node->data[indx] != elem; ++indx);
+
+    if (node->data[indx] != elem)
+        return;
+    
+    eraseFromNode(node, indx, ParentNChild.first, ParentNChild.second);
     return;
 }
 
