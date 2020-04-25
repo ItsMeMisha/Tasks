@@ -4,7 +4,6 @@
 
 #include <vector>
 #include <utility>
-#include <algorithm>
 
 template <typename T>
 class BTree {
@@ -18,10 +17,8 @@ public:
     void insert(const T& elem);
     T findNext(const T& elem);
     void erase(const T& elem);
+    T findKMax(int k);
     bool empty();
-    void dump() {
-        dump(root);
-    }
 
 private:
 
@@ -30,6 +27,7 @@ private:
         Node() {
 
             children.push_back(nullptr);
+            subTreeSize.push_back(0);
 
         }
 
@@ -37,59 +35,29 @@ private:
 
             size (last - first),
             children (sourceNode.children.begin() + first, sourceNode.children.begin() + last + 1),
-            data (sourceNode.data.begin() + first, sourceNode.data.begin() + last)
+            data (sourceNode.data.begin() + first, sourceNode.data.begin() + last),
+            subTreeSize (sourceNode.subTreeSize.begin() + first, sourceNode.subTreeSize.begin() + last + 1)
 
         {};
 
         std::vector<T> data;
         std::vector<Node*> children;
+        std::vector<int> subTreeSize;
         int size = 0;
 
         bool isLeaf() const;
         Node* split(Node* parent = nullptr, const int& posInParent = 0);
         void insert(const T& elem);
         void destroyChildren();
-
-        void dump() {
-
-            printf ("Node: %p; size: %d {", this, size);
-    
-            for (int i = 0; i < size && i < 10; ++i)
-                printf ("%d ", data[i]);
-
-//            printf ("\n");
-
-            /*for (int i = 0; i <=size; ++i)
-                printf ("%p ", children[i]);*/
-    
-            printf ("}\n");
-
-            }
+        int countSubTreeSize();
+        T findKMax(int k);
 
     };
 
     static const int maxT = 1 << 7; //128
     int size = 0;
     Node* root;
-    const T defaultElem;
-
-    void dump(Node* node, int lvl = 0) {
-
-        if (node == nullptr)
-            return;
-
-        for (int i = 0; i < lvl; ++i) printf ("\t");
-/*        printf ("Node: %p; size: %d {", node, node->size);
-
-        for (int i = 0; i < node->size; ++i)
-            printf ("%d ", node->data[i]);
-
-        printf ("}\n");*/
-        node->dump();
-        for (int i = 0; i <= node->size; ++i)
-            dump(node->children[i], lvl + 1);
-
-    }
+    const T defaultElem = {};
 
     void deleteFromNode(Node* node, int indx);
     void movFromNext(Node* parent, int childIndx);
@@ -104,148 +72,60 @@ private:
 
 //================================================
 
-void Test(int num) {
-
-    BTree<int> tree (-1);
-    std::vector<int> results;
-    char command = 0;
-    int param = 0;
-    char prevCom = 0;
-    int prevRes = 0;
-    int curMax = 2;
-
-    for (int i = 0; i < num; ++i) {
-        command = rand() % 2;
-        param = rand() %1000000000;
-        if (i % 100 == 0)
-            printf ("%d: \n", i);
-
-        if (command == 1) {
-
-      //      printf ("+ %d\n", param);
-            
-            if (prevCom == 0) {
-
-                tree.insert((param + prevRes) % 1000000000);
-
-            } else {
-
-                tree.insert(param);
-
-            }
-
-            if (param > curMax) curMax = param;
-
-        }
-
-        else if (command == 0) {
-
-        //    printf ("? %d\n", param);
-
-            if (param > curMax)
-                param = curMax - 1;
-
-            int next = tree.findNext (param);
-            prevRes = next;
-            results.push_back(next);
-
-        }
-        prevCom = command;
-    }
-
-//    for (int i = 0; i < results.size(); i++)
-//        std::cout << results[i] << '\n';
-
-//    tree.dump();
-
-}
-
-void doCommands (int numberOfCommands);
+void doCommands(int numOfCommands);
 
 int main() {
 
-/*    BTree<int> tree (-1);
-    for (int i = 0; i < 64; ++i)
-        for (int j = i; j < 64; ++j)
-            tree.insert(j);
-
-
-    for (int i = 0; i < 64; ++i)
-        for (int j = i; j < 20; ++j) {
-
-            printf ("I: %d J: %d; ", i, j);
-            tree.checkLeftElem();
-            tree.erase(j);
-
-        }
-
-//tree.dump();
-    printf ("findNext(1): %d\n", tree.findNext(1)); */
-
-//    int numOfCommands = 0;
-//   std::cin >> numOfCommands;
-//    doCommands (numOfCommands);
-
-    Test(300000);
-
+    int numOfCommands = 0;
+    std::cin >> numOfCommands;
+    doCommands(numOfCommands);
+    
     return 0;
+
 }
 
-void doCommands (int numberOfCommands) {
+void doCommands(int numOfCommands) {
 
     BTree<int> tree (-1);
     std::vector<int> results;
-    char command = 0;
+    short int command = 0;
     int param = 0;
-    char prevCom = 0;
-    int prevRes = 0;
-    for (int i = 0; i < numberOfCommands; ++i) {
+
+    for (int i = 0; i < numOfCommands; ++i) {
+
         std::cin >> command;
+        std::cin >> param;
+        if (command == 1)
+            tree.insert(param);
 
-        if (command == '+') {
-            
-            std::cin >> param;
-            if (prevCom == '?')
-                tree.insert((param + prevRes) % 1000000000);
-            else tree.insert(param);
+        else if (command == -1) 
+            tree.erase(param);
 
-        }
+        else if (command == 0) {
 
-        else if (command == '?') {
-
-            std::cin >> param;
-            int next = tree.findNext (param);
-            prevRes = next;
+            int next = tree.findKMax (param);
             results.push_back(next);
 
         }
-        prevCom = command;
     }
 
     for (int i = 0; i < results.size(); i++)
         std::cout << results[i] << '\n';
+
 }
 
 //================================================
-
-
-
 template <typename T>
 void BTree<T>::Node::destroyChildren() {
 
     if (isLeaf())
         return;
-//dump();
 
     for (int i = 0; i <= size; ++i){
  
-//        printf ("%d: %p\n", i, children[i]);
-       
         children[i]->destroyChildren();
         delete children[i];
     }
-//    printf ("\t\tEnd\n");
-
 
     return;
 }
@@ -254,6 +134,20 @@ template <typename T>
 bool BTree<T>::Node::isLeaf() const {
 
         return (this->children[0] == nullptr);
+}
+
+template <typename T>
+int BTree<T>::Node::countSubTreeSize() {
+
+    if (isLeaf())
+        return size;
+
+    int subSize = subTreeSize[0];
+
+    for (int i = 1; i <= size; ++i)
+        subSize += subTreeSize[i] + 1;
+
+    return subSize;
 }
 
 template <typename T>
@@ -275,6 +169,7 @@ typename BTree<T>::Node* BTree<T>::Node::split(Node* parent, const int& posInPar
 
         parent->data.push_back(midElem);
         parent->children.push_back(rightPart);
+        parent->subTreeSize.push_back(0);
 
     } else {
 
@@ -282,6 +177,8 @@ typename BTree<T>::Node* BTree<T>::Node::split(Node* parent, const int& posInPar
         parent->children.insert(parent->children.begin()+posInParent + 1, rightPart);
 
     }
+    parent->subTreeSize[posInParent] = countSubTreeSize();
+    parent->subTreeSize[posInParent + 1] = rightPart->countSubTreeSize();
     ++(parent->size);
     this->size /= 2;
 
@@ -303,6 +200,7 @@ void BTree<T>::Node::insert(const T& elem) {
         if (pos < this->size && this->data[pos] < elem)
             ++pos;
 
+        this->subTreeSize[pos]++;
         this->children[pos]->insert(elem);
 
     } else {
@@ -313,6 +211,7 @@ void BTree<T>::Node::insert(const T& elem) {
         else this->data.insert(this->data.begin()+pos, elem);
 
         this->children.push_back(nullptr);
+        this->subTreeSize.push_back(0);
         ++(this->size);
 
     }
@@ -320,7 +219,43 @@ void BTree<T>::Node::insert(const T& elem) {
     return;
 }
 
+template <typename T>
+T BTree<T>::Node::findKMax(int k) {
+
+    if (isLeaf()) 
+        return data[size - k];
+
+    int numOfElems = subTreeSize[size];
+
+    if (numOfElems >= k)
+        return children[size]->findKMax(k);
+
+    int i = size - 1;
+    for (int i; numOfElems < k; --i) {
+
+        numOfElems++;
+        if (numOfElems == k)
+            return data[i];
+
+        numOfElems += subTreeSize[i];
+
+    }
+
+    return children[i]->findKMax(k - (numOfElems - subTreeSize[i]));
+
+}
+
 //----------------------------------------------------------
+
+template <typename T>
+T BTree<T>::findKMax(int k) {
+
+    if (empty() || k > size)
+        return defaultElem;
+
+    return root->findKMax(k);
+
+}
 
 template <typename T>
 typename BTree<T>::Node* BTree<T>::mergeSons(Node* parent, int midPos) {
@@ -340,7 +275,10 @@ typename BTree<T>::Node* BTree<T>::mergeSons(Node* parent, int midPos) {
     
     parent->data.erase(parent->data.begin() + midPos);
     parent->children.erase(parent->children.begin() + midPos + 1);
+    parent->subTreeSize.erase(parent->subTreeSize.begin() + midPos + 1);
+
     parent->children[midPos] = mergedNodes;
+    parent->subTreeSize[midPos] = mergedNodes->countSubTreeSize(); 
     parent->size--;
 
     return mergedNodes;
@@ -398,12 +336,14 @@ T BTree<T>::findNext(const T& elem) {
 
 }
 
+
 template <typename T>
 void BTree<T>::deleteFromNode(Node* node, int indx) {
 
     node->size--;
     node->data.erase(node->data.begin()+indx);
     node->children.pop_back();
+    node->subTreeSize.pop_back();
 }
 
 template <typename T>
@@ -413,13 +353,18 @@ void BTree<T>::movFromNext(Node* parent, int childIndx) {
     Node* nextNode = parent->children[childIndx+1];
 
     node->data.push_back(parent->data[childIndx]);
-    node->size++;
     node->children.push_back(nextNode->children[0]);
+    node->subTreeSize.push_back(nextNode->subTreeSize[0]);
+    node->size++;
 
     parent->data[childIndx] = nextNode->data[0];
     nextNode->data.erase(nextNode->data.begin());
     nextNode->children.erase(nextNode->children.begin());
+    nextNode->subTreeSize.erase(nextNode->subTreeSize.begin());
     nextNode->size--;
+
+    parent->subTreeSize[childIndx] = node->countSubTreeSize();
+    parent->subTreeSize[childIndx+1] = nextNode->countSubTreeSize();
 
 }
 
@@ -432,15 +377,20 @@ void BTree<T>::movFromPrev(Node* parent, int childIndx) {
     node->data.insert(node->data.begin(), parent->data[childIndx]);
     node->size++;
     node->children.insert(node->children.begin(), prevNode->children[prevNode->size]);
-
+    node->subTreeSize.insert(node->subTreeSize.begin(), prevNode->subTreeSize[prevNode->size]);
 
     parent->data[childIndx] = prevNode->data[prevNode->size-1];
     prevNode->data.pop_back();
 
     prevNode->children.pop_back();
+    prevNode->subTreeSize.pop_back();
     prevNode->size--;
 
+    parent->subTreeSize[childIndx] = node->countSubTreeSize();
+    parent->subTreeSize[childIndx-1] = prevNode->countSubTreeSize();
+
 }
+
 
 template <typename T>
 void BTree<T>::fixNode(Node* node, Node* parent, int childIndx) {
@@ -510,6 +460,7 @@ void BTree<T>::eraseFromSubtree(const T& elem, Node* node, Node* parent, int chi
             node->data[i] = curNode->data[0];
             curNode->data[0] = elem;
             eraseLeftFromLeftLeaf(node->children[i+1], node, i+1);
+//            eraseFromSubtree(elem, node->children[i+1], node, i+1);
         }
         
     } else if (node->isLeaf()) {
@@ -518,12 +469,17 @@ void BTree<T>::eraseFromSubtree(const T& elem, Node* node, Node* parent, int chi
         if (node->size > maxT - 1 || node == root){
 
             deleteFromNode(node, i);
+
+            if (node != root)
+                parent->subTreeSize[childIndx]--;
+
             size--;
             return;
         
         } else {
 
             deleteFromNode(node, i);
+            parent->subTreeSize[childIndx]--;
             fixNode(node, parent, childIndx);
             
         }
