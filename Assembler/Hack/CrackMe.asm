@@ -1,18 +1,25 @@
 section .data
 
-    gretting: db 'What must you say while invading secret trade federation base', 0 ;??????
+    greeting: db 'What must you say when you invade the Trade Federation secret base?', 10, 0 ;68 symbols
+    greetingPhraseLength dq 68    
+
     passBuf times 10h db 0     ;pass is "hellothere" - 10 symbols
 
     wrongPass: db 'No. Impossible. Perhaps, the archives are incomplete', 10, 0 ; 53 symbols
     wrongPhraseLength   dq 52
 
-    rightPass: db 'You are in. You hear: "General Kenobi..."', 10, 0 ; 42 symbols
-    rightPhraseLength   dq 42
+    rightPass: db 'You are inside. You hear: "General Kenobi..."', 10, 0 ; 46 symbols
+    rightPhraseLength   dq 46
 
 section .text
 
 global _start
 _start:
+
+        mov     rsi, greeting
+        mov     rdx, [greetingPhraseLength]
+        call    print
+
         call    readPass
         call    checkHash
         call    close
