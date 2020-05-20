@@ -20,13 +20,14 @@
 %endmacro
 
 %macro  printBinNum 1
-        mov     r8l, %1
+        mov     r8b, %1
         mov     rcx, NumBuffer
         call    _binRadixToa
         printNum
         jmp     formatEnd
 
 %endmacro
+
 %macro  printSnum 1
 
         mov     r8d, %1
@@ -106,20 +107,20 @@ Format:         inc     rsi
     formatC:        call    _myPutc
                     jmp     formatEnd
 
-    formatPerc:     mov     al, '%'
+    formatPerc:     mov     rax, '%'
                     call    _myPutc
-                    jmp     formatEnd
+                    jmp     checkEnd
 
     formatI:                           ;same as foramtD
     formatD:        printSnum 10d
 
     formatU:        printUnum 10d
 
-    formatX:        printUnum 10h
+    formatX:        printBinNum 4d
 
-    formatO:        printUnum 8d
+    formatO:        printBinNum 3d
 
-    formatB:        printUnum 2d
+    formatB:        printBinNum 1d
 
     Error:          mov     rax, ErrorMsg
                     call    _myPuts
