@@ -2,13 +2,6 @@
 ; _myPrintf realization
 ;=================================================
 
-%macro  caseESI 2
-
-        cmp     byte [rsi], %1
-        je      %2
-
-%endmacro
-
 %macro printNum 0
 
         mov     rax, NumBuffer
@@ -26,6 +19,14 @@
 
 %endmacro
 
+%macro  printBinNum 1
+        mov     r8l, %1
+        mov     rcx, NumBuffer
+        call    _binRadixToa
+        printNum
+        jmp     formatEnd
+
+%endmacro
 %macro  printSnum 1
 
         mov     r8d, %1
@@ -42,6 +43,7 @@ section         .text
     extern  _myPuts
     extern  _stoa
     extern  _utoa
+    extern  _binRadixToa
 
     global  _myPrintf
 
@@ -59,17 +61,16 @@ _myPrintf:      enter   0, 0
                 mov     rdi, rbp
                 add     rdi, 24
                 
-.loop:         
+loop:         
                 cmp     byte [rsi], '%'
                 jne     .letter
-                call    Format
-                jmp     .checkEnd
+                jmp    Format
 .letter:        mov     al, byte [rsi]
                 call    _myPutc
 
-.checkEnd:      inc     rsi
+checkEnd:       inc     rsi
                 cmp     byte [rsi], 0
-                jne     .loop
+                jne     loop
            
                 pop     r8                  ;end
                 pop     rax
@@ -82,7 +83,7 @@ Format:         inc     rsi
                 
                 xor     rbx, rbx
                 mov     bl, byte [rsi]
-mov al, 'R'
+
                 cmp     bl, '%'
                 je      formatPerc
                 cmp     bl, 'z'
@@ -96,30 +97,8 @@ mov al, 'R'
                 mov     rax, [rdi]
                 jmp     [JmpTable + 8*rbx - 'B'*8]
                 
-;                caseESI '%', .formatPerc
-
-;                caseESI 's', .formatS
-;                caseESI 'S', .formatS
-;                caseESI 'c', .formatC
-;                caseESI 'C', .formatC
-;                
-;                caseESI 'd', .formatD
-;                caseESI 'D', .formatD
-;                caseESI 'i', .formatI
-;                caseESI 'I', .formatI
-;                caseESI 'u', .formatU
-;                caseESI 'U', .formatU
-;
-;                
-;                caseESI 'b', .formatB
-;                caseESI 'B', .formatB
-;                caseESI 'o', .formatO
-;                caseESI 'O', .formatO
-;                caseESI 'x', .formatX
-;                caseESI 'X', .formatX
-
     formatEnd:      add     rdi, 8
-                    ret
+                    jmp     checkEnd
 
     formatS:        call    _myPuts
                     jmp     formatEnd
