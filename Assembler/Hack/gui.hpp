@@ -19,10 +19,7 @@ public:
 
 Button::Button (const float& posX, const float& posY, const float& sizeX, const float& sizeY, const sf::Color& color) {
 
-    this->setPosition (sf::Vector2f (posX, posY));
-    this->setSize (sf::Vector2f (sizeX, sizeY));
-    this->setFillColor (color);
-
+    set (posX, posY, sizeX, sizeY, color);
 }
 
 void Button::set (const float& posX, const float& posY, const float& sizeX, const float& sizeY, const sf::Color& color) {
