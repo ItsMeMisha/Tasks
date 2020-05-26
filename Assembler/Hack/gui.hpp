@@ -111,7 +111,7 @@ private:
     JnzButton jnzButton;
     const float jnzButPosX = 120;
     const float jnzButPosY = 120;
-    sf::Color jnzButColor = sf::Color::Red;
+    sf::Color jnzButColor = sf::Color::Green;
 
     SkipPassButton skipPassButton;
     const float skipButPosX = 480;
