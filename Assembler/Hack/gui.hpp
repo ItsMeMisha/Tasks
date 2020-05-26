@@ -69,7 +69,6 @@ private:
 void JnzButton::mainFunc() {
 
     file.changeJnz();
-printf ("Jnz was pressed!\n");
 }
 
 
@@ -91,8 +90,6 @@ private:
 void SkipPassButton::mainFunc() {
 
     file.skipPass();
-printf ("skip was pressed!\n");
-
 }
 
 

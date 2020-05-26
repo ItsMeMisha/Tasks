@@ -20,8 +20,9 @@
 
 namespace MaxsPass {
 
-    enum Error {
+    enum ERRORS {
 
+        OK         = 0,
         WRONG_FILE = 1
     };
 
@@ -35,6 +36,8 @@ namespace MaxsPass {
         void changeJnz();
         void changeCall();
         void skipPass();
+
+        ERRORS error = OK;
     
     private:
         const char* outputName = "CrackedProg.out";
@@ -43,7 +46,7 @@ namespace MaxsPass {
 
         void readFile (const char* fileName);
         void writeToFile ();
-        int checkFile ();
+        ERRORS checkFile ();
 
     };
 
@@ -53,7 +56,7 @@ namespace MaxsPass {
 
         readFile (fileName);
 
-        if (checkFile());
+        error = checkFile();
             
     }
 
@@ -76,7 +79,7 @@ namespace MaxsPass {
         fclose (input);
     }
 
-    int File::checkFile() {
+    ERRORS File::checkFile() {
         
         if (fileSize < 0x1CA)
             return WRONG_FILE;
@@ -84,6 +87,7 @@ namespace MaxsPass {
         if (buffer[0] != 0x7F || buffer[1] != 0x45 || buffer[2] != 0x4C || buffer[3] != 0x46)
             return WRONG_FILE;
 
+        return OK;
     }
 
     void File::changeJnz() {
@@ -93,12 +97,14 @@ namespace MaxsPass {
         const char jnz = 0x75;
 
         if (buffer[jnzOffset] == jz) {
+
+            printf ("This program already has been hacked this way!\n");
             return;
         }
 
         buffer[jnzOffset] = jz;
-
         writeToFile();
+        printf ("Done! Program has been hacked by replacing jnz\n");
     }
 
     void File::changeCall() {
@@ -117,12 +123,15 @@ namespace MaxsPass {
         const size_t jmpLength = 2;
 
         if (buffer[jmpToBadOffset] == nop || buffer[readFuncCallOffset] == nop) {
+
+            printf ("This program already has been hacked this way!\n");
             return;
         }
 
         memset (buffer + readFuncCallOffset, nop, callLength);
         memset (buffer + jmpToBadOffset, nop, jmpLength);
         writeToFile ();
+        printf ("Done! Program has been hacked by erasing of some commands\n");
     }
 
     void File::writeToFile () {
