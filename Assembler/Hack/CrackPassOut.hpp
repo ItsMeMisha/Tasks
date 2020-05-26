@@ -6,13 +6,15 @@
 #include <cstring>
 #include <sys/stat.h>
 
+#define _DEBUG
+
 #ifdef _DEBUG
 
     #define ASSERT( cond ) assert (cond)
 
 #else
     
-    #define ASSERT( cond )
+    #define ASSERT( cond ) 
 
 #endif
 
@@ -31,11 +33,11 @@ namespace MaxsPass {
         ~File();
 
         void changeJnz();
-        int changeCall();
+        void changeCall();
         void skipPass();
     
     private:
-        const char* outputName = "CrackedProg.com";
+        const char* outputName = "CrackedProg.out";
         char* buffer = nullptr;
         int fileSize = 0;
 
@@ -51,27 +53,26 @@ namespace MaxsPass {
 
         readFile (fileName);
 
-        if (checkFile())
+        if (checkFile());
             
-        close(input);
     }
 
     File::~File() {
         
         free(buffer);
-        free(outputName);
     }
 
     void File::readFile (const char* fileName) {
  
-        FILE* input = fopen (fileName, rb);
+        FILE* input = fopen (fileName, "rb");
         ASSERT (input);
         struct stat* fileInfo = (struct stat*) calloc (1, sizeof (struct stat));
         stat (fileName, fileInfo);
 
         fileSize = fileInfo->st_size;
-        buffer = (char*) calloc (fileSize, sizeof (char));
-        fread (buffer, fileInfo->st_size, sizeof (char), input);
+
+        buffer = (char*) calloc (fileSize + 64, sizeof (char));
+        fread (buffer, fileSize, sizeof (char), input);
         fclose (input);
     }
 
@@ -87,15 +88,16 @@ namespace MaxsPass {
 
     void File::changeJnz() {
 
-        const char jnzOffset = 0xE9;
+        const unsigned char jnzOffset = 0xE9;
         const char jz = 0x74;
-        const char jnz = 0x75
+        const char jnz = 0x75;
 
         if (buffer[jnzOffset] == jz) {
             return;
         }
 
         buffer[jnzOffset] = jz;
+
         writeToFile();
     }
 
@@ -108,10 +110,10 @@ namespace MaxsPass {
 
         const char nop = 0x90;
 
-        const char readFuncCallOffset = 0xB8;
+        const unsigned char readFuncCallOffset = 0xB8;
         const size_t callLength = 5;
 
-        const char jmpToBadOffset = 0xE9;
+        const unsigned char jmpToBadOffset = 0xE9;
         const size_t jmpLength = 2;
 
         if (buffer[jmpToBadOffset] == nop || buffer[readFuncCallOffset] == nop) {
@@ -120,6 +122,7 @@ namespace MaxsPass {
 
         memset (buffer + readFuncCallOffset, nop, callLength);
         memset (buffer + jmpToBadOffset, nop, jmpLength);
+        writeToFile ();
     }
 
     void File::writeToFile () {
